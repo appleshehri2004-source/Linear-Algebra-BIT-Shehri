@@ -1,0 +1,23 @@
+/* Shared layout for the lesson demos: the plane, then a row of readouts and controls under it. */
+.demo-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem 1rem;
+  margin: 0.5rem 0;
+}
+
+.demo-op {
+  color: var(--muted);
+  font-size: 1.2rem;
+}
+
+.snap-toggle {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--muted);
+  padding: 0.5rem 0; /* tall enough to tap */
+}

@@ -1,0 +1,18 @@
+/* Makes Mafs use the site's colours (from global.css), in light and dark mode. */
+.plane {
+  width: 100%;
+  max-width: 480px;
+  margin: 1rem auto;
+}
+
+.plane .MafsView {
+  --mafs-bg: var(--bg);
+  --mafs-fg: var(--muted);
+  --mafs-origin-color: var(--muted); /* the x and y axes */
+  --mafs-line-color: var(--grid-faint); /* the faint grid */
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  /* Mafs blocks scrolling on the whole plane. Allow it again, so a phone user can scroll past.
+     Arrow tips keep "touch-action: none", so dragging a tip still doesn't scroll. */
+  touch-action: manipulation;
+}

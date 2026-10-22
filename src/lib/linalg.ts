@@ -38,3 +38,33 @@ export function det2(m: Mat2): number {
   const [[a, c], [b, d]] = m;
   return a * d - b * c;
 }
+
+/** Subtract: the vector that goes from the tip of v to the tip of u. */
+export function sub(u: Vec2, v: Vec2): Vec2 {
+  return [u[0] - v[0], u[1] - v[1]];
+}
+
+/**
+ * Round a number to a few decimal places, e.g. roundTo(1.26, 1) = 1.3.
+ * Also turns -0 into 0, so a readout never shows "-0".
+ */
+export function roundTo(n: number, decimals: number): number {
+  const f = 10 ** decimals;
+  return Math.round(n * f) / f + 0;
+}
+
+/**
+ * Move a vector to the nearest grid point, e.g. step 1 snaps to whole numbers.
+ * Used while dragging, so arrows land on tidy values.
+ */
+export function snapVec(v: Vec2, step = 1): Vec2 {
+  // Rounding to 10 places cleans up tiny errors like 0.30000000000000004.
+  const snap = (n: number) => roundTo(Math.round(n / step) * step, 10);
+  return [snap(v[0]), snap(v[1])];
+}
+
+/** Keep a vector inside the square from -limit to limit, so it can't be dragged off the plane. */
+export function clampVec(v: Vec2, limit: number): Vec2 {
+  const clamp = (n: number) => Math.min(limit, Math.max(-limit, n));
+  return [clamp(v[0]), clamp(v[1])];
+}
