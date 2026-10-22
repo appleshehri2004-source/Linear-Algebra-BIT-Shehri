@@ -3,6 +3,7 @@ import { getCollection, type CollectionEntry } from 'astro:content';
 // The name of each module. Add a line here when you start a new module.
 export const moduleNames: Record<number, string> = {
   1: 'Vectors',
+  2: 'Linear transformations',
 };
 
 /** A module's name, or "Untitled" if it isn't named above yet. */

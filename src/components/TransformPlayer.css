@@ -1,0 +1,43 @@
+/* The moving grid is brighter than the faint fixed grid behind it. */
+.transform-player .moving-grid {
+  stroke: var(--grid-moving);
+  stroke-width: 1px;
+}
+
+/* Where the x-axis and y-axis have moved to: drawn thicker. */
+.transform-player .moving-axes {
+  stroke: var(--grid-moving);
+  stroke-width: 2px;
+}
+
+/* Extra lines that move with the grid, e.g. a diagonal. */
+.transform-player .moving-extra {
+  stroke: var(--vec);
+  stroke-width: 3px;
+  stroke-linejoin: round;
+}
+
+.transform-scrub {
+  max-width: 480px;
+  margin: 0.5rem auto 1rem;
+}
+
+.transform-scrub label {
+  display: block;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.transform-scrub input {
+  width: 100%;
+  height: 2.5rem; /* a big target for a thumb on a phone */
+  margin: 0.25rem 0 0;
+  accent-color: var(--link);
+}
+
+.transform-scrub .slider-ends {
+  display: flex;
+  justify-content: space-between;
+  color: var(--muted);
+  font-size: 0.85rem;
+}

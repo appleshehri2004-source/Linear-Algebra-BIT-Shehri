@@ -16,6 +16,11 @@ interface Props {
 export default function Plane({ range = 5, children }: Props) {
   const box = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState(320);
+  // Mafs numbers its arrowheads and grids with a counter that keeps growing while the site is built,
+  // so the built page and the browser would disagree about those numbers (a "hydration mismatch").
+  // So the built page holds an empty square, and Mafs draws only once the page is in the browser.
+  const [inBrowser, setInBrowser] = useState(false);
+  useEffect(() => setInBrowser(true), []);
 
   // Measure the box's width and keep the plane square. Runs again whenever the box resizes.
   useEffect(() => {
@@ -59,20 +64,23 @@ export default function Plane({ range = 5, children }: Props) {
 
   return (
     <div className="plane" ref={box}>
-      <Mafs
-        width={size}
-        height={size}
-        viewBox={{ x: [-range, range], y: [-range, range], padding: 0.3 }}
-        preserveAspectRatio="contain"
-        // The plane stays still: only arrow tips move. (Mafs lets you slide it around by default.)
-        pan={false}
-      >
-        <Coordinates.Cartesian
-          xAxis={{ lines: 1, labels: label }}
-          yAxis={{ lines: 1, labels: label }}
-        />
-        {children}
-      </Mafs>
+      {!inBrowser && <div className="plane-placeholder" />}
+      {inBrowser && (
+        <Mafs
+          width={size}
+          height={size}
+          viewBox={{ x: [-range, range], y: [-range, range], padding: 0.3 }}
+          preserveAspectRatio="contain"
+          // The plane stays still: only arrow tips move. (Mafs lets you slide it around by default.)
+          pan={false}
+        >
+          <Coordinates.Cartesian
+            xAxis={{ lines: 1, labels: label }}
+            yAxis={{ lines: 1, labels: label }}
+          />
+          {children}
+        </Mafs>
+      )}
     </div>
   );
 }

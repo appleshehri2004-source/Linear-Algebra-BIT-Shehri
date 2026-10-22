@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { isIndependent } from '../lib/linalg';
-import { checkAnswer, parseNumber, type Rand } from './exercise';
+import { checkAnswer, matTex, parseNumber, type Rand } from './exercise';
 import { exercises } from './index';
 import { module1 } from './module1';
 
@@ -61,5 +61,11 @@ describe('parseNumber', () => {
   it('gives null for empty or non-numbers', () => {
     expect(parseNumber('')).toBeNull();
     expect(parseNumber('abc')).toBeNull();
+  });
+});
+
+describe('matTex', () => {
+  it('puts column 1 (i-hat) on the left', () => {
+    expect(matTex([[1, -2], [3, 0]])).toBe('\\begin{bmatrix} 1 & 3 \\\\ -2 & 0 \\end{bmatrix}');
   });
 });

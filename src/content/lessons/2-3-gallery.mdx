@@ -1,0 +1,79 @@
+---
+title: A gallery of transformations
+module: 2
+order: 3
+threeBlueOneBrown: https://www.3blue1brown.com/lessons/linear-transformations
+mit: https://ocw.mit.edu/courses/18-06-linear-algebra-spring-2010/resources/lecture-30-linear-transformations-and-their-matrices/
+tongji: 第二章 §2 矩阵的运算
+---
+
+import Formula from '../../components/Formula.astro';
+import MatrixPlayground from '../../components/MatrixPlayground.tsx';
+import Exercise from '../../components/Exercise.tsx';
+
+## Question
+
+Turning, stretching, slanting, flipping, squashing: what does each of these look like as a matrix?
+
+## Play
+
+Press a button to load a matrix and watch it play. Then change a number, or drag <span class="ihat">**î**</span> and <span class="jhat">**ĵ**</span>, and see how the picture changes.
+
+<MatrixPlayground
+  client:visible
+  matrix={[[0, 1], [-1, 0]]}
+  presets={[
+    { name: 'Rotate 90°', matrix: [[0, 1], [-1, 0]] },
+    { name: 'Shear', matrix: [[1, 0], [1, 1]] },
+    { name: 'Scale', matrix: [[3, 0], [0, 2]] },
+    { name: 'Reflect', matrix: [[-1, 0], [0, 1]] },
+    { name: 'Project', matrix: [[1, 0], [0, 0]] },
+    { name: 'Mystery', matrix: [[1, 2], [3, 1]] },
+  ]}
+/>
+
+## Numbers
+
+To build a matrix, ask "where do <span class="ihat">**î**</span> and <span class="jhat">**ĵ**</span> land?" and write the answers as columns.
+
+| Transformation | î lands on | ĵ lands on | Matrix |
+| --- | --- | --- | --- |
+| Rotate 90° anticlockwise | <Formula tex="(0, 1)" /> | <Formula tex="(-1, 0)" /> | <Formula tex="\begin{bmatrix} 0 & -1 \\ 1 & 0 \end{bmatrix}" /> |
+| Shear | <Formula tex="(1, 0)" /> | <Formula tex="(1, 1)" /> | <Formula tex="\begin{bmatrix} 1 & 1 \\ 0 & 1 \end{bmatrix}" /> |
+| Scale by 3 and 2 | <Formula tex="(3, 0)" /> | <Formula tex="(0, 2)" /> | <Formula tex="\begin{bmatrix} 3 & 0 \\ 0 & 2 \end{bmatrix}" /> |
+| Reflect over the y-axis | <Formula tex="(-1, 0)" /> | <Formula tex="(0, 1)" /> | <Formula tex="\begin{bmatrix} -1 & 0 \\ 0 & 1 \end{bmatrix}" /> |
+| Project onto the x-axis | <Formula tex="(1, 0)" /> | <Formula tex="(0, 0)" /> | <Formula tex="\begin{bmatrix} 1 & 0 \\ 0 & 0 \end{bmatrix}" /> |
+
+For example, the shear sends <Formula tex="(2, 3)" /> to <Formula tex="2 \cdot (1, 0) + 3 \cdot (1, 1) = (5, 3)" />: each point slides sideways by its height.
+
+## Explain
+
+- **Rotate 90°:** î turns up to <Formula tex="(0, 1)" />, ĵ turns left to <Formula tex="(-1, 0)" />. Lengths and angles stay the same.
+- **Shear:** î stays put, ĵ leans over. Horizontal lines slide sideways; the higher the line, the further it slides. Squares become slanted parallelograms with the same area.
+- **Scale:** î and ĵ stay on their axes but get longer. Everything stretches 3 times wider and 2 times taller.
+- **Reflect:** î flips to <Formula tex="(-1, 0)" />. The plane turns over like a page, so a clockwise loop becomes anticlockwise.
+- **Project:** ĵ is squashed to <Formula tex="\vec{0}" />, so the whole plane collapses onto the x-axis. Each point drops straight down (or up) onto it.
+- **Mystery:** columns <Formula tex="(1, 2)" /> and <Formula tex="(3, 1)" />. It doesn't have a simple name, and that's fine: most matrices are a mix of stretching, slanting and turning.
+
+## Predict
+
+After **Project**, can you get the original plane back? Is there a transformation that undoes it?
+
+<details>
+  <summary>Reveal</summary>
+  No. <Formula tex="(2, 1)" />, <Formula tex="(2, 5)" /> and <Formula tex="(2, -3)" /> all land on the same point <Formula tex="(2, 0)" />. Once they're squashed together, no rule can tell them apart again. The other five can all be undone (try finding the matrix that undoes each one).
+</details>
+
+## Practice
+
+<Exercise id="2.3-named" client:visible />
+
+<Exercise id="2.3-describe" client:visible />
+
+## Go deeper
+
+Rotating by any angle <Formula tex="\theta" /> sends î to <Formula tex="(\cos\theta, \sin\theta)" /> and ĵ to <Formula tex="(-\sin\theta, \cos\theta)" />, so its matrix is
+
+<Formula display tex="\begin{bmatrix} \cos\theta & -\sin\theta \\ \sin\theta & \cos\theta \end{bmatrix}" />
+
+Put <Formula tex="\theta = 90°" /> in and you get the first row of the table. Whether a matrix can be undone, and by how much it changes area, are the next two big ideas: the *inverse* and the *determinant*.

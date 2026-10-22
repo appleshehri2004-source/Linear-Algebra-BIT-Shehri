@@ -18,6 +18,7 @@
   --link: #2a5bd7;
   --border: #dcdce0;
   --grid-faint: #e8e8ec; /* the fixed grid behind the moving one */
+  --grid-moving: #8fa9e6; /* the grid that moves with a transformation: brighter */
 
   color-scheme: light;
 }
@@ -40,6 +41,7 @@
     --link: #8ab4ff;
     --border: #34343c;
     --grid-faint: #26262c;
+    --grid-moving: #4d6aa8;
 
     color-scheme: dark;
   }

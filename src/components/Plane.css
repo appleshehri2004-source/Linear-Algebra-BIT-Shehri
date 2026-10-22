@@ -16,3 +16,10 @@
      Arrow tips keep "touch-action: none", so dragging a tip still doesn't scroll. */
   touch-action: manipulation;
 }
+
+/* An empty square the size of the plane, shown until the browser draws the real one. */
+.plane-placeholder {
+  aspect-ratio: 1;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}

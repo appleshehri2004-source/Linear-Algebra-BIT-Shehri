@@ -1,0 +1,39 @@
+.matrix-editor {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.75rem 0;
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+/* Two columns of boxes inside the square brackets from CoordReadout.css. */
+.matrix-editor-grid {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 0.4rem 0.6rem;
+  padding: 0.4rem 0.6rem;
+  color: var(--text);
+}
+
+.matrix-cell input {
+  width: 4rem;
+  /* 16px or more stops the iPhone zooming in when the box is tapped. */
+  font-size: 1rem;
+  font-weight: 600;
+  text-align: center;
+  padding: 0.5rem 0.25rem;
+  border: 2px solid currentColor;
+  border-radius: 0.4rem;
+  background: var(--bg);
+  color: inherit;
+}
+
+.matrix-cell.ihat {
+  color: var(--ihat);
+}
+
+.matrix-cell.jhat {
+  color: var(--jhat);
+}

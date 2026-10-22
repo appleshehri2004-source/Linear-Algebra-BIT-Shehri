@@ -56,3 +56,20 @@
   color: var(--muted);
   margin: 0.25rem 0;
 }
+
+/* A short list of yes/no checks under a demo, e.g. "✓ The origin stays put". */
+.demo-checklist {
+  list-style: none;
+  max-width: 480px;
+  margin: 0.5rem auto;
+  padding: 0;
+  font-weight: 600;
+}
+
+/* A number written in front of a vector, e.g. the -1 in "-1 · (1, -2)". */
+.readout-coef {
+  font-size: 1.15rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  margin-right: -0.6rem; /* sit close to the bracket it multiplies */
+}

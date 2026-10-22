@@ -144,3 +144,49 @@ The three new lessons, each with all seven sections and its exercises in Practic
 - **`-0` is real.** JavaScript has a "negative zero", and `[2, -0]` is not equal to `[2, 0]` in a test. Adding `+ 0` turns it into a normal 0.
 - **The determinant spots dependence.** If v and w lie on one line, the parallelogram they make is flat, so its area (the determinant) is 0. `isIndependent` and `solveCombination` both use this.
 - **Long formulas on a phone.** A formula wider than 375px has to scroll sideways, so long ones are split into two lines.
+
+## Day 5 (2026-10-22): Module 2 begins, transformations
+
+Today's big idea: a matrix moves the whole plane, and its two columns are just where î and ĵ land.
+
+### New files
+
+**`src/components/TransformPlayer.tsx`** (and `TransformPlayer.css`)
+The heart of the site. A faint grid stays still and a brighter grid moves from "nothing changed" (t = 0) to "fully transformed" (t = 1). î (green) and ĵ (red) ride along, and so can a yellow vector or a yellow line.
+Play, Pause, Rewind (plays backwards) and a slider for t. One play takes 1.5 seconds and starts and stops gently (`easeInOut`).
+The whole moving grid is drawn as one SVG shape, so the browser only redraws one thing per frame. In testing it never missed a frame.
+It also accepts a rule that isn't a matrix (like "bend every line"), for the counter-examples in lesson 2.1.
+
+**`src/components/MatrixEditor.tsx`** (and `MatrixEditor.css`)
+Four number boxes inside square brackets: column 1 green, column 2 red. Each box remembers half-typed text like "-" or "2." and only passes it on once it's a real number.
+
+**`src/components/MatrixPlayground.tsx`**
+A TransformPlayer and a MatrixEditor sharing one matrix. Typing a number plays the animation. Dragging an arrow tip changes the numbers and jumps to the end, so the arrow stays under your finger.
+Dragging v works out "how many î plus how many ĵ" reach that point (`solveCombination` again).
+Options: a live line "x·(column 1) + y·(column 2) = answer" (lesson 2.2) and buttons for ready-made matrices (lesson 2.3).
+
+**`src/components/LinearityDemo.tsx`** (Lesson 2.1)
+Four buttons: one linear example and three that aren't (curved lines, moved origin, and "Sneaky"). A checklist under the plane says which rules each one keeps.
+
+**`src/exercises/module2.ts`**
+Eight new kinds of practice question for lessons 2.1 to 2.3.
+
+**`src/content/lessons/2-1-linear-transformations.mdx`, `2-2-matrix-times-vector.mdx`, `2-3-gallery.mdx`**
+The first three lessons of Module 2.
+
+### Changed files
+
+- **`src/lib/linalg.ts`** and **`linalg.test.ts`**: `identity`, `matMul`, `lerp`, `lerpVec`, `lerpMatrix`, `rotation`, `rotationAngle`, `easeInOut`, `matrixAt`, `mapAt`, `gridLines`, `segmentPoints`, and the three counter-example rules, all with tests.
+- **`src/components/Plane.tsx`** (and `Plane.css`): Mafs now draws only in the browser (see "Things I learned").
+- **`src/exercises/exercise.ts`**: new `matTex`, which writes a matrix in KaTeX.
+- **`src/styles/global.css`**: new colour `--grid-moving` for the moving grid.
+- **`src/content/modules.ts`**: Module 2 is called "Linear transformations".
+
+### Things I learned
+
+- **`matMul(A, B)` means "B first, then A".** Like reading `f(g(x))` from the inside out. Swapping them gives a different answer, and a test checks that.
+- **Sliding a rotation shrinks it.** Going straight from I to a 90° rotation passes through a matrix whose arrows are only about 71% as long. So for pure rotations `matrixAt` turns the angle instead.
+- **Watching grid lines isn't enough.** "Sneaky" slides points along each horizontal line in a wave. Every grid line lands on itself, so the grid looks untouched, yet the diagonal goes wavy. Linear means *every* straight line stays straight.
+- **Astro can't send a function to a React island.** Numbers and lists can travel from a lesson file to a component, but a rule like `bendLines` can't. So lesson 2.1's examples live inside a React component.
+- **Hydration mismatch.** Mafs numbers its arrowheads with a counter that keeps growing while the site is built. The browser starts counting from 0, so the two disagree. The fix: draw Mafs only once the page is in the browser.
+- **Tests check the code agrees with itself, not that the maths is right.** If an exercise's answer is worked out wrongly, the "accepts the right answer" test still passes. Each question still needs a careful read.
