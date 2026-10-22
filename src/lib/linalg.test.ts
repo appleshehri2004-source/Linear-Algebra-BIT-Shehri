@@ -1,5 +1,21 @@
 import { describe, expect, it } from 'vitest';
-import { add, clampVec, det2, matVec, roundTo, scale, snapVec, sub } from './linalg';
+import {
+  add,
+  angleBetween,
+  clampVec,
+  det2,
+  dot,
+  isClose,
+  isIndependent,
+  length,
+  matVec,
+  projectOnto,
+  roundTo,
+  scale,
+  snapVec,
+  solveCombination,
+  sub,
+} from './linalg';
 
 describe('add', () => {
   it('adds matching parts', () => {
@@ -80,5 +96,97 @@ describe('clampVec', () => {
   it('keeps a vector inside the plane', () => {
     expect(clampVec([7, -9], 5)).toEqual([5, -5]);
     expect(clampVec([1, 2], 5)).toEqual([1, 2]);
+  });
+});
+
+describe('dot', () => {
+  it('multiplies matching parts and adds', () => {
+    // 1*3 + 2*4 = 11
+    expect(dot([1, 2], [3, 4])).toBe(11);
+  });
+
+  it('is 0 for arrows at right angles', () => {
+    expect(dot([1, 0], [0, 1])).toBe(0);
+  });
+
+  it('is negative for arrows pointing opposite ways', () => {
+    expect(dot([1, 0], [-2, 1])).toBe(-2);
+  });
+});
+
+describe('length', () => {
+  it('uses Pythagoras: 3, 4, 5', () => {
+    expect(length([3, 4])).toBe(5);
+  });
+});
+
+describe('angleBetween', () => {
+  it('is 90 degrees for i-hat and j-hat', () => {
+    expect(angleBetween([1, 0], [0, 1])).toBeCloseTo(90);
+  });
+
+  it('is 0 for the same direction and 180 for opposite', () => {
+    expect(angleBetween([2, 2], [1, 1])).toBeCloseTo(0);
+    expect(angleBetween([1, 0], [-3, 0])).toBeCloseTo(180);
+  });
+
+  it('is null when an arrow has no length', () => {
+    expect(angleBetween([0, 0], [1, 0])).toBeNull();
+  });
+});
+
+describe('projectOnto', () => {
+  it("drops (2, 2) onto the x-axis's line", () => {
+    expect(projectOnto([2, 2], [1, 0])).toEqual([2, 0]);
+  });
+
+  it('does not depend on how long v is, only its line', () => {
+    expect(projectOnto([2, 2], [-5, 0])).toEqual([2, 0]);
+  });
+
+  it('is null when projecting onto the zero vector', () => {
+    expect(projectOnto([2, 2], [0, 0])).toBeNull();
+  });
+});
+
+describe('isIndependent', () => {
+  it('is true for i-hat and j-hat', () => {
+    expect(isIndependent([1, 0], [0, 1])).toBe(true);
+  });
+
+  it('is false when one is a stretched copy of the other', () => {
+    expect(isIndependent([1, 2], [2, 4])).toBe(false);
+  });
+
+  it('is false when one is the zero vector', () => {
+    expect(isIndependent([0, 0], [1, 3])).toBe(false);
+  });
+});
+
+describe('solveCombination', () => {
+  it('finds 3 i-hat - 2 j-hat for (3, -2)', () => {
+    expect(solveCombination([1, 0], [0, 1], [3, -2])).toEqual({ a: 3, b: -2 });
+  });
+
+  it('works for slanted vectors too', () => {
+    // 1*(1, 1) + 2*(1, -1) = (3, -1)
+    const r = solveCombination([1, 1], [1, -1], [3, -1]);
+    expect(r?.a).toBeCloseTo(1);
+    expect(r?.b).toBeCloseTo(2);
+  });
+
+  it('is null when v and w are dependent', () => {
+    expect(solveCombination([1, 2], [2, 4], [1, 1])).toBeNull();
+  });
+});
+
+describe('isClose', () => {
+  it('accepts answers within 0.01', () => {
+    expect(isClose(1.414, 1.41)).toBe(true);
+    expect(isClose(2, 2.01)).toBe(true);
+  });
+
+  it('rejects answers further away', () => {
+    expect(isClose(2, 2.02)).toBe(false);
   });
 });

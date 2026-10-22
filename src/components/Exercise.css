@@ -1,0 +1,95 @@
+.exercise {
+  border: 1px solid var(--border);
+  border-radius: 0.6rem;
+  padding: 0.75rem 1rem;
+  margin: 1rem 0;
+}
+
+.exercise-loading {
+  color: var(--muted);
+  min-height: 8rem; /* about the size of a question, so the page doesn't jump */
+}
+
+.exercise-label {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.exercise-text {
+  margin: 0.5rem 0;
+}
+
+.exercise-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.exercise-boxes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  margin: 0.75rem 0;
+}
+
+.exercise-box {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.exercise-box input {
+  width: 6rem;
+  /* 16px or more stops the iPhone zooming in when the box is tapped. */
+  font-size: 1rem;
+  padding: 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 0.4rem;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.exercise-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.exercise button {
+  font: inherit;
+  min-height: 2.75rem; /* big enough to tap */
+  padding: 0.4rem 1rem;
+  border-radius: 0.4rem;
+  border: 1px solid var(--link);
+  background: var(--link);
+  color: var(--bg);
+  cursor: pointer;
+}
+
+.exercise button.secondary {
+  background: transparent;
+  color: var(--link);
+}
+
+.exercise button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.exercise-feedback {
+  min-height: 1.6rem;
+  margin: 0.5rem 0 0;
+}
+
+.exercise-feedback .right {
+  color: var(--ihat);
+  font-weight: 600;
+}
+
+.exercise-feedback .wrong {
+  color: var(--jhat);
+}

@@ -85,3 +85,62 @@ This is Lesson 1.2, with all seven sections: tip-to-tail adding, scaling with th
 
 - Mafs lets you slide the whole plane around by default. We switched that off (`pan={false}`) so only arrow tips move.
 - On a phone, `touch-action: none` tells the browser "don't scroll when this is touched". Mafs put it on the whole plane, which would trap your thumb, so we kept it only on the arrow tips.
+
+## Day 4 (2026-10-22): Module 1 finished
+
+### New files
+
+**`src/exercises/exercise.ts`**
+This describes what a practice question is: some text (with maths between `$` signs), the correct answer (one number or a vector), and an optional rounding hint.
+It also has small helpers: pick a random whole number, read what the learner typed (it accepts `−2` and `2,5` too), and check an answer.
+An answer counts as right if every number is within 0.01 of the correct one.
+
+**`src/exercises/module1.ts`**
+These are the question "generators" for Module 1: little functions that pick random numbers and ask `linalg.ts` for the answer.
+There are 11 of them, two or three per lesson, with names like `"1.5-dot"`.
+They live here, not in the lesson files, because Astro can only pass plain data (like a name) from an `.mdx` page to a React island, not a function.
+
+**`src/exercises/index.ts`**
+One list of every question generator on the site, looked up by name. Module 2's questions will be added here.
+
+**`src/exercises/exercises.test.ts`**
+For every generator, this makes 200 random questions and checks that the right answer is accepted, the right answer rounded to 2 decimals is accepted, and a wrong answer (off by 1) is rejected.
+So a new exercise is tested automatically as soon as it's added to the list.
+
+**`src/components/Exercise.tsx`** (and `Exercise.css`)
+This is the question box: question, answer box(es), Check and New question.
+After two wrong tries it shows the correct answer. A typo like "abc" doesn't count as a try.
+The question is picked after the page loads, not while the site is built; otherwise the built page and the browser would choose different random numbers.
+The answer box uses the normal keyboard, because the iPhone number pad has no minus sign.
+
+**`src/components/SpanTracer.tsx`** (Lesson 1.3)
+Sliders a and b build a·v + b·w, and the tip leaves a trail.
+"Sweep" runs through lots of a and b values like mowing a lawn (up one row, down the next), so the trail paints in the span.
+A label says whether the span is the whole plane, a line, or a single point. "Fix a" locks a, so only b moves and the trail is a straight line.
+
+**`src/components/TargetGame.tsx`** (Lesson 1.4)
+Drag v and w, and a label says independent (green) or dependent (red).
+The game: move a and b until a·v + b·w hits the target dot, which turns green.
+"Show answer" uses `solveCombination`, and if v and w are dependent it explains why there may be no answer.
+
+**`src/components/DotDemo.tsx`** (Lesson 1.5)
+Drag v and w to see the lengths, the angle, the dot product worked out live, and the "shadow" (projection) of w on v's line.
+The dot product turns green when positive, grey when zero, and red when negative.
+
+**`src/content/lessons/1-3-span.mdx`, `1-4-independence-basis.mdx`, `1-5-dot-product.mdx`**
+The three new lessons, each with all seven sections and its exercises in Practice.
+
+### Changed files
+
+- **`src/lib/linalg.ts`** and **`linalg.test.ts`**: new functions `dot`, `length`, `angleBetween`, `projectOnto`, `isIndependent`, `solveCombination` and `isClose`, with tests (now 47 tests in total).
+- **`src/components/ScalarSlider.tsx`**: can now be greyed out (`disabled`), used by "Fix a".
+- **`src/components/Demo.css`**: shared styles for demo buttons, status labels and messages.
+- **`src/styles/global.css`**: three new colours, `--positive`, `--zero` and `--negative`.
+- **Lessons 1.1 and 1.2**: random-number exercises added to Practice.
+
+### Things I learned
+
+- **A bug that the browser caught but the tests didn't.** The first Sweep left no trail. The code said "add the points from i to next", but React runs that instruction a moment *later*, after `i` had already moved on, so it always added nothing. The fix: copy the points into a variable first, then hand them to React.
+- **`-0` is real.** JavaScript has a "negative zero", and `[2, -0]` is not equal to `[2, 0]` in a test. Adding `+ 0` turns it into a normal 0.
+- **The determinant spots dependence.** If v and w lie on one line, the parallelogram they make is flat, so its area (the determinant) is 0. `isIndependent` and `solveCombination` both use this.
+- **Long formulas on a phone.** A formula wider than 375px has to scroll sideways, so long ones are split into two lines.

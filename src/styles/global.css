@@ -8,6 +8,9 @@
   --vec: #c99a00; /* any other vector: yellow (darker so it shows on white) */
   --vec2: #e07000; /* a second vector next to the first: orange */
   --sum: #8a6d00; /* a sum of vectors: deep gold, drawn thicker */
+  --positive: #1a7f3c; /* a positive number, or "yes" (e.g. independent) */
+  --zero: #5e5e66; /* exactly zero */
+  --negative: #c42f2f; /* a negative number, or "no" (e.g. dependent) */
 
   --bg: #fdfdfb;
   --text: #1c1c1e;
@@ -27,6 +30,9 @@
     --vec: #ffd43b;
     --vec2: #ff9f43;
     --sum: #fff0a0;
+    --positive: #5ee08f;
+    --zero: #a0a0aa;
+    --negative: #ff7b7b;
 
     --bg: #16161a;
     --text: #ececf0;

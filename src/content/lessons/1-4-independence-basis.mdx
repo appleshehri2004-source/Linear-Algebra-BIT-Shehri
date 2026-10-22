@@ -1,0 +1,70 @@
+---
+title: Independence and basis
+module: 1
+order: 4
+threeBlueOneBrown: https://www.3blue1brown.com/lessons/span
+mit: https://ocw.mit.edu/courses/18-06-linear-algebra-spring-2010/resources/lecture-9-independence-basis-and-dimension/
+tongji: 第四章 §2 向量组的线性相关性
+---
+
+import Formula from '../../components/Formula.astro';
+import TargetGame from '../../components/TargetGame.tsx';
+import Exercise from '../../components/Exercise.tsx';
+
+## Question
+
+Can two arrows always get you to any point in the plane? When do they fail?
+
+## Play
+
+Drag <span class="vec">**v**</span> and <span class="vec2">**w**</span>. The label under the plane says whether they are **independent** or **dependent**.
+
+**Reach the target.** Move the sliders <Formula tex="a" /> and <Formula tex="b" /> until the tip of <span class="sum">**a·v + b·w**</span> lands on the target dot. If you get stuck, press **Show answer**.
+Then make <span class="vec">**v**</span> and <span class="vec2">**w**</span> dependent and try again.
+
+<TargetGame client:visible />
+
+## Numbers
+
+Put <Formula tex="\vec{v}" /> and <Formula tex="\vec{w}" /> side by side as the columns of a matrix and work out its *determinant*, <Formula tex="ad - bc" /> (you'll meet it properly in a later module):
+
+<Formula display tex="\det \begin{bmatrix} 2 & -1 \\ 1 & 2 \end{bmatrix} = 2 \cdot 2 - (-1) \cdot 1 = 5" />
+
+That is not 0, so <Formula tex="(2, 1)" /> and <Formula tex="(-1, 2)" /> are independent.
+
+<Formula display tex="\det \begin{bmatrix} 1 & 2 \\ 2 & 4 \end{bmatrix} = 1 \cdot 4 - 2 \cdot 2 = 0" />
+
+That is 0, so <Formula tex="(1, 2)" /> and <Formula tex="(2, 4)" /> are dependent.
+
+To reach the target <Formula tex="(3, 4)" /> with <Formula tex="\vec{v} = (2, 1)" /> and <Formula tex="\vec{w} = (-1, 2)" />, the answer is <Formula tex="a = 2" />, <Formula tex="b = 1" />:
+
+<Formula display tex="2 \begin{bmatrix} 2 \\ 1 \end{bmatrix} + 1 \begin{bmatrix} -1 \\ 2 \end{bmatrix} = \begin{bmatrix} 3 \\ 4 \end{bmatrix}" />
+
+## Explain
+
+**Dependent** means one vector is just a stretched copy of the other, like <Formula tex="(2, 4) = 2 \cdot (1, 2)" />. They lie on the same line, so they add nothing new: their span is only a line.
+
+**Independent** means they point in genuinely different directions. Then their span is the whole plane, and every target has exactly one pair <Formula tex="a, b" />.
+
+**The determinant test.** The determinant measures the area of the parallelogram that <Formula tex="\vec{v}" /> and <Formula tex="\vec{w}" /> make. If they lie on one line, the parallelogram is flat, with area 0. So: determinant 0 means dependent, anything else means independent.
+
+**Basis.** Two independent vectors in the plane are called a *basis*. "Basis" means any point can be described, in exactly one way, as "this much <Formula tex="\vec{v}" /> plus that much <Formula tex="\vec{w}" />". The usual basis is <span class="ihat">**î** = (1, 0)</span> and <span class="jhat">**ĵ** = (0, 1)</span>, but any independent pair works.
+
+## Predict
+
+<Formula tex="\vec{v} = (1, 0)" /> and <Formula tex="\vec{w} = (0, 0)" />. Independent or dependent?
+
+<details>
+  <summary>Reveal</summary>
+  Dependent. The zero vector is <Formula tex="0 \cdot \vec{v}" />, a squashed copy of <Formula tex="\vec{v}" />, and it adds nothing: the span is just the x-axis. The determinant agrees: <Formula tex="1 \cdot 0 - 0 \cdot 0 = 0" />. Drag w onto the origin to check.
+</details>
+
+## Practice
+
+<Exercise id="1.4-solve" client:visible />
+
+<Exercise id="1.4-dependent" client:visible />
+
+## Go deeper
+
+In 3D you need three independent vectors for a basis. MIT 18.06 Lecture 9 (linked below) defines independence for any number of vectors, using equations instead of pictures.

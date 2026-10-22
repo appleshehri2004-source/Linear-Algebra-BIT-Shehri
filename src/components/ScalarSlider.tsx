@@ -11,9 +11,11 @@ interface Props {
   min?: number;
   max?: number;
   step?: number;
+  /** true: greyed out and can't be moved. */
+  disabled?: boolean;
 }
 
-export default function ScalarSlider({ value, onChange, label, min = -3, max = 3, step = 0.1 }: Props) {
+export default function ScalarSlider({ value, onChange, label, min = -3, max = 3, step = 0.1, disabled = false }: Props) {
   const id = useId();
 
   return (
@@ -28,6 +30,7 @@ export default function ScalarSlider({ value, onChange, label, min = -3, max = 3
         max={max}
         step={step}
         value={value}
+        disabled={disabled}
         onChange={(e) => onChange(Number(e.target.value))}
       />
       <div className="slider-ends" aria-hidden="true">

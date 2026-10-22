@@ -21,3 +21,38 @@
   color: var(--muted);
   padding: 0.5rem 0; /* tall enough to tap */
 }
+
+/* A button under a demo, e.g. "Sweep" or "Show answer". Big enough to tap. */
+.demo-button {
+  font: inherit;
+  min-height: 2.75rem;
+  padding: 0.4rem 1rem;
+  border-radius: 0.4rem;
+  border: 1px solid var(--link);
+  background: var(--link);
+  color: var(--bg);
+  cursor: pointer;
+}
+
+.demo-button.secondary {
+  background: transparent;
+  color: var(--link);
+}
+
+.demo-button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* A one-line status under a demo, e.g. "span = a line" or "independent". */
+.demo-status {
+  text-align: center;
+  font-weight: 600;
+  margin: 0.5rem 0;
+}
+
+.demo-message {
+  text-align: center;
+  color: var(--muted);
+  margin: 0.25rem 0;
+}
