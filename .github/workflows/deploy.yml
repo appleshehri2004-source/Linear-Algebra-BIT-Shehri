@@ -1,0 +1,37 @@
+# Builds the site and publishes it to GitHub Pages.
+# Follows https://docs.astro.build/en/guides/deploy/github/
+name: Deploy to GitHub Pages
+
+on:
+  # Run every time you push to main...
+  push:
+    branches: [main]
+  # ...or when you click "Run workflow" on the Actions tab.
+  workflow_dispatch:
+
+# Allow this job to read the code and publish to GitHub Pages.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v7
+      - name: Install, build, and upload the site
+        # Uses Node 24 by default, which meets package.json's "node >= 22.23.4".
+        uses: withastro/action@v6
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
