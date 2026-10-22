@@ -1,0 +1,30 @@
+---
+// Shows a maths formula written in TeX, e.g. <Formula tex="\det(A) = ad - bc" />.
+// KaTeX turns it into HTML while the site is built, so the browser runs no JavaScript.
+// KaTeX's CSS and fonts come from node_modules and are bundled with the site (no CDN).
+import katex from 'katex';
+import 'katex/dist/katex.min.css';
+
+interface Props {
+  /** The formula in TeX. */
+  tex: string;
+  /** true: centred on its own line. false (default): inside a sentence. */
+  display?: boolean;
+}
+
+const { tex, display = false } = Astro.props;
+
+const html = katex.renderToString(tex, {
+  displayMode: display,
+  // A typo in a formula stops the build with a clear error, instead of showing broken maths.
+  throwOnError: true,
+});
+---
+
+{display ? <div class="formula" set:html={html} /> : <span set:html={html} />}
+
+<style>
+  .formula {
+    margin: 1rem 0;
+  }
+</style>
