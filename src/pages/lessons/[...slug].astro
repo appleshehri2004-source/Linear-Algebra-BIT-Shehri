@@ -1,20 +1,22 @@
 ---
-import { getCollection, render } from 'astro:content';
+import { render } from 'astro:content';
 import LessonLayout from '../../layouts/LessonLayout.astro';
+import { getSortedLessons } from '../../content/modules';
 
-// Build one page per lesson file, e.g. 01-vectors.mdx -> /lessons/01-vectors/
+// Build one page per lesson file, e.g. 1-1-vectors.mdx -> /lessons/1-1-vectors/
+// Each page also gets the lessons just before and after it, for the prev/next links.
 export async function getStaticPaths() {
-  const lessons = await getCollection('lessons');
-  return lessons.map((lesson) => ({
+  const lessons = await getSortedLessons();
+  return lessons.map((lesson, i) => ({
     params: { slug: lesson.id },
-    props: { lesson },
+    props: { lesson, prev: lessons[i - 1], next: lessons[i + 1] },
   }));
 }
 
-const { lesson } = Astro.props;
+const { lesson, prev, next } = Astro.props;
 const { Content } = await render(lesson);
 ---
 
-<LessonLayout title={lesson.data.title} description={lesson.data.description}>
+<LessonLayout lesson={lesson} prev={prev} next={next}>
   <Content />
 </LessonLayout>

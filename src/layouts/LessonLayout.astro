@@ -1,22 +1,86 @@
 ---
 // The shared frame around every lesson page.
+import type { CollectionEntry } from 'astro:content';
 import BaseLayout from './BaseLayout.astro';
+import { moduleName } from '../content/modules';
+
+type Lesson = CollectionEntry<'lessons'>;
 
 interface Props {
-  title: string;
-  description: string;
+  lesson: Lesson;
+  prev?: Lesson;
+  next?: Lesson;
 }
 
-const { title, description } = Astro.props;
+const { lesson, prev, next } = Astro.props;
+const { title, module, order, threeBlueOneBrown, mit, tongji } = lesson.data;
 
 // BASE_URL is "/Linear-Algebra-BIT-Shehri/" (set by `base` in astro.config.mjs).
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const href = (l: Lesson) => `${base}/lessons/${l.id}/`;
+const label = (l: Lesson) => `${l.data.module}.${l.data.order} ${l.data.title}`;
+
+const hasSources = threeBlueOneBrown || mit || tongji;
 ---
 
-<BaseLayout title={`${title} · Visual Linear Algebra`} description={description}>
-  <nav><a href={`${base}/`}>← All lessons</a></nav>
+<BaseLayout title={`${module}.${order} ${title} · Visual Linear Algebra`}>
+  <nav class="top"><a href={`${base}/`}>← All lessons</a></nav>
+
   <main>
+    <p class="kicker">Module {module}: {moduleName(module)} · Lesson {module}.{order}</p>
     <h1>{title}</h1>
+
     <slot />
+
+    {
+      hasSources && (
+        <ul class="sources">
+          {threeBlueOneBrown && (
+            <li>
+              <a href={threeBlueOneBrown}>3Blue1Brown video</a>
+            </li>
+          )}
+          {mit && (
+            <li>
+              <a href={mit}>MIT 18.06 lecture</a>
+            </li>
+          )}
+          {tongji && <li>Tongji textbook: {tongji}</li>}
+        </ul>
+      )
+    }
   </main>
+
+  <nav class="prev-next" aria-label="Previous and next lessons">
+    {prev ? <a href={href(prev)}>← {label(prev)}</a> : <span />}
+    {next && <a class="next" href={href(next)}>{label(next)} →</a>}
+  </nav>
 </BaseLayout>
+
+<style>
+  .kicker {
+    color: var(--muted);
+    font-size: 0.9rem;
+    margin: 1.5rem 0 0;
+  }
+
+  .sources {
+    padding-left: 1.25rem;
+  }
+
+  /* Stacked on a phone, side by side when there's room. */
+  .prev-next {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 3rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .next {
+    margin-left: auto;
+    text-align: right;
+  }
+</style>
