@@ -1,0 +1,103 @@
+/* Site-wide styles. Every page gets these through BaseLayout.astro. */
+
+/* ---------- Colour tokens ---------- */
+/* Light theme (the default). */
+:root {
+  --ihat: #1a9e4b; /* i-hat: green */
+  --jhat: #d93a3a; /* j-hat: red */
+  --vec: #c99a00; /* any other vector: yellow (darker so it shows on white) */
+
+  --bg: #fdfdfb;
+  --text: #1c1c1e;
+  --muted: #5e5e66;
+  --link: #2a5bd7;
+  --border: #dcdce0;
+  --grid-faint: #e8e8ec; /* the fixed grid behind the moving one */
+
+  color-scheme: light;
+}
+
+/* Dark theme: used automatically when the phone or computer is in dark mode. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ihat: #4cd07d;
+    --jhat: #ff6b6b;
+    --vec: #ffd43b;
+
+    --bg: #16161a;
+    --text: #ececf0;
+    --muted: #a0a0aa;
+    --link: #8ab4ff;
+    --border: #34343c;
+    --grid-faint: #26262c;
+
+    color-scheme: dark;
+  }
+}
+
+/* ---------- Page basics ---------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  /* Inter is installed from npm and bundled with the site: no Google Fonts. */
+  font-family: 'Inter Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-size: 100%;
+  line-height: 1.6;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* Mobile-first text column: full width on a phone, capped on big screens. */
+.page {
+  width: 100%;
+  max-width: 42rem;
+  margin: 0 auto;
+  padding: 1rem 1rem 3rem;
+}
+
+h1,
+h2,
+h3 {
+  line-height: 1.25;
+}
+
+h1 {
+  font-size: 1.75rem;
+  margin: 0.5rem 0 1rem;
+}
+
+h2 {
+  font-size: 1.3rem;
+  margin-top: 2rem;
+}
+
+a {
+  color: var(--link);
+}
+
+/* Long formulas scroll sideways instead of stretching the page on a phone. */
+.katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.25rem 0;
+}
+
+/* Small helpers for colouring text to match the drawings. */
+.ihat {
+  color: var(--ihat);
+}
+.jhat {
+  color: var(--jhat);
+}
+.vec {
+  color: var(--vec);
+}

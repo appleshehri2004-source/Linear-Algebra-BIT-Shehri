@@ -1,5 +1,7 @@
 ---
 // The shared frame around every lesson page.
+import BaseLayout from './BaseLayout.astro';
+
 interface Props {
   title: string;
   description: string;
@@ -11,30 +13,10 @@ const { title, description } = Astro.props;
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 ---
 
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width" />
-    <link rel="icon" type="image/svg+xml" href={`${base}/favicon.svg`} />
-    <meta name="description" content={description} />
-    <title>{title} · Visual Linear Algebra</title>
-  </head>
-  <body>
-    <nav><a href={`${base}/`}>← All lessons</a></nav>
-    <main>
-      <h1>{title}</h1>
-      <slot />
-    </main>
-  </body>
-</html>
-
-<style>
-  body {
-    /* System fonts only: nothing is loaded from the internet. */
-    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-    line-height: 1.6;
-    max-width: 48rem;
-    margin: 0 auto;
-    padding: 1rem;
-  }
-</style>
+<BaseLayout title={`${title} · Visual Linear Algebra`} description={description}>
+  <nav><a href={`${base}/`}>← All lessons</a></nav>
+  <main>
+    <h1>{title}</h1>
+    <slot />
+  </main>
+</BaseLayout>
