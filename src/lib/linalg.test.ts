@@ -57,6 +57,15 @@ import {
   type Mat2,
   type Vec2,
   type Vec3,
+  equationLine,
+  augmentedRows,
+  equationText,
+  formatNumber,
+  lerpRows,
+  randomSystem,
+  inverse2,
+  rrefSteps,
+  solve2,
 } from './linalg';
 
 describe('add', () => {
@@ -656,5 +665,206 @@ describe('stripeLines', () => {
 
   it('works for a flat shape (no area)', () => {
     expect(stripeLines([[0, 0], [2, 2], [0, 0]], 0.5).length).toBeGreaterThan(0);
+  });
+});
+
+// ---------- Systems of equations ----------
+
+describe('formatNumber', () => {
+  it('shows clean fractions instead of long decimals', () => {
+    expect(formatNumber(1 / 3)).toBe('1/3');
+    expect(formatNumber(-4.5)).toBe('-9/2');
+    expect(formatNumber(0.1 + 0.2)).toBe('3/10');
+  });
+
+  it('shows whole numbers as whole numbers, and never "-0"', () => {
+    expect(formatNumber(4)).toBe('4');
+    expect(formatNumber(-0)).toBe('0');
+    expect(formatNumber(4.4999999999)).toBe('9/2');
+  });
+
+  it('falls back to 2 decimals when there is no simple fraction', () => {
+    expect(formatNumber(Math.PI)).toBe('3.14');
+  });
+
+  it('keeps short decimals as decimals when the fraction would be ugly (1.41, not 141/100)', () => {
+    expect(formatNumber(1.41)).toBe('1.41');
+    expect(formatNumber(0.25)).toBe('1/4');
+    expect(formatNumber(-2 / 21)).toBe('-2/21');
+  });
+});
+
+/** true when x solves every row a1·x1 + a2·x2 (+ a3·x3) = b of an augmented matrix. */
+function solvesRows(rows: number[][], x: number[]): boolean {
+  return rows.every((row) => isClose(x.reduce((sum, xi, j) => sum + row[j] * xi, 0), row[x.length], 1e-9));
+}
+
+describe('rrefSteps', () => {
+  it('solves x + 2y = 5, 3x + 4y = 6: x = -4, y = 4.5', () => {
+    const { steps, solution } = rrefSteps([[1, 2, 5], [3, 4, 6]]);
+    expect(solution![0]).toBeCloseTo(-4, 9);
+    expect(solution![1]).toBeCloseTo(4.5, 9);
+    expect(steps[0]).toEqual({ description: 'Start', matrix: [[1, 2, 5], [3, 4, 6]], changedRow: null });
+    expect(steps[1].description).toBe('R2 → R2 − 3·R1');
+    expect(steps[1].changedRow).toBe(1);
+    expect(steps[1].matrix).toEqual([[1, 2, 5], [0, -2, -9]]);
+  });
+
+  it('solves x + y + z = 6, 2y + 5z = -4, 2x + 5y - z = 27: (5, 3, -2)', () => {
+    const { solution } = rrefSteps([[1, 1, 1, 6], [0, 2, 5, -4], [2, 5, -1, 27]]);
+    [5, 3, -2].forEach((n, i) => expect(solution![i]).toBeCloseTo(n, 9));
+  });
+
+  it('never moves the solution: every step is still solved by it (the lines keep crossing at one point)', () => {
+    for (const system of [[[1, 2, 5], [3, 4, 6]], [[1, 1, 1, 6], [0, 2, 5, -4], [2, 5, -1, 27]]]) {
+      const { steps, solution } = rrefSteps(system);
+      for (const step of steps) expect(solvesRows(step.matrix, solution!)).toBe(true);
+    }
+  });
+
+  it('changes one row per step and ends with the identity on the left', () => {
+    const { steps } = rrefSteps([[1, 1, 1, 6], [0, 2, 5, -4], [2, 5, -1, 27]]);
+    for (let i = 1; i < steps.length; i++) {
+      const changed = steps[i].matrix.filter((row, r) => row.some((n, c) => n !== steps[i - 1].matrix[r][c]));
+      expect(changed).toHaveLength(1);
+    }
+    const last = steps[steps.length - 1].matrix;
+    expect(last.map((row) => row.slice(0, 3))).toEqual([[1, 0, 0], [0, 1, 0], [0, 0, 1]]);
+  });
+
+  it('writes fractions in the step, e.g. R3 → R3 − 3/2·R2', () => {
+    const { steps } = rrefSteps([[1, 1, 1, 6], [0, 2, 5, -4], [2, 5, -1, 27]]);
+    expect(steps.map((s) => s.description)).toContain('R3 → R3 − 3/2·R2');
+  });
+
+  it('swaps rows when a pivot is 0', () => {
+    const { steps, solution } = rrefSteps([[0, 1, 2], [1, 0, 3]]);
+    expect(steps[1].description).toBe('R1 ↔ R2');
+    expect(solution).toEqual([3, 2]);
+  });
+
+  it('reports "no unique solution" for a dependent system', () => {
+    // x + 2y = 3 and 2x + 4y = 6 are the same line.
+    const { steps, solution } = rrefSteps([[1, 2, 3], [2, 4, 6]]);
+    expect(solution).toBeNull();
+    expect(steps[steps.length - 1].description).toMatch(/no unique solution/i);
+  });
+
+  it('does not change the matrix it was given', () => {
+    const system = [[1, 2, 5], [3, 4, 6]];
+    rrefSteps(system);
+    expect(system).toEqual([[1, 2, 5], [3, 4, 6]]);
+  });
+});
+
+/** Check two matrices match, number by number. */
+function expectMatrixClose(a: Mat2, b: Mat2) {
+  a.forEach((col, i) => col.forEach((n, j) => expect(n).toBeCloseTo(b[i][j], 9)));
+}
+
+describe('inverse2', () => {
+  it('turns columns (2,1), (-1,1) into (1/3,-1/3), (1/3,2/3)', () => {
+    expectMatrixClose(inverse2([[2, 1], [-1, 1]])!, [[1 / 3, -1 / 3], [1 / 3, 2 / 3]]);
+  });
+
+  it('undoes a 90° turn with a -90° turn', () => {
+    expectMatrixClose(inverse2(rotation(90))!, rotation(-90));
+  });
+
+  it('undoes the shear (1,0), (1,1) with (1,0), (-1,1)', () => {
+    expectMatrixClose(inverse2([[1, 0], [1, 1]])!, [[1, 0], [-1, 1]]);
+  });
+
+  it('gives back the identity when multiplied by the matrix', () => {
+    const a: Mat2 = [[2, 1], [-1, 1]];
+    expectMatrixClose(matMul(inverse2(a)!, a), identity());
+  });
+
+  it('returns null when det = 0 (a squashed plane cannot be unsquashed)', () => {
+    expect(inverse2([[1, 0], [0, 0]])).toBeNull();
+    expect(inverse2([[1, 2], [2, 4]])).toBeNull();
+  });
+});
+
+describe('solve2', () => {
+  it('finds which x lands on v', () => {
+    // 2·(2, 1) + 3·(-1, 1) = (1, 5)
+    const x = solve2([[2, 1], [-1, 1]], [1, 5])!;
+    expect(x[0]).toBeCloseTo(2, 9);
+    expect(x[1]).toBeCloseTo(3, 9);
+  });
+
+  it('returns null when det = 0', () => {
+    expect(solve2([[1, 2], [2, 4]], [1, 2])).toBeNull();
+  });
+});
+
+describe('equationLine', () => {
+  it('gives two different points on a·x + b·y = c', () => {
+    for (const [a, b, c] of [[1, 2, 5], [3, 4, 6], [1, 0, -4], [0, 1, 4.5]]) {
+      const [p, q] = equationLine([a, b, c])!;
+      expect(distance(p, q)).toBeGreaterThan(0.5);
+      for (const [x, y] of [p, q]) expect(a * x + b * y).toBeCloseTo(c, 9);
+    }
+  });
+
+  it('returns null for 0x + 0y = c (no line at all)', () => {
+    expect(equationLine([0, 0, 3])).toBeNull();
+  });
+});
+
+describe('equationText', () => {
+  it('writes a row as an equation', () => {
+    expect(equationText([1, 2, 5])).toBe('x + 2y = 5');
+    expect(equationText([0, -2, -9])).toBe('−2y = −9');
+    expect(equationText([2, 5, -1, 27])).toBe('2x + 5y − z = 27');
+    expect(equationText([1, -0.5, 1 / 3])).toBe('x − (1/2)y = 1/3');
+  });
+
+  it('writes 0 = 0 for an empty row', () => {
+    expect(equationText([0, 0, 0])).toBe('0 = 0');
+  });
+});
+
+describe('lerpRows', () => {
+  it('slides from one matrix to the other', () => {
+    expect(lerpRows([[1, 2, 5]], [[0, -2, -9]], 0.5)).toEqual([[0.5, 0, -2]]);
+  });
+
+  it('keeps the solution: halfway between two rows is still a line through the crossing point', () => {
+    const { steps, solution } = rrefSteps([[1, 2, 5], [3, 4, 6]]);
+    const half = lerpRows(steps[0].matrix, steps[1].matrix, 0.3);
+    expect(solvesRows(half, solution!)).toBe(true);
+  });
+});
+
+describe('randomSystem', () => {
+  /** A repeatable "random" number maker, so a failing test fails the same way every time. */
+  function seeded(seed: number) {
+    return () => {
+      seed = (seed * 16807) % 2147483647;
+      return seed / 2147483647;
+    };
+  }
+
+  it('makes 2x2 and 3x3 systems with one whole-number solution', () => {
+    const rand = seeded(7);
+    for (let i = 0; i < 50; i++) {
+      for (const size of [2, 3] as const) {
+        const rows = randomSystem(size, rand);
+        expect(rows).toHaveLength(size);
+        rows.forEach((row) => expect(row).toHaveLength(size + 1));
+        const { solution } = rrefSteps(rows);
+        expect(solution).not.toBeNull();
+        solution!.forEach((n) => expect(Math.abs(n - Math.round(n))).toBeLessThan(1e-9));
+      }
+    }
+  });
+});
+
+describe('augmentedRows', () => {
+  it('turns A (stored as columns) and v into the rows of [A | v]', () => {
+    // Columns (2, 1) and (-1, 1): the equations 2x − y = 1 and x + y = 5.
+    expect(augmentedRows([[2, 1], [-1, 1]], [1, 5])).toEqual([[2, -1, 1], [1, 1, 5]]);
   });
 });

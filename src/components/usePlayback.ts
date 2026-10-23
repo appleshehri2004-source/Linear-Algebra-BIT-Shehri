@@ -21,8 +21,8 @@ export interface PlaybackOptions {
 export interface Playback {
   t: number;
   playing: 'forward' | 'backward' | null;
-  /** Animate to t = 1 (Play) or t = 0 (Rewind). */
-  animateTo: (target: 0 | 1, from?: number) => void;
+  /** Animate to t = 1 (Play) or t = 0 (Rewind), or to any t in between (e.g. 0.5: the end of step 1 of 2). */
+  animateTo: (target: number, from?: number) => void;
   stop: () => void;
   /** Jump straight to a t (the slider). Stops any animation. */
   scrub: (t: number) => void;
@@ -71,8 +71,8 @@ export function usePlayback({ t: controlledT, onTChange, playKey, duration = DUR
     setPlaying(null);
   }
 
-  /** Animate t from `from` to `target` (1 for Play, 0 for Rewind), easing in and out. */
-  function animateTo(target: 0 | 1, from = lastT.current) {
+  /** Animate t from `from` to `target` (1 for Play, 0 for Rewind, or anything between), easing in and out. */
+  function animateTo(target: number, from = lastT.current) {
     stop();
     // Play from the end starts again from the beginning.
     if (target === 1 && from === 1) from = 0;
@@ -80,7 +80,7 @@ export function usePlayback({ t: controlledT, onTChange, playKey, duration = DUR
     // A shorter distance takes a shorter time, so the speed feels the same.
     const time = duration * Math.abs(target - from);
     const start = performance.now();
-    setPlaying(target === 1 ? 'forward' : 'backward');
+    setPlaying(target > from ? 'forward' : 'backward');
     const step = (now: number) => {
       const s = Math.min(1, (now - start) / time);
       setT(lerp(from, target, easeInOut(s)));

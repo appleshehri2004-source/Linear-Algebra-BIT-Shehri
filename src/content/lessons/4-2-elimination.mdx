@@ -1,0 +1,83 @@
+---
+title: Gaussian elimination, step by step
+module: 4
+order: 2
+mit: https://ocw.mit.edu/courses/18-06-linear-algebra-spring-2010/resources/lecture-2-elimination-with-matrices/
+tongji: 第三章 §1 矩阵的初等变换
+---
+
+import Formula from '../../components/Formula.astro';
+import EliminationPlayer from '../../components/EliminationPlayer.tsx';
+import Exercise from '../../components/Exercise.tsx';
+
+## Question
+
+Two equations you can solve by trying things. Three equations are harder, and a computer may need to solve a thousand. Is there a **recipe**, the same every time, that always works?
+
+## Play
+
+Each row of the box is one equation: the numbers in front of <Formula tex="x, y, z" />, then (after the dashed bar) the right-hand side. Press **Next** to do one step, or **Play** to watch them all. The row that just changed is highlighted, and the step is written above it.
+
+<EliminationPlayer
+  client:visible
+  random
+  systems={[
+    { name: '2 equations', rows: [[1, 2, 5], [3, 4, 6]] },
+    { name: '3 equations', rows: [[1, 1, 1, 6], [0, 2, 5, -4], [2, 5, -1, 27]] },
+  ]}
+/>
+
+With 2 equations, watch the picture: each step turns one line, but the two lines **always cross at the yellow dot**. At the end one line is upright (<Formula tex="x = -4" />) and the other is flat (<Formula tex="y = 9/2" />), so you can read the answer straight off.
+
+## Numbers
+
+<Formula tex="x + 2y = 5" /> and <Formula tex="3x + 4y = 6" />:
+
+<Formula display tex="\left[\begin{array}{cc|c} 1 & 2 & 5 \\ 3 & 4 & 6 \end{array}\right]" />
+
+1. **Clear below the first pivot.** The 1 in the top-left corner is the *pivot*. Take away 3 copies of row 1 from row 2 (<Formula tex="R_2 \to R_2 - 3R_1" />), and the 3 under it becomes 0. Row 2 now says <Formula tex="-2y = -9" />: <Formula tex="x" /> is gone.
+   <Formula display tex="\left[\begin{array}{cc|c} 1 & 2 & 5 \\ 0 & -2 & -9 \end{array}\right]" />
+2. **Make the pivot 1.** Multiply row 2 by <Formula tex="-\tfrac12" />: <Formula tex="y = \tfrac92" />.
+   <Formula display tex="\left[\begin{array}{cc|c} 1 & 2 & 5 \\ 0 & 1 & \frac92 \end{array}\right]" />
+3. **Clear above it.** Take away 2 copies of row 2 from row 1 (<Formula tex="R_1 \to R_1 - 2R_2" />): <Formula tex="x = -4" />.
+   <Formula display tex="\left[\begin{array}{cc|c} 1 & 0 & -4 \\ 0 & 1 & \frac92 \end{array}\right]" />
+
+## Explain
+
+Elimination uses just three moves:
+
+- **Add a multiple of one row to another** (<Formula tex="R_2 \to R_2 - 3R_1" />)
+- **Multiply a row by a number that isn't 0** (<Formula tex="R_2 \to -\tfrac12 R_2" />)
+- **Swap two rows**, if a pivot is 0
+
+**Why the answer never changes.** If a point solves equation 1 and equation 2, it also solves "equation 2 minus 3 × equation 1". And every move can be undone (add the 3 copies back), so no new answers sneak in either. In the picture, a move swaps one line for a different line **through the same crossing point**.
+
+**The recipe.** Going down, use each pivot to make zeros under it: now the last equation has just one unknown. Going back up, make each pivot 1 and clear the numbers above it. The left side becomes <Formula tex="I" />, and the right-hand column *is* the answer.
+
+## Predict
+
+What's the first step for <Formula tex="2x + y = 4" />, <Formula tex="6x + 5y = 14" />? And what does row 2 become?
+
+<details>
+  <summary>Reveal, then check it step by step</summary>
+
+  <Formula tex="R_2 \to R_2 - 3R_1" />, since 6 is 3 times the pivot 2. Row 2 becomes <Formula tex="(0, 2 \mid 2)" />, so <Formula tex="y = 1" />, and then <Formula tex="x = \tfrac32" />.
+
+  <EliminationPlayer client:visible systems={[{ name: 'Check', rows: [[2, 1, 4], [6, 5, 14]] }]} />
+</details>
+
+## Practice
+
+<Exercise id="4.2-multiplier" client:visible />
+
+<Exercise id="4.2-new-row" client:visible />
+
+<Exercise id="4.2-solve3" client:visible />
+
+## Go deeper
+
+**When the recipe gets stuck.** If a pivot is 0 and there's no row below to swap with, there's no unique solution. A row that becomes <Formula tex="0 = 0" /> means two equations were really the same (infinitely many solutions). A row like <Formula tex="0 = 3" /> means the equations disagree (no solution). Press **Random system** a few times: it only makes systems with one answer, but you can try <Formula tex="x + 2y = 3,\ 2x + 4y = 6" /> by hand.
+
+**Each move is a matrix.** "<Formula tex="R_2 \to R_2 - 3R_1" />" is the same as multiplying on the left by <Formula tex="E = \begin{bmatrix} 1 & 0 \\ -3 & 1 \end{bmatrix}" />. A whole elimination is a product of such matrices, and MIT Lecture 2 (linked below) builds on exactly this idea.
+
+**This is what computers do.** Solving 1000 equations takes about <Formula tex="\tfrac13 \cdot 1000^3" /> multiplications, around 300 million: under a second.

@@ -1,0 +1,73 @@
+/* The augmented matrix [A | b] in EliminationPlayer. */
+.elim-op {
+  text-align: center;
+  font-size: 1.15rem;
+  font-weight: 600;
+  min-height: 3.2em; /* room for two lines, so the matrix doesn't jump up and down */
+  margin: 0.75rem 0 0.25rem;
+}
+
+.elim-count {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 400;
+  color: var(--muted);
+}
+
+/* Wide 3x3 systems with fractions can scroll sideways on a small phone instead of breaking the page. */
+.elim-matrix-wrap {
+  display: flex;
+  justify-content: center;
+  overflow-x: auto;
+}
+
+.elim-matrix {
+  border-collapse: collapse;
+  font-size: 1.15rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.elim-matrix th {
+  padding: 0.3rem 0.6rem 0.3rem 0;
+  font-size: 0.9rem;
+}
+
+.elim-matrix td {
+  min-width: 2.4em;
+  padding: 0.3rem 0.4rem;
+  text-align: center;
+}
+
+/* The square brackets: left and right borders on the first and last number of each row. */
+.elim-matrix th + td {
+  border-left: 2px solid currentColor;
+}
+
+.elim-matrix td:last-child {
+  border-right: 2px solid currentColor;
+}
+
+/* The bar between A and b. */
+.elim-matrix td.elim-rhs {
+  border-left: 1px dashed var(--muted);
+}
+
+/* The row that just changed. */
+.elim-matrix tr.changed td {
+  background: color-mix(in srgb, var(--vec) 25%, transparent);
+}
+
+.elim-equations {
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0;
+  text-align: center;
+  font-weight: 600;
+}
+
+/* The system on screen: its button is filled in. */
+.elimination .demo-button[aria-pressed='true'] {
+  background: var(--link);
+  color: var(--bg);
+}

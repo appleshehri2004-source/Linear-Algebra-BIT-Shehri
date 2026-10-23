@@ -5,6 +5,7 @@ export const moduleNames: Record<number, string> = {
   1: 'Vectors',
   2: 'Linear transformations',
   3: 'The determinant',
+  4: 'Systems of equations',
 };
 
 /** A module's name, or "Untitled" if it isn't named above yet. */

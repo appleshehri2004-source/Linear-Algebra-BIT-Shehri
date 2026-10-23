@@ -57,10 +57,17 @@ export function answerTex(q: Question): string {
 }
 
 /**
- * Read a typed number. Accepts "-2", "−2" (a typographic minus), "2.5" and "2,5".
- * Gives null for anything that isn't a number, e.g. "" or "abc".
+ * Read a typed number. Accepts "-2", "−2" (a typographic minus), "2.5", "2,5" and fractions like "-9/2".
+ * Gives null for anything that isn't a number, e.g. "", "abc", "1/" or "1/0".
  */
 export function parseNumber(typed: string): number | null {
+  const parts = typed.split('/');
+  if (parts.length === 2) {
+    const top = parseNumber(parts[0]);
+    const bottom = parseNumber(parts[1]);
+    return top === null || bottom === null || bottom === 0 ? null : top / bottom;
+  }
+  if (parts.length > 2) return null;
   const cleaned = typed.trim().replace(/[−–]/g, '-').replace(',', '.');
   if (cleaned === '') return null;
   const n = Number(cleaned);

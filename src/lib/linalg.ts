@@ -515,3 +515,191 @@ export function adBcPieces(m: Mat2): { box: AreaPiece; triangles: AreaPiece[]; r
     ],
   };
 }
+
+// ---------- Systems of equations ----------
+
+/**
+ * A number written the way you'd write it by hand: 1/3 instead of 0.3333, -9/2 instead of -4.5.
+ * Tries every bottom number up to 100. Numbers with no simple fraction (like pi) get 2 decimals.
+ * A short decimal with a big bottom number stays a decimal: 1.41, not 141/100.
+ */
+export function formatNumber(n: number): string {
+  if (!Number.isFinite(n)) return String(n);
+  const close = (a: number) => Math.abs(a - n) < 1e-9 * Math.max(1, Math.abs(n));
+  for (let bottom = 1; bottom <= 100; bottom++) {
+    const top = Math.round(n * bottom);
+    if (close(top / bottom)) {
+      if (top === 0) return '0'; // never "-0"
+      if (bottom === 1) return String(top);
+      if (bottom > 12 && close(roundTo(n, 2))) break; // a short decimal reads better
+      return `${top}/${bottom}`;
+    }
+  }
+  return String(roundTo(n, 2));
+}
+
+/** One step of elimination: what was done, the matrix after it, and which row changed (null for the start). */
+export interface EliminationStep {
+  description: string;
+  matrix: number[][];
+  changedRow: number | null;
+}
+
+/** Every step of elimination, and the answer (null when there is no unique solution). */
+export interface Elimination {
+  steps: EliminationStep[];
+  solution: number[] | null;
+}
+
+/** Numbers this close to 0 count as 0: rounding errors shouldn't count as a pivot. */
+const TINY = 1e-9;
+
+/**
+ * Gaussian elimination on an augmented matrix [A | b], written down step by step.
+ * NOTE: unlike every other matrix in this file, the augmented matrix is stored as ROWS, because
+ * elimination works on rows. x + 2y = 5, 3x + 4y = 6 is [[1, 2, 5], [3, 4, 6]]. Works for 2 or 3 equations.
+ *
+ * The order is the one taught in class:
+ * 1. Going down: under each pivot, make every number 0 ("R2 → R2 − 3·R1"). Swap rows if a pivot is 0.
+ * 2. Going up: make each pivot 1 ("R2 → (−1/2)·R2"), then make every number above it 0.
+ * At the end the left side is the identity, and the right-hand column is the solution.
+ * Row operations never change the solution: every step's equations are solved by the same x.
+ */
+export function rrefSteps(augmented: number[][]): Elimination {
+  const m = augmented.map((row) => [...row]);
+  const n = m.length;
+  const steps: EliminationStep[] = [{ description: 'Start', matrix: copyRows(m), changedRow: null }];
+  const record = (description: string, changedRow: number) =>
+    steps.push({ description, matrix: copyRows(m), changedRow });
+
+  // 1. Going down.
+  for (let c = 0; c < n; c++) {
+    if (Math.abs(m[c][c]) < TINY) {
+      const below = m.findIndex((row, r) => r > c && Math.abs(row[c]) >= TINY);
+      if (below === -1) {
+        steps.push({
+          description: `No unique solution: column ${c + 1} has no pivot`,
+          matrix: copyRows(m),
+          changedRow: null,
+        });
+        return { steps, solution: null };
+      }
+      [m[c], m[below]] = [m[below], m[c]];
+      record(`R${c + 1} ↔ R${below + 1}`, c);
+    }
+    for (let r = c + 1; r < n; r++) {
+      const k = m[r][c] / m[c][c];
+      if (Math.abs(k) < TINY) continue;
+      m[r] = m[r].map((x, j) => x - k * m[c][j]);
+      m[r][c] = 0; // exactly 0, not 1e-17
+      record(`R${r + 1} → R${r + 1} ${k > 0 ? '−' : '+'} ${multiplier(Math.abs(k))}R${c + 1}`, r);
+    }
+  }
+
+  // 2. Going up.
+  for (let c = n - 1; c >= 0; c--) {
+    const pivot = m[c][c];
+    if (Math.abs(pivot - 1) >= TINY) {
+      m[c] = m[c].map((x) => x / pivot);
+      m[c][c] = 1;
+      const factor = formatNumber(1 / pivot).replace('-', '−');
+      record(`R${c + 1} → ${factor.includes('/') ? `(${factor})` : factor}·R${c + 1}`, c);
+    }
+    for (let r = c - 1; r >= 0; r--) {
+      const k = m[r][c];
+      if (Math.abs(k) < TINY) continue;
+      m[r] = m[r].map((x, j) => x - k * m[c][j]);
+      m[r][c] = 0;
+      record(`R${r + 1} → R${r + 1} ${k > 0 ? '−' : '+'} ${multiplier(Math.abs(k))}R${c + 1}`, r);
+    }
+  }
+
+  return { steps, solution: m.map((row) => row[n] + 0) };
+}
+
+/** "3·" for 3, "3/2·" for 1.5, and nothing at all for 1 (R2 − R1, not R2 − 1·R1). */
+function multiplier(k: number): string {
+  const text = formatNumber(k);
+  return text === '1' ? '' : `${text}·`;
+}
+
+/** A copy of a matrix stored as rows, with -0 turned into 0. */
+function copyRows(m: number[][]): number[][] {
+  return m.map((row) => row.map((x) => x + 0));
+}
+
+/**
+ * The matrix that undoes m: send everything through m, then through inverse2(m), and every point is back home.
+ * With columns (a, c) and (b, d), the inverse has columns (d, −c) and (−b, a), all divided by the determinant.
+ * Returns null when det = 0: m squashed the plane flat, and a line can't be unsquashed.
+ */
+export function inverse2(m: Mat2): Mat2 | null {
+  const det = det2(m);
+  if (Math.abs(det) < TINY) return null;
+  const [[a, c], [b, d]] = m;
+  return [[d / det + 0, -c / det + 0], [-b / det + 0, a / det + 0]];
+}
+
+/** Which x does m send to v? Answer: rewind v with the inverse. null when det = 0 (no single answer). */
+export function solve2(m: Mat2, v: Vec2): Vec2 | null {
+  const inv = inverse2(m);
+  return inv ? matVec(inv, v) : null;
+}
+
+/**
+ * Two points on the line a·x + b·y = c, for drawing it. The first is the point of the line nearest
+ * the origin; the second is one step along the line from there. Works for upright lines like x = −4 too.
+ * null when a and b are both 0 (then it isn't a line).
+ */
+export function equationLine([a, b, c]: number[]): [Vec2, Vec2] | null {
+  const lengthSquared = a * a + b * b;
+  if (lengthSquared < TINY) return null;
+  const nearest: Vec2 = [(c * a) / lengthSquared + 0, (c * b) / lengthSquared + 0];
+  const along = scale(1 / Math.sqrt(lengthSquared), [-b, a]);
+  return [nearest, add(nearest, along)];
+}
+
+/**
+ * The rows of the augmented matrix [A | v], for the equations A·x = v. A is stored as columns, so row r is
+ * (column 1's number r, column 2's number r, v's number r). Columns (2, 1), (-1, 1) and v = (1, 5) give
+ * 2x − y = 1 and x + y = 5.
+ */
+export function augmentedRows(m: Mat2, v: Vec2): number[][] {
+  return [0, 1].map((r) => [m[0][r], m[1][r], v[r]]);
+}
+
+/** Slide every number of one matrix towards the other: t = 0 gives a, t = 1 gives b. Works for any size. */
+export function lerpRows(a: number[][], b: number[][], t: number): number[][] {
+  return a.map((row, r) => row.map((n, c) => lerp(n, b[r][c], t) + 0));
+}
+
+/**
+ * A row of an augmented matrix written as an equation: [1, 2, 5] is "x + 2y = 5", [0, -2, -9] is "−2y = −9".
+ * Fractions go in brackets so they don't run into the letter: "(1/2)y".
+ */
+export function equationText(row: number[], names = ['x', 'y', 'z']): string {
+  const minus = (text: string) => text.replace('-', '−');
+  const terms: string[] = [];
+  row.slice(0, -1).forEach((k, i) => {
+    if (Math.abs(k) < TINY) return;
+    const size = formatNumber(Math.abs(k));
+    const coefficient = size === '1' ? '' : size.includes('/') ? `(${size})` : size;
+    const sign = k < 0 ? '−' : '+';
+    terms.push(terms.length === 0 ? `${k < 0 ? '−' : ''}${coefficient}${names[i]}` : `${sign} ${coefficient}${names[i]}`);
+  });
+  return `${terms.length ? terms.join(' ') : '0'} = ${minus(formatNumber(row[row.length - 1]))}`;
+}
+
+/**
+ * A random system of 2 or 3 equations (an augmented matrix, stored as rows) with one whole-number answer.
+ * It picks the answer first, then a matrix of small whole numbers with det ≠ 0, then works out the right-hand side.
+ */
+export function randomSystem(size: 2 | 3, rand: () => number = Math.random): number[][] {
+  const small = () => Math.floor(rand() * 7) - 3; // -3 to 3
+  const answer = Array.from({ length: size }, small);
+  const rows = Array.from({ length: size }, () => Array.from({ length: size }, small));
+  const det = size === 2 ? det2(rows as Mat2) : det3(rows as Mat3);
+  // A 0 in the top-left corner would need a row swap first: allowed, but not for the first example.
+  if (Math.abs(det) < TINY || rows[0][0] === 0) return randomSystem(size, rand);
+  return rows.map((row) => [...row, row.reduce((sum, k, i) => sum + k * answer[i], 0)]);
+}

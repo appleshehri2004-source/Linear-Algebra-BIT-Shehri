@@ -1,7 +1,7 @@
 // Shows any matrix (stored as its columns) in square brackets, read-only.
 // Column 1 is green, column 2 red, column 3 blue, like i-hat, j-hat and k-hat.
 // `highlight` marks some numbers with a yellow box, e.g. the ones that differ between two matrices.
-import { roundTo } from '../lib/linalg';
+import { formatNumber, roundTo } from '../lib/linalg';
 import './CoordReadout.css';
 import './MatrixEditor.css';
 
@@ -14,11 +14,13 @@ interface Props {
   highlight?: boolean[][];
   /** One colour for every number, e.g. "var(--vec)" for a vector. Default: green, red, blue columns. */
   color?: string;
+  /** Show clean fractions (1/3, -9/2) instead of decimals rounded to 2 places. */
+  fractions?: boolean;
 }
 
 const colours = ['ihat', 'jhat', 'khat'];
 
-export default function MatrixView({ columns, label, highlight, color }: Props) {
+export default function MatrixView({ columns, label, highlight, color, fractions = false }: Props) {
   const rows = columns[0].length;
   return (
     <span className="readout matrix-view" style={color ? { color } : undefined}>
@@ -34,7 +36,7 @@ export default function MatrixView({ columns, label, highlight, color }: Props) 
               key={`${r}${c}`}
               className={`matrix-view-cell ${color ? '' : colours[c] ?? ''}${highlight?.[c]?.[r] ? ' marked' : ''}`}
             >
-              {roundTo(col[r], 2)}
+              {fractions ? formatNumber(col[r]).replace('-', '−') : roundTo(col[r], 2)}
             </span>
           )),
         )}

@@ -1,0 +1,98 @@
+---
+title: The inverse = rewinding
+module: 4
+order: 3
+threeBlueOneBrown: https://www.3blue1brown.com/lessons/inverse-matrices
+mit: https://ocw.mit.edu/courses/18-06-linear-algebra-spring-2010/resources/lecture-3-multiplication-and-inverse-matrices/
+tongji: 第二章 §3 逆矩阵
+---
+
+import Formula from '../../components/Formula.astro';
+import InverseDemo from '../../components/InverseDemo.tsx';
+import PredictReveal from '../../components/PredictReveal.tsx';
+import Exercise from '../../components/Exercise.tsx';
+
+## Question
+
+A matrix moves the whole plane. Can you always move it **back**? And if you can, how does that solve <Formula tex="A\vec{x} = \vec{v}" />?
+
+## Play
+
+Press **Play A**, then **Rewind with A⁻¹**. Try every button. The last one is different.
+
+<InverseDemo
+  client:visible
+  tracked={[1, 2]}
+  points={[[2, 1], [2, -2]]}
+  presets={[
+    { name: 'Shear', matrix: [[1, 0], [1, 1]] },
+    { name: 'Rotate 90°', matrix: [[0, 1], [-1, 0]] },
+    { name: 'Lesson 4.1', matrix: [[2, 1], [-1, 1]] },
+    { name: 'Squash', matrix: [[1, 0], [0, 0]] },
+  ]}
+/>
+
+## Numbers
+
+The **shear** pushes <span class="jhat">**ĵ**</span> one step to the right. To undo it, push it one step back to the left:
+
+<Formula display tex="A = \begin{bmatrix} 1 & 1 \\ 0 & 1 \end{bmatrix}, \qquad A^{-1} = \begin{bmatrix} 1 & -1 \\ 0 & 1 \end{bmatrix}" />
+
+<Formula display tex="A^{-1}A = \begin{bmatrix} 1 & 0 \\ 0 & 1 \end{bmatrix} = I" />
+
+**Rotate 90°** is undone by rotating 90° the other way. The matrix from **Lesson 4.1** has <Formula tex="\det A = 3" />, and its inverse is full of thirds:
+
+<Formula display tex="A = \begin{bmatrix} 2 & -1 \\ 1 & 1 \end{bmatrix}" />
+
+<Formula display tex="A^{-1} = \frac13 \begin{bmatrix} 1 & 1 \\ -1 & 2 \end{bmatrix} = \begin{bmatrix} 1/3 & 1/3 \\ -1/3 & 2/3 \end{bmatrix}" />
+
+## Explain
+
+The **inverse** <Formula tex="A^{-1}" /> is the matrix that undoes <Formula tex="A" />. Doing <Formula tex="A" /> and then <Formula tex="A^{-1}" /> changes nothing:
+
+<Formula display tex="A^{-1}A = I" />
+
+For a 2×2 matrix there's a formula: swap <Formula tex="a" /> and <Formula tex="d" />, change the signs of <Formula tex="b" /> and <Formula tex="c" />, and divide by the determinant.
+
+<Formula display tex="\begin{bmatrix} a & b \\ c & d \end{bmatrix}^{-1} = \frac{1}{ad - bc} \begin{bmatrix} d & -b \\ -c & a \end{bmatrix}" />
+
+**Why divide by the determinant?** <Formula tex="A" /> multiplies every area by <Formula tex="\det A" />, so undoing it must multiply every area by <Formula tex="1 / \det A" />.
+
+**When det = 0 there is no inverse.** Press **Squash**: the whole plane lands on the x-axis. The two orange dots, <Formula tex="(2, 1)" /> and <Formula tex="(2, -2)" />, both land on <Formula tex="(2, 0)" />. To undo that, <Formula tex="(2, 0)" /> would have to go back to two places at once. **You can't unsquish a line.** And the formula agrees: it would divide by 0.
+
+**Solving with the inverse.** Rewind both sides of <Formula tex="A\vec{x} = \vec{v}" /> with <Formula tex="A^{-1}" />:
+
+<Formula display tex="A\vec{x} = \vec{v} \quad\Longrightarrow\quad \vec{x} = A^{-1}\vec{v}" />
+
+For Lesson 4.1's system, with <Formula tex="\vec{v} = (1, 5)" />:
+
+<Formula display tex="\vec{x} = \frac13 \begin{bmatrix} 1 & 1 \\ -1 & 2 \end{bmatrix} \begin{bmatrix} 1 \\ 5 \end{bmatrix} = \frac13 \begin{bmatrix} 6 \\ 9 \end{bmatrix} = \begin{bmatrix} 2 \\ 3 \end{bmatrix}" />
+
+That's the same answer as the game in Lesson 4.1.
+
+## Predict
+
+<Formula tex="A" /> is Lesson 4.1's matrix. First <Formula tex="A" /> plays, then <Formula tex="A^{-1}" />. Tap where you think the yellow vector <Formula tex="(3, 1)" /> ends up.
+
+<PredictReveal client:visible steps={[[[2, 1], [-1, 1]], [[1 / 3, -1 / 3], [1 / 3, 2 / 3]]]} vector={[3, 1]} />
+
+<details>
+  <summary>Why</summary>
+  Exactly where it started, <Formula tex="(3, 1)" />. <Formula tex="A^{-1}" /> undoes <Formula tex="A" />, whatever the vector.
+</details>
+
+## Practice
+
+<Exercise id="4.3-inverse-column" client:visible />
+
+<Exercise id="4.3-solve-inverse" client:visible />
+
+<Exercise id="4.3-no-inverse" client:visible />
+
+## Go deeper
+
+**Undo in reverse order.** If you put on socks and then shoes, you take off the shoes first. In the same way, <Formula tex="(AB)^{-1} = B^{-1}A^{-1}" />.
+
+**Computers rarely use the inverse.** To solve <Formula tex="A\vec{x} = \vec{v}" />, elimination (Lesson 4.2) is faster and more accurate than working out <Formula tex="A^{-1}" /> first. The inverse is the right *idea*, and elimination is the right *method*. In fact, elimination on <Formula tex="[A \mid I]" /> is how <Formula tex="A^{-1}" /> is found for bigger matrices.
+
+**Bigger matrices.** A 3×3 matrix has an inverse exactly when its determinant isn't 0: it doesn't squash space onto a plane or a line.

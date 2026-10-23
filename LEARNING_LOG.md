@@ -274,3 +274,46 @@ Pick B and A from buttons, press Play, and the square's area goes 1 → det(B) �
 - **SVG stripe patterns went blurry.** The pattern tile was 0.3 squares wide, and the browser turned it into pixels *before* zooming it up, so it showed as grey mush. Drawing the stripes as real lines cut to the parallelogram's shape (a clip path) fixed it.
 - **Mafs's own stylesheet turned my stripe colour grey.** A colour set on the element itself (`style={{ stroke: … }}`) wins.
 - **Checked in iPhone Safari on the Simulator** (iPhone 17e): dragging î across ĵ with a finger flips the patch to purple stripes, and the sentence says "orientation flipped".
+
+## Day 8 (2026-10-23): Module 4 part 1, systems of equations
+
+Lessons 4.1 to 4.3: a system is a transformation, Gaussian elimination step by step, and the inverse as rewinding.
+
+### New files
+
+**`src/components/EliminationPlayer.tsx`** (and `EliminationPlayer.css`)
+The augmented matrix [A | b] with Previous, Next and Play. The row that just changed is highlighted and the step ("R2 → R2 − 3·R1") is written above it. Each row is also written as an equation, in its own colour. For 2 equations a plane shows them as two lines: each step turns one line around the yellow dot, with a faint dashed copy of where it was. Buttons for ready-made systems and a "Random system".
+
+**`src/components/SolveGame.tsx`** (Lesson 4.1)
+Drag x until the gold arrow A·x lands on the target v. "Show answer" uses `solve2`.
+
+**`src/components/RowColumnPicture.tsx`** (and `RowColumnPicture.css`, Lesson 4.1)
+The same system twice: lines crossing (row picture) next to columns adding up to v (column picture). Side by side on a computer, one above the other on a phone.
+
+**`src/components/InverseDemo.tsx`** (Lesson 4.3)
+"Play A", then "Rewind with A⁻¹", and the grid goes home; A⁻¹A = I is shown at the end. With "Squash" (det 0) the plane lands on the x-axis, two orange dots land on the same spot, and Rewind stays off.
+
+**`src/exercises/module4.ts`**
+9 practice questions. Some answers are fractions (3/2), which can now be typed.
+
+**`src/content/lessons/4-1-system-transformation.mdx`, `4-2-elimination.mdx`, `4-3-inverse.mdx`**
+
+### Changed files
+
+- **`linalg.ts`** and **`linalg.test.ts`**: new `rrefSteps` (elimination, every step written down), `inverse2`, `solve2`, `formatNumber` (1/3 instead of 0.33), `equationLine`, `equationText`, `lerpRows`, `randomSystem` and `augmentedRows`, all with tests (189 tests now). The augmented matrix is stored as **rows**, not columns, because elimination works on rows.
+- **`exercise.ts`**: `parseNumber` reads fractions like "-9/2", so answer boxes and matrix boxes accept them.
+- **`MatrixView.tsx`**: new `fractions` option.
+- **`usePlayback.ts`**: can animate to any t, not just 0 or 1. "Play A" stops at t = 0.5, before A⁻¹ starts.
+- **`global.css`**: colours `--row1`, `--row2`, `--row3` (blue, purple, teal) for equations. Not green or red, which mean î and ĵ.
+- **`modules.ts`**: Module 4 is "Systems of equations".
+
+### Things I learned
+
+- **Row operations never move the answer.** If a point solves two equations, it solves any mix of them. A test checks every step of both examples still has the same solution; that is why the lines always cross at the same dot.
+- **Even halfway between two steps, the line goes through the dot.** Sliding a line from one equation to another mixes the two equations, so the animation can never miss the crossing.
+- **Computers don't get 1 − 3·(1/3) = 0.** They get about 0.0000000000000001. Elimination sets the cleared number to exactly 0, or "0" would show as a tiny number and the next pivot test could be fooled.
+- **Turning decimals back into fractions needs care.** Trying bottoms 1 to 100 turns 0.3333… into 1/3, but it also turned 1.41 into 141/100. Short decimals with big bottoms now stay decimals.
+- **The inverse is just "undo".** Undoing a shear pushes ĵ back; undoing a turn turns back. Dividing by det in the formula is undoing the area change, and det = 0 means dividing by 0: you can't unsquish a line.
+- **A hidden browser tab doesn't run React's after-render code.** Every exercise (even in Lesson 3.1) said "Loading a question…" while the preview was hidden, and worked as soon as it was on screen. Not a bug in the site.
+- **Long formulas don't fit a phone.** A chain of four matrices was 686 px wide; one matrix per step fits.
+- **Checked on the iPhone Simulator** (iPhone 17e, Safari): Next takes one step at a time, 9/2 shows as a clean fraction, and the lines end as x = −4 (upright) and y = 9/2 (flat), crossing at the yellow dot.
