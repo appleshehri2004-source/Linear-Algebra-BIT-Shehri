@@ -11,7 +11,7 @@ import './Demo.css';
 
 /** Shows a number in brackets if it's negative, e.g. (−1), so "2 × (−1)" reads clearly. */
 function bracket(n: number): string {
-  const r = roundTo(n, 1);
+  const r = roundTo(n, 2);
   return r < 0 ? `(${r})` : String(r);
 }
 
@@ -20,7 +20,7 @@ export default function DotDemo() {
   const [w, setW] = useState<Vec2>([1, 3]);
   const [snap, setSnap] = useState(true);
 
-  const d = roundTo(dot(v, w), 1);
+  const d = roundTo(dot(v, w), 2);
   const angle = angleBetween(v, w);
   const shadow = projectOnto(w, v);
 

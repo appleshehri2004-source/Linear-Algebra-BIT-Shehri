@@ -93,7 +93,7 @@ export default function InverseDemo({ presets, tracked, points = [], range = 5 }
           Rewind with A⁻¹
         </button>
         <button type="button" className="demo-button secondary" disabled={playing !== null} onClick={() => scrub(0)}>
-          Start again
+          Start over
         </button>
       </div>
 

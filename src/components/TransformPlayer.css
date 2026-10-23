@@ -30,7 +30,7 @@
 
 .transform-scrub input {
   width: 100%;
-  height: 2.5rem; /* a big target for a thumb on a phone */
+  height: 2.75rem; /* 44px: a big target for a thumb on a phone */
   margin: 0.25rem 0 0;
   accent-color: var(--link);
 }

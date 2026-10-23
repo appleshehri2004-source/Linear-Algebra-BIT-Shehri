@@ -13,8 +13,8 @@ interface Props {
 }
 
 export default function CoordReadout({ vector, label, color = 'var(--vec)' }: Props) {
-  // One decimal place is enough, and it stops the digits flickering while you drag.
-  const [x, y] = vector.map((n) => roundTo(n, 1));
+  // Two decimal places, like every other readout on the site (snapping keeps most values whole).
+  const [x, y] = vector.map((n) => roundTo(n, 2));
 
   return (
     <span className="readout" style={{ color }} aria-live="polite">

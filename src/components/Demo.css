@@ -19,7 +19,7 @@
   align-items: center;
   gap: 0.4rem;
   color: var(--muted);
-  padding: 0.5rem 0; /* tall enough to tap */
+  min-height: 2.75rem; /* 44px: tall enough to tap */
 }
 
 /* A button under a demo, e.g. "Sweep" or "Show answer". Big enough to tap. */
@@ -122,11 +122,12 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  min-height: 2.25rem; /* tall enough to tap */
+  min-height: 2.75rem; /* 44px: tall enough to tap */
 }
 
 .coord-sliders input {
   flex: 1;
+  height: 2.75rem; /* the slider itself, not just its row, is the target */
   accent-color: currentColor;
 }
 

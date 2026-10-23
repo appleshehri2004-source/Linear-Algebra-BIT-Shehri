@@ -1,0 +1,24 @@
+---
+// The page shown when a link leads nowhere. Astro builds it as 404.html, which GitHub Pages
+// (and most other hosts) show for any missing page.
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+// BASE_URL comes from `base` in astro.config.mjs, e.g. "/Linear-Algebra-BIT-Shehri/" or "/".
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+---
+
+<BaseLayout title="Page not found · Visual Linear Algebra" description="This page doesn't exist. Go back to the list of lessons.">
+  <main>
+    <h1>Page not found</h1>
+    <p>This page doesn't exist. It may have moved, or the link may have a typo.</p>
+    <p class="home"><a href={`${base}/`}>← All lessons</a></p>
+  </main>
+</BaseLayout>
+
+<style>
+  .home a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem; /* 44px: big enough to tap */
+  }
+</style>

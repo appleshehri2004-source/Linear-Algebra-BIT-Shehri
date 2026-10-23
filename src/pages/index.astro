@@ -5,7 +5,7 @@ import { exerciseIds, getSortedLessons, moduleName } from '../content/modules';
 
 const lessons = await getSortedLessons();
 
-// BASE_URL is "/Linear-Algebra-BIT-Shehri/" (set by `base` in astro.config.mjs).
+// BASE_URL comes from `base` in astro.config.mjs, e.g. "/Linear-Algebra-BIT-Shehri/" or "/".
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
 // Group the lessons by module number, keeping reading order, in the plain shape LessonList wants.
@@ -25,12 +25,15 @@ const modules: ModuleLinks[] = [...new Set(lessons.map((l) => l.data.module))].m
 }));
 ---
 
-<BaseLayout title="Visual Linear Algebra">
+<BaseLayout
+  title="Visual Linear Algebra"
+  description="Learn linear algebra by moving things: drag vectors, stretch grids and watch matrices act, in 40 interactive lessons."
+>
   <h1>Visual Linear Algebra</h1>
   <p>See the maths move. Pick a lesson to start.</p>
 
-  <!-- client:load: the list shows saved ticks as soon as the page opens. -->
-  <LessonList modules={modules} client:load />
+  <!-- client:visible, like every island: the list is at the top, so it still shows saved ticks as soon as the page opens. -->
+  <LessonList modules={modules} client:visible />
 
   <p class="footer-links"><a href={`${base}/about/`}>About and credits</a></p>
 </BaseLayout>

@@ -151,3 +151,14 @@ a {
 .cross {
   color: var(--cross);
 }
+
+/* ---------- Page links ---------- */
+/* "← All lessons", prev/next and "About" links: padded to 44px tall so a thumb can hit them. */
+nav.top a,
+.prev-next a,
+.footer-links a,
+.about a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+}

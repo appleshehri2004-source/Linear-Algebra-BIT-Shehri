@@ -5,12 +5,13 @@ import '../styles/global.css';
 
 interface Props {
   title: string;
-  description?: string;
+  /** One sentence for search results and link previews. Every page needs one. */
+  description: string;
 }
 
 const { title, description } = Astro.props;
 
-// BASE_URL is "/Linear-Algebra-BIT-Shehri/" (set by `base` in astro.config.mjs).
+// BASE_URL comes from `base` in astro.config.mjs, e.g. "/Linear-Algebra-BIT-Shehri/" or "/".
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 ---
 
@@ -19,7 +20,9 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="icon" type="image/svg+xml" href={`${base}/favicon.svg`} />
-    {description && <meta name="description" content={description} />}
+    <link rel="icon" href={`${base}/favicon.ico`} sizes="32x32" />
+    <link rel="sitemap" href={`${base}/sitemap-index.xml`} />
+    <meta name="description" content={description} />
     <meta name="generator" content={Astro.generator} />
     <title>{title}</title>
   </head>

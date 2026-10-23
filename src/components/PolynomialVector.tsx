@@ -104,7 +104,7 @@ export default function PolynomialVector({ start = [5, 4, 5, 1] }: Props) {
           </button>
         )}
         <button type="button" className="demo-button secondary" onClick={() => setP(start)}>
-          Reset
+          Start over
         </button>
       </div>
     </div>

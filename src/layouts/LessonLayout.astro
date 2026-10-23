@@ -14,9 +14,9 @@ interface Props {
 }
 
 const { lesson, prev, next } = Astro.props;
-const { title, module, order, threeBlueOneBrown, mit, tongji, optional } = lesson.data;
+const { title, description, module, order, threeBlueOneBrown, mit, tongji, optional } = lesson.data;
 
-// BASE_URL is "/Linear-Algebra-BIT-Shehri/" (set by `base` in astro.config.mjs).
+// BASE_URL comes from `base` in astro.config.mjs, e.g. "/Linear-Algebra-BIT-Shehri/" or "/".
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 const href = (l: Lesson) => `${base}/lessons/${l.id}/`;
 const label = (l: Lesson) => `${l.data.module}.${l.data.order} ${l.data.title}`;
@@ -24,7 +24,7 @@ const label = (l: Lesson) => `${l.data.module}.${l.data.order} ${l.data.title}`;
 const hasSources = threeBlueOneBrown || mit || tongji;
 ---
 
-<BaseLayout title={`${module}.${order} ${title} · Visual Linear Algebra`}>
+<BaseLayout title={`${module}.${order} ${title} · Visual Linear Algebra`} description={description}>
   <nav class="top"><a href={`${base}/`}>← All lessons</a></nav>
 
   <main>

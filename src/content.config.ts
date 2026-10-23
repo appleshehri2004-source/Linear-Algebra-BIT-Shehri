@@ -8,6 +8,8 @@ const lessons = defineCollection({
   loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/lessons' }),
   schema: z.object({
     title: z.string(),
+    // One sentence for search results and link previews (the page's <meta name="description">).
+    description: z.string().max(160),
     // Which module the lesson is in (its name lives in src/content/modules.ts).
     module: z.number().int().positive(),
     // Position inside the module: lesson 1.2 has module 1, order 2.

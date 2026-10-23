@@ -61,7 +61,7 @@ export default function AdBcPicture({ matrix }: Props) {
       </p>
       <div className="demo-row">
         <button type="button" className="demo-button secondary" disabled={step === 0} onClick={() => setStep((s) => s - 1)}>
-          Back
+          Previous
         </button>
         <button type="button" className="demo-button" disabled={step === 3} onClick={() => setStep((s) => s + 1)}>
           Next step

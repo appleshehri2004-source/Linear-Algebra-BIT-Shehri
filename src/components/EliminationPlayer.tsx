@@ -1,5 +1,5 @@
 // Gaussian elimination, one row operation at a time. Shows the augmented matrix [A | b] with
-// Previous / Next / Play buttons; the row that just changed is highlighted, and the operation is written above it.
+// Previous / Next step / Play buttons; the row that just changed is highlighted, and the operation is written above it.
 // For 2 equations it also draws them as two lines on a plane. Each step turns a line, but the lines
 // always cross at the same point: row operations never change the solution.
 // Use it in a lesson as <EliminationPlayer client:visible systems={[{ name: '2×2', rows: [[1, 2, 5], [3, 4, 6]] }]} />.
@@ -171,7 +171,7 @@ export default function EliminationPlayer({ systems, random = false, range = 6 }
           {playing ? 'Pause' : 'Play'}
         </button>
         <button type="button" className="demo-button secondary" disabled={step === last} onClick={() => goTo(step + 1)}>
-          Next
+          Next step
         </button>
       </div>
 

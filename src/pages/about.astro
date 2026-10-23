@@ -2,7 +2,7 @@
 // The About page: what the site is, who it thanks, and the libraries it is built with.
 import BaseLayout from '../layouts/BaseLayout.astro';
 
-// BASE_URL is "/Linear-Algebra-BIT-Shehri/" (set by `base` in astro.config.mjs).
+// BASE_URL comes from `base` in astro.config.mjs, e.g. "/Linear-Algebra-BIT-Shehri/" or "/".
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
 // Every library the site ships or is built with. Add a line here when you add a dependency.
@@ -67,6 +67,14 @@ const libraries = [
     <p>
       Section references in the lessons point to the Tongji University textbook 《线性代数》 for readers
       following that course.
+    </p>
+
+    <h2>Licence</h2>
+    <p>
+      The lessons (text, formulas and exercises) are licensed under <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a>, the same licence as MIT OpenCourseWare. You may share and adapt them for non-commercial use if you credit this site and share your version under the same licence.
+    </p>
+    <p>
+      The code that runs the site is licensed under the <a href="https://opensource.org/license/mit">MIT licence</a>, so you may reuse it for anything. Both licences are in the <a href="https://github.com/appleshehri2004-source/Linear-Algebra-BIT-Shehri">source code on GitHub</a>.
     </p>
 
     <h2>Built with</h2>

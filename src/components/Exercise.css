@@ -46,6 +46,7 @@
   width: 6rem;
   /* 16px or more stops the iPhone zooming in when the box is tapped. */
   font-size: 1rem;
+  min-height: 2.75rem; /* 44px: big enough to tap */
   padding: 0.5rem;
   border: 1px solid var(--border);
   border-radius: 0.4rem;

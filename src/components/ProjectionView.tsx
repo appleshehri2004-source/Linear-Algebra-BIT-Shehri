@@ -135,7 +135,7 @@ function OntoLine({ v: startV, a: startA }: { v: Vec2; a: Vec2 }) {
         </button>
         {times > 0 && (
           <button type="button" className="demo-button secondary" onClick={() => { playback.stop(); setTimes(0); }}>
-            Reset
+            Start over
           </button>
         )}
       </div>
