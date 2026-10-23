@@ -2,6 +2,7 @@
 // The shared frame around every lesson page.
 import type { CollectionEntry } from 'astro:content';
 import BaseLayout from './BaseLayout.astro';
+import LessonComplete from '../components/LessonComplete.tsx';
 import { moduleName } from '../content/modules';
 
 type Lesson = CollectionEntry<'lessons'>;
@@ -32,6 +33,8 @@ const hasSources = threeBlueOneBrown || mit || tongji;
 
     <slot />
 
+    <LessonComplete lessonId={lesson.id} client:visible />
+
     {
       hasSources && (
         <ul class="sources">
@@ -55,6 +58,8 @@ const hasSources = threeBlueOneBrown || mit || tongji;
     {prev ? <a href={href(prev)}>← {label(prev)}</a> : <span />}
     {next && <a class="next" href={href(next)}>{label(next)} →</a>}
   </nav>
+
+  <p class="about"><a href={`${base}/about/`}>About and credits</a></p>
 </BaseLayout>
 
 <style>
@@ -77,6 +82,11 @@ const hasSources = threeBlueOneBrown || mit || tongji;
     margin-top: 3rem;
     padding-top: 1rem;
     border-top: 1px solid var(--border);
+  }
+
+  .about {
+    margin-top: 2rem;
+    font-size: 0.9rem;
   }
 
   .next {

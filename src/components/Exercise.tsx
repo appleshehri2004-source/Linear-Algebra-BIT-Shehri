@@ -6,6 +6,7 @@ import katex from 'katex';
 import 'katex/dist/katex.min.css';
 import { exercises } from '../exercises';
 import { answerTex, checkAnswer, parseNumber, type Question } from '../exercises/exercise';
+import { recordSolved } from '../lib/progress';
 import './Exercise.css';
 
 interface Props {
@@ -67,6 +68,8 @@ export default function Exercise({ id }: Props) {
     }
     if (checkAnswer(question, numbers as number[])) {
       setFeedback('right');
+      // Remember the solve for the home page. No wrong tries yet means first try.
+      recordSolved(id, wrongTries === 0);
     } else {
       setFeedback('wrong');
       setWrongTries((n) => n + 1);

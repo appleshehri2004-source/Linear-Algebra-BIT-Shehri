@@ -1,0 +1,111 @@
+---
+// The About page: what the site is, who it thanks, and the libraries it is built with.
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+// BASE_URL is "/Linear-Algebra-BIT-Shehri/" (set by `base` in astro.config.mjs).
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+
+// Every library the site ships or is built with. Add a line here when you add a dependency.
+const libraries = [
+  { name: 'Astro', url: 'https://astro.build', use: 'builds the pages', license: 'MIT' },
+  { name: 'React', url: 'https://react.dev', use: 'the interactive parts', license: 'MIT' },
+  { name: 'Mafs', url: 'https://mafs.dev', use: 'the 2D planes and draggable vectors', license: 'MIT' },
+  { name: 'three.js', url: 'https://threejs.org', use: 'the 3D scenes', license: 'MIT' },
+  {
+    name: 'React Three Fiber and Drei',
+    url: 'https://github.com/pmndrs/react-three-fiber',
+    use: 'three.js inside React',
+    license: 'MIT',
+  },
+  { name: 'KaTeX', url: 'https://katex.org', use: 'the maths formulas', license: 'MIT' },
+  {
+    name: 'Inter, via Fontsource',
+    url: 'https://fontsource.org/fonts/inter',
+    use: 'the font, bundled with the site',
+    license: 'SIL Open Font License 1.1',
+  },
+  { name: 'Vitest', url: 'https://vitest.dev', use: 'checks the maths with tests', license: 'MIT' },
+];
+---
+
+<BaseLayout
+  title="About · Visual Linear Algebra"
+  description="What this site is, the courses it thanks, and the libraries it uses."
+>
+  <nav class="top"><a href={`${base}/`}>← All lessons</a></nav>
+
+  <main>
+    <h1>About</h1>
+    <p>
+      Visual Linear Algebra teaches linear algebra by letting you move things: drag a vector, stretch a
+      grid, watch an area flip. Each lesson asks a question, lets you play, then explains the numbers
+      behind what you saw.
+    </p>
+    <p>
+      Your progress (lessons you mark complete and exercises you solve) is saved only in this browser.
+      Nothing is sent anywhere.
+    </p>
+
+    <h2>Credits</h2>
+
+    <h3>3Blue1Brown: Essence of Linear Algebra</h3>
+    <p>
+      <!-- Links sit on the same line as the words around them: Astro drops a line break next to a tag, which would eat the space. -->
+      Grant Sanderson's video series <a href="https://www.3blue1brown.com/topics/linear-algebra">Essence of Linear Algebra</a> inspired the visual approach of this site, and each lesson links to the matching video. The
+      explanations, drawings and exercises here were written independently; no video content or
+      animation is copied.
+    </p>
+
+    <h3>MIT OpenCourseWare 18.06 Linear Algebra</h3>
+    <p>
+      Lessons link to lectures from Gilbert Strang's <a href="https://ocw.mit.edu/courses/18-06-linear-algebra-spring-2010/">MIT 18.06 Linear Algebra</a> (Spring 2010) for going deeper. MIT OpenCourseWare material is © Massachusetts Institute of
+      Technology and licensed under <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a>. This site links
+      to it and is not affiliated with or endorsed by MIT.
+    </p>
+
+    <h3>Textbook references</h3>
+    <p>
+      Section references in the lessons point to the Tongji University textbook 《线性代数》 for readers
+      following that course.
+    </p>
+
+    <h2>Built with</h2>
+    <ul class="libraries">
+      {
+        libraries.map((lib) => (
+          <li>
+            <a href={lib.url}>{lib.name}</a>: {lib.use}. <span class="license">{lib.license}</span>
+          </li>
+        ))
+      }
+    </ul>
+    <p class="note">
+      Every library and font is bundled with the site itself. Nothing is loaded from a CDN or Google
+      Fonts, so the site works anywhere, including mainland China.
+    </p>
+  </main>
+</BaseLayout>
+
+<style>
+  h3 {
+    font-size: 1.05rem;
+    margin: 1.5rem 0 0.25rem;
+  }
+
+  .libraries {
+    padding-left: 1.25rem;
+  }
+
+  .libraries li {
+    margin: 0.35rem 0;
+  }
+
+  .license,
+  .note {
+    color: var(--muted);
+  }
+
+  .license {
+    font-size: 0.9rem;
+  }
+</style>

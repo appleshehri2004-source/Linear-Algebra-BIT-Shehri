@@ -1,63 +1,42 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { getSortedLessons, moduleName } from '../content/modules';
+import LessonList, { type ModuleLinks } from '../components/LessonList.tsx';
+import { exerciseIds, getSortedLessons, moduleName } from '../content/modules';
 
 const lessons = await getSortedLessons();
 
-// Group the lessons by module number, keeping reading order: [[1, [...]], [2, [...]]].
-const modules = [...new Set(lessons.map((l) => l.data.module))].map(
-  (module) => [module, lessons.filter((l) => l.data.module === module)] as const,
-);
-
 // BASE_URL is "/Linear-Algebra-BIT-Shehri/" (set by `base` in astro.config.mjs).
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+
+// Group the lessons by module number, keeping reading order, in the plain shape LessonList wants.
+const modules: ModuleLinks[] = [...new Set(lessons.map((l) => l.data.module))].map((module) => ({
+  module,
+  name: moduleName(module),
+  lessons: lessons
+    .filter((l) => l.data.module === module)
+    .map((l) => ({
+      id: l.id,
+      href: `${base}/lessons/${l.id}/`,
+      number: `${l.data.module}.${l.data.order}`,
+      title: l.data.title,
+      exerciseIds: exerciseIds(l),
+    })),
+}));
 ---
 
 <BaseLayout title="Visual Linear Algebra">
   <h1>Visual Linear Algebra</h1>
   <p>See the maths move. Pick a lesson to start.</p>
 
-  {
-    modules.map(([module, moduleLessons]) => (
-      <section>
-        <h2>
-          Module {module}: {moduleName(module)}
-        </h2>
-        <ul class="lessons">
-          {moduleLessons.map((lesson) => (
-            <li>
-              <a href={`${base}/lessons/${lesson.id}/`}>
-                <span class="number">
-                  {lesson.data.module}.{lesson.data.order}
-                </span>
-                {lesson.data.title}
-              </a>
-            </li>
-          ))}
-        </ul>
-      </section>
-    ))
-  }
+  <!-- client:load: the list shows saved ticks as soon as the page opens. -->
+  <LessonList modules={modules} client:load />
+
+  <p class="footer-links"><a href={`${base}/about/`}>About and credits</a></p>
 </BaseLayout>
 
 <style>
-  .lessons {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-  }
-
-  .lessons a {
-    display: flex;
-    gap: 0.75rem;
-    padding: 0.75rem 0; /* tall enough to tap easily on a phone */
-    border-bottom: 1px solid var(--border);
-    text-decoration: none;
-  }
-
-  .number {
+  .footer-links {
+    margin-top: 3rem;
     color: var(--muted);
-    font-variant-numeric: tabular-nums;
-    min-width: 2.5rem;
   }
 </style>

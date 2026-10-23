@@ -1,0 +1,93 @@
+/* Styles for the saved-progress parts: the home page list (LessonList) and the lesson button (LessonComplete). */
+
+/* ---------- Home page ---------- */
+.progress-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 0.5rem;
+}
+
+.progress-summary progress {
+  flex: 1 1 8rem;
+  max-width: 12rem;
+  height: 0.5rem;
+  accent-color: var(--positive);
+}
+
+.lessons {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.lessons a {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  padding: 0.75rem 0; /* tall enough to tap easily on a phone */
+  border-bottom: 1px solid var(--border);
+  text-decoration: none;
+}
+
+.lessons .number {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  min-width: 2.5rem;
+}
+
+.lessons .title {
+  flex: 1;
+  min-width: 0; /* lets a long title wrap instead of pushing the badges off screen */
+}
+
+.lessons .badges {
+  display: flex;
+  gap: 0.5rem;
+  align-items: baseline;
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.lessons .tick {
+  display: inline-block;
+  width: 1rem;
+  text-align: center;
+}
+
+.lessons .tick.done {
+  color: var(--positive);
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+/* ---------- End of a lesson ---------- */
+.lesson-complete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  margin: 2.5rem 0 1rem;
+}
+
+.lesson-complete button {
+  font: inherit;
+  min-height: 2.75rem; /* big enough to tap */
+  padding: 0.4rem 1rem;
+  border-radius: 0.4rem;
+  border: 1px solid var(--positive);
+  background: transparent;
+  color: var(--positive);
+  cursor: pointer;
+}
+
+.lesson-complete button.done {
+  background: var(--positive);
+  color: var(--bg);
+}
+
+.lesson-complete-hint {
+  color: var(--muted);
+  font-size: 0.9rem;
+}

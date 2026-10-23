@@ -19,3 +19,8 @@ export async function getSortedLessons(): Promise<CollectionEntry<'lessons'>[]> 
     (a, b) => a.data.module - b.data.module || a.data.order - b.data.order,
   );
 }
+
+/** The ids of the exercises a lesson uses, e.g. ["1.1-walk", "1.1-trip"], read from its <Exercise id="..." /> tags. */
+export function exerciseIds(lesson: CollectionEntry<'lessons'>): string[] {
+  return [...(lesson.body ?? '').matchAll(/<Exercise\s+id="([^"]+)"/g)].map((m) => m[1]);
+}
