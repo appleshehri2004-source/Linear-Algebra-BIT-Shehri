@@ -7,6 +7,7 @@ export const moduleNames: Record<number, string> = {
   3: 'The determinant',
   4: 'Systems of equations',
   5: 'Duality and the cross product',
+  7: 'Change of basis',
 };
 
 /** A module's name, or "Untitled" if it isn't named above yet. */

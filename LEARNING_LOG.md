@@ -390,3 +390,33 @@ A tilted orange number line along û, with whole numbers marked. Drag v: a dashe
 - **−0 is not 0 to the tests.** A dot product came out as −0 and `toBe(0)` failed. Adding `+ 0` turns −0 into 0, the same trick the file already uses.
 - **A handle at the busy origin is hard to grab.** î, ĵ and û all sit within 1 square of the origin, so the dot that turns the line now sits at −3 on the line instead of on û's tip.
 - **Two dev servers don't fit in one folder.** Another chat's `astro dev` was running, so I checked the built site from my own folder and port instead.
+
+## Day 11 (2026-10-23): Module 7, change of basis
+
+Lessons 7.1 and 7.2: Jennifer's grid, and P⁻¹MP (3Blue1Brown writes A⁻¹MA). There is no Module 6 yet, so the list goes from Module 5 to Module 7.
+
+### New files
+
+**`src/components/BasisGridView.tsx`** (Lesson 7.1)
+Our grid (grey) and Jennifer's grid (blue), made from her b₁ (green) and b₂ (red), with Ours / Hers / Both buttons. The yellow arrow carries two labels, "ours" and "hers", that change while you drag. In the Hers view it snaps to her grid corners. b₁ and b₂ can be dragged; if they line up, the page says "Not a basis". Under the plane: P × hers = ours, and P⁻¹ × ours = hers.
+
+**`src/components/ChangeOfBasisPlayer.tsx`** (Lesson 7.2)
+Two pictures, one Play button. Left: P, then M, then P⁻¹, one after another, with a caption for each step. Right: her matrix P⁻¹MP, all at once. At the end the page checks that both arrows land on the same point: "Both end at (−1, 1) ✓".
+
+**`src/content/lessons/7-1-…` and `7-2-…`** and **6 new questions** in `module7.ts`.
+
+### Changed files
+
+- **`linalg.ts`** and **`linalg.test.ts`**: `toOurCoords`, `toHerCoords`, `changeOfBasisMatrix`, `basisGridLines`, `snapToBasis` and `currentStep` (266 tests now). One test plays P, M, P⁻¹ in a row on 200 random cases and checks that they always end on her matrix.
+- **`TransformPlayer.tsx`**: `toPath` and `MathPath` (the fast way of drawing a whole grid) are now shared, so BasisGridView can draw grids the same way.
+- **`Demo.css`**: grid colours for BasisGridView, and the joined-up Ours / Hers / Both buttons.
+
+### Things I learned
+
+- **P goes "hers → ours", even though as a movement it sends our grid onto hers.** Her numbers (x, y) mean x·b₁ + y·b₂, and a matrix times a vector is exactly that many copies of each column. So P⁻¹ goes "ours → hers".
+- **P⁻¹MP reads right to left**: translate into our language, do M, translate back. M and P⁻¹MP look nothing alike, but they are the same movement of space. Such matrices are called similar.
+- **"Double everything" is 2I in every language.** P⁻¹(2I)P = 2P⁻¹P = 2I.
+- **The three-step animation needed no new animation code.** TransformPlayer could already play several matrices in a row (from Lesson 2.4), so the steps were just [P, M, P⁻¹].
+- **Snapping can eat small moves.** With snap on, an arrow-key step is too small and gets rounded straight back, so to watch the labels change step by step I turned snapping off.
+- **My first browser check pressed Play too early.** The demo only starts once it's on screen (client:visible), so clicking straight after scrolling hit a button that wasn't working yet. Waiting a moment fixed it.
+- **Labels near the edge get cut off on a phone.** The two labels now sit on the side of the arrow away from the nearer edge.

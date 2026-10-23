@@ -1042,3 +1042,43 @@ export function boxVolume(p: Vec3, v: Vec3, w: Vec3): BoxVolume {
   const height = base === 0 ? 0 : dot3(p, n) / base + 0;
   return { base, height, volume: dot3(p, n) + 0 };
 }
+
+// ---- Module 7: change of basis ----
+// Jennifer's basis is stored like any matrix: P = [b1, b2], her two basis vectors written in our numbers.
+
+/** Her numbers → ours: "her" copies of b1 and b2, added up. That is just P times her numbers. */
+export function toOurCoords(P: Mat2, her: Vec2): Vec2 {
+  const [x, y] = matVec(P, her);
+  return [x + 0, y + 0]; // + 0 turns -0 into 0
+}
+
+/** Our numbers → hers: undo P, so P⁻¹ times our numbers. null when b1 and b2 lie on one line (not a basis). */
+export function toHerCoords(P: Mat2, ours: Vec2): Vec2 | null {
+  const her = solve2(P, ours);
+  return her && [her[0] + 0, her[1] + 0];
+}
+
+/**
+ * The matrix M (written in our numbers) rewritten in Jennifer's numbers: P⁻¹ M P.
+ * Read it right to left: her numbers → ours (P), do M, back to hers (P⁻¹). null when P is not a basis.
+ */
+export function changeOfBasisMatrix(P: Mat2, M: Mat2): Mat2 | null {
+  const inv = inverse2(P);
+  return inv && matMul(inv, matMul(M, P));
+}
+
+/** Jennifer's grid: our grid lines from -extent to extent, moved by P (her lines are where ours land). */
+export function basisGridLines(P: Mat2, extent: number): Vec2[][] {
+  return gridLines(extent).map((line) => transformShape(P, line));
+}
+
+/** Move a point (our numbers) to the nearest corner of Jennifer's grid: round her numbers to whole numbers. */
+export function snapToBasis(P: Mat2, ours: Vec2): Vec2 {
+  const her = toHerCoords(P, ours);
+  return her ? toOurCoords(P, [Math.round(her[0]), Math.round(her[1])]) : ours;
+}
+
+/** Which of n steps is playing at time t (0 to 1): 0 for the first, n - 1 for the last (and at t = 1). */
+export function currentStep(n: number, t: number): number {
+  return Math.min(n - 1, Math.floor(t * n));
+}

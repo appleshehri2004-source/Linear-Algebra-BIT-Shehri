@@ -53,12 +53,12 @@ interface Props {
 }
 
 /** Turn lines (lists of points) into one SVG path, so the browser draws the whole grid in one go. */
-function toPath(lines: Vec2[][]): string {
+export function toPath(lines: Vec2[][]): string {
   return lines.map((line) => 'M' + line.map(([x, y]) => `${x} ${y}`).join('L')).join('');
 }
 
 /** An SVG path drawn in maths coordinates, the same way Mafs draws its own curves. */
-function MathPath({ d, className }: { d: string; className: string }) {
+export function MathPath({ d, className }: { d: string; className: string }) {
   return (
     <path
       d={d}

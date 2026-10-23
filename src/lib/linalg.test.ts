@@ -93,6 +93,12 @@ import {
   parallelepipedEdges,
   boxVolume,
   numberLineTicks,
+  toOurCoords,
+  toHerCoords,
+  changeOfBasisMatrix,
+  basisGridLines,
+  snapToBasis,
+  currentStep,
 } from './linalg';
 
 describe('add', () => {
@@ -1247,3 +1253,83 @@ describe('cross products (Lessons 5.2-5.3)', () => {
 function sub3(a: Vec3, b: Vec3): Vec3 {
   return [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
 }
+
+describe('change of basis (Module 7)', () => {
+  // Jennifer's basis: b1 = (2, 1), b2 = (-1, 1).
+  const P: Mat2 = [[2, 1], [-1, 1]];
+  const rot90: Mat2 = [[0, 1], [-1, 0]];
+
+  it('toOurCoords: her (-1, 2) is our (-4, 1)', () => {
+    expect(toOurCoords(P, [-1, 2])).toEqual([-4, 1]);
+    expect(toOurCoords(P, [1, 0])).toEqual([2, 1]); // her "i-hat" is b1
+  });
+
+  it('toHerCoords: our (3, 2) is her (5/3, 1/3)', () => {
+    const her = toHerCoords(P, [3, 2])!;
+    expect(her[0]).toBeCloseTo(5 / 3, 9);
+    expect(her[1]).toBeCloseTo(1 / 3, 9);
+    expect(toHerCoords([[1, 2], [2, 4]], [3, 2])).toBeNull(); // b1 and b2 on one line: not a basis
+  });
+
+  it('changeOfBasisMatrix: a 90° turn in her numbers', () => {
+    const [c1, c2] = changeOfBasisMatrix(P, rot90)!;
+    expectClose(c1, [1 / 3, 5 / 3]);
+    expectClose(c2, [-2 / 3, -1 / 3]);
+    expect(changeOfBasisMatrix([[1, 2], [2, 4]], rot90)).toBeNull();
+  });
+
+  it('ours → hers → ours gets back the start, for 200 random bases', () => {
+    const rand = seeded(71);
+    for (let i = 0; i < 200; i++) {
+      const Q = randomMatrix(rand);
+      const v: Vec2 = [rand() * 10 - 5, rand() * 10 - 5];
+      const her = toHerCoords(Q, v);
+      if (det2(Q) === 0) {
+        expect(her).toBeNull();
+        continue;
+      }
+      expectClose(toOurCoords(Q, her!), v);
+    }
+  });
+
+  it('the three steps P, then M, then P⁻¹ end exactly where her matrix does, for 200 random cases', () => {
+    const rand = seeded(72);
+    for (let i = 0; i < 200; i++) {
+      const Q = randomMatrix(rand);
+      const M = randomMatrix(rand);
+      const her = changeOfBasisMatrix(Q, M);
+      if (!her) continue;
+      const threeSteps = sequenceAt([Q, M, inverse2(Q)!], 1);
+      expectClose(threeSteps[0], her[0]);
+      expectClose(threeSteps[1], her[1]);
+      // And in words: turn her numbers into ours, do M, turn back — the same as her matrix on her numbers.
+      const x: Vec2 = [rand() * 6 - 3, rand() * 6 - 3];
+      expectClose(toHerCoords(Q, matVec(M, toOurCoords(Q, x)))!, matVec(her, x));
+    }
+  });
+
+  it('a stretch of everything by 2 looks the same in every basis', () => {
+    expectClose(changeOfBasisMatrix(P, [[2, 0], [0, 2]])!.flat(), [2, 0, 0, 2]);
+  });
+
+  it('basisGridLines: her grid lines go through her grid corners', () => {
+    const lines = basisGridLines(P, 2);
+    expect(lines).toHaveLength(10);
+    // The vertical line x = 1 of our grid becomes her line through b1, running along b2.
+    const [start, end] = lines[6];
+    expect(start).toEqual(toOurCoords(P, [1, -2]));
+    expect(end).toEqual(toOurCoords(P, [1, 2]));
+  });
+
+  it('snapToBasis moves a point to the nearest corner of her grid', () => {
+    expect(snapToBasis(P, [1.1, 2.2])).toEqual([1, 2]); // her (1, 1) is our (1, 2)
+    expect(snapToBasis([[1, 2], [2, 4]], [1.1, 2.2])).toEqual([1.1, 2.2]); // not a basis: left alone
+  });
+
+  it('currentStep says which step is playing', () => {
+    expect(currentStep(3, 0)).toBe(0);
+    expect(currentStep(3, 0.5)).toBe(1);
+    expect(currentStep(3, 0.9)).toBe(2);
+    expect(currentStep(3, 1)).toBe(2);
+  });
+});

@@ -129,3 +129,33 @@
   flex: 1;
   accent-color: currentColor;
 }
+
+/* BasisGridView (Module 7): our grid and Jennifer's grid, drawn on top of the faint fixed grid. */
+.basis-grid .our-grid {
+  stroke: var(--muted);
+  stroke-width: 1px;
+  opacity: 0.6;
+}
+
+.basis-grid .her-grid {
+  stroke: var(--grid-moving);
+  stroke-width: 1.5px;
+}
+
+/* The Ours / Hers / Both buttons sit close together, like one control. */
+.demo-toggle {
+  display: inline-flex;
+  gap: 0;
+}
+
+.demo-toggle .demo-button {
+  border-radius: 0;
+}
+
+.demo-toggle .demo-button:first-child {
+  border-radius: 0.4rem 0 0 0.4rem;
+}
+
+.demo-toggle .demo-button:last-child {
+  border-radius: 0 0.4rem 0.4rem 0;
+}
