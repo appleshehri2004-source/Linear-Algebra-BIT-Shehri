@@ -28,6 +28,7 @@ import Plane from './Plane';
 import DragVector from './DragVector';
 import SnapToggle from './SnapToggle';
 import LazyScene3D from './LazyScene3D';
+import VectorSliders from './VectorSliders';
 import type { SceneArrow } from './Scene3D';
 import { usePlayback } from './usePlayback';
 import './Demo.css';
@@ -92,35 +93,6 @@ function Cross2D({ v: startV, w: startW }: { v: Vec2; w: Vec2 }) {
       </div>
       <SnapToggle checked={snap} onChange={setSnap} />
     </div>
-  );
-}
-
-/** Three small sliders, one per coordinate, for one vector. */
-function VectorSliders({ name, value, onChange, colour }: { name: string; value: Vec3; onChange: (v: Vec3) => void; colour: string }) {
-  return (
-    <fieldset className="coord-sliders" style={{ color: colour }}>
-      <legend>
-        {name} = {vec(value)}
-      </legend>
-      {(['x', 'y', 'z'] as const).map((axis, i) => (
-        <label key={axis}>
-          <span>{axis}</span>
-          <input
-            type="range"
-            min={-2}
-            max={2}
-            step={1}
-            value={value[i]}
-            aria-label={`${name} ${axis}`}
-            onChange={(e) => {
-              const next = [...value] as Vec3;
-              next[i] = Number(e.target.value);
-              onChange(next);
-            }}
-          />
-        </label>
-      ))}
-    </fieldset>
   );
 }
 

@@ -420,3 +420,42 @@ Two pictures, one Play button. Left: P, then M, then P⁻¹, one after another, 
 - **Snapping can eat small moves.** With snap on, an arrow-key step is too small and gets rounded straight back, so to watch the labels change step by step I turned snapping off.
 - **My first browser check pressed Play too early.** The demo only starts once it's on screen (client:visible), so clicking straight after scrolling hit a button that wasn't working yet. Waiting a moment fixed it.
 - **Labels near the edge get cut off on a phone.** The two labels now sit on the side of the arrow away from the nearer edge.
+
+## Day 11 (continued): Module 6, orthogonality
+
+Lessons 6.1 to 6.4: orthogonal vectors and subspaces, projections, least squares, and Gram–Schmidt with orthogonal matrices. The gap between Module 5 and Module 7 is now filled.
+
+### New files
+
+**`src/components/ProjectionView.tsx`** (Lesson 6.2)
+Two modes. In `line` mode (2D), you drag v and the line's direction a. The gold arrow is the shadow Pv, the pink dashed arrow is the error e, and a small square marks the right angle. "Project v" and then "Project again" show that a second projection doesn't move anything (P·P = P). In `plane` mode (3D), sliders set v and the two arrows that span a violet plane. The error sticks straight out of the plane, with its own right-angle mark.
+
+**`src/components/LeastSquaresView.tsx`** (Lesson 6.3)
+Drag the points and the best line b = C + D·t follows. Pink segments show the errors, and the sum of their squares is printed. "Try your own line" adds C and D sliders and prints your error next to the best one. The normal equations AᵀA x = Aᵀb are shown with live numbers. You can add points (up to 6) or remove them (down to 2).
+
+**`src/components/GramSchmidtView.tsx`** (Lesson 6.4)
+"Next step" three times: keep v₁, slide v₂ down to v₂ minus its shadow, then scale both onto the unit circle. The lengths and the dot product update as it plays.
+
+**`src/components/OrthogonalCompare.tsx`** (Lesson 6.4)
+A 30° rotation and a shear, played side by side. The small square between î and ĵ stays square under the rotation and gets bent by the shear.
+
+**`src/components/VectorSliders.tsx`**
+The x/y/z sliders that used to live inside CrossView, now in their own file so ProjectionView can use them too.
+
+**`src/content/lessons/6-1-…` to `6-4-…`** and **12 new questions** in `module6.ts`.
+
+### Changed files
+
+- **`linalg.ts`** and **`linalg.test.ts`**: `projectOntoPlane`, `projectionMatrix`, `rightAngleMark`, `projectionPicture` (2D and 3D), `leastSquaresLine`, `lineErrors`, `sumSquaredErrors`, `clampToBox`, `gramSchmidt`, `gramSchmidtSteps`, `gramSchmidtAt` and `isOrthogonalMatrix` (295 tests now).
+- **`Scene3D.tsx`**: an arrow can now start somewhere other than the origin (`tail`), which the 3D error arrow needs. It also gained the gold `sum` colour.
+- **`CrossView.tsx`**: uses the shared VectorSliders.
+- **`modules.ts`** and **`exercises/index.ts`**: Module 6 is named and its questions are registered.
+
+### Things I learned
+
+- **Closest point = perpendicular error.** Projections, least squares and Gram–Schmidt all come from that one idea.
+- **Least squares is a projection in disguise.** With 3 points, b lives in 3D, and A·x can only reach a plane (the column space). The best line is b's shadow on that plane. That's why no slider setting can win: every other line is a different point of the plane, so it is farther from b.
+- **A test can prove "never".** One test tries 500 random point sets with random lines, and none beat the best line. In the browser I also tried every position the C and D sliders can reach (about 500,000 settings): none won either.
+- **Random tests found a real edge case.** When v is almost on the line, the error is almost 0 and no right-angle square fits, so the picture hides it. The test first failed on exactly those cases, and now it checks that the mark is only missing when the error is under 0.01.
+- **Choose starting numbers that don't overlap.** With a = (2, 1), the shadow of (1, 3) is exactly (2, 1), so the gold arrow sat right on a's drag handle and hid the right-angle mark. Starting with a = (4, 2) gives the same line with the handle out of the way.
+- **The browser check needs real scrolling.** Islands with client:visible start when they come on screen. Jumping there with JavaScript sometimes didn't count as "on screen" in the preview pane, so the demos looked broken when they weren't.

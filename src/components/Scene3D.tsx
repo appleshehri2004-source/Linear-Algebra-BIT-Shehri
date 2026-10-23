@@ -42,6 +42,8 @@ interface Props {
 /** One extra arrow: where its tip is, which site colour, and an optional label at the tip. */
 export interface SceneArrow {
   tip: Vec3;
+  /** Where the arrow starts. Default: the origin. */
+  tail?: Vec3;
   colour: Colour;
   label?: string;
 }
@@ -59,6 +61,7 @@ function readColours() {
     khat: get('--khat'),
     vec: get('--vec'),
     vec2: get('--vec2'),
+    sum: get('--sum'),
     cross: get('--cross'),
     areaKept: get('--area-kept'),
     faint: get('--grid-faint'),
@@ -104,15 +107,15 @@ function Lines({ points, color, opacity = 1 }: { points: Float32Array; color: st
 
 const UP = new THREE.Vector3(0, 1, 0);
 
-/** An arrow from the origin to `tip`: a thin cylinder and a cone, turned to point the right way. */
-function Arrow({ tip, color, label }: { tip: Vec3; color: string; label?: string }) {
+/** An arrow from `tail` (default: the origin) to `tip`: a thin cylinder and a cone, turned to point the right way. */
+function Arrow({ tip, tail = [0, 0, 0], color, label }: { tip: Vec3; tail?: Vec3; color: string; label?: string }) {
   const { position, quaternion, length } = useMemo(() => {
-    const dir = new THREE.Vector3(...tip);
+    const dir = new THREE.Vector3(...tip).sub(new THREE.Vector3(...tail));
     const len = dir.length();
     // three.js cylinders point up the y-axis, so turn y towards the arrow's direction.
     const q = new THREE.Quaternion().setFromUnitVectors(UP, len > 0 ? dir.clone().normalize() : UP);
-    return { position: new THREE.Vector3(0, 0, 0), quaternion: q, length: len };
-  }, [tip[0], tip[1], tip[2]]);
+    return { position: new THREE.Vector3(...tail), quaternion: q, length: len };
+  }, [tip[0], tip[1], tip[2], tail[0], tail[1], tail[2]]);
 
   if (length < 1e-6) return null;
   const head = Math.min(0.25, length * 0.4);
@@ -277,7 +280,7 @@ export default function Scene3D({
         )}
         {patch && <Patch corners={patch.corners} color={colours[patch.colour]} />}
         {edges && edgePoints && <Lines points={edgePoints} color={colours[edges.colour]} />}
-        {arrows?.map((a, i) => <Arrow key={i} tip={a.tip} color={colours[a.colour]} label={a.label} />)}
+        {arrows?.map((a, i) => <Arrow key={i} tip={a.tip} tail={a.tail} color={colours[a.colour]} label={a.label} />)}
         {vector && <Arrow tip={vector} color={colours.vec} label="v" />}
         {columnSpace && <Subspace basis={columnSpace} color={colours.space} />}
         {nullVectors?.map((tip, i) =>

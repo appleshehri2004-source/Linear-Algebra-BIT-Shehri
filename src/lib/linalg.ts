@@ -1082,3 +1082,186 @@ export function snapToBasis(P: Mat2, ours: Vec2): Vec2 {
 export function currentStep(n: number, t: number): number {
   return Math.min(n - 1, Math.floor(t * n));
 }
+
+// ---- Module 6: orthogonality ----
+
+/**
+ * The shadow of v on the plane through the origin spanned by u and w: the point of the plane closest to v.
+ * Made from two arrows 1 long and at right angles in the plane (orthonormalPair): v's part along each, added up.
+ * (1, 2, 3) onto the floor spanned by (1, 0, 0) and (0, 1, 0) is (1, 2, 0). null when u and w lie on one line.
+ */
+export function projectOntoPlane(v: Vec3, u: Vec3, w: Vec3): Vec3 | null {
+  if (length3(cross3(u, w)) < TINY) return null;
+  const [e1, e2] = orthonormalPair(u, w);
+  return add3(scale3(dot3(v, e1), e1), scale3(dot3(v, e2), e2));
+}
+
+/**
+ * The matrix that projects onto the line through a: P = a aᵀ / (aᵀ a). P times any vector is its shadow on the line.
+ * For a = (1, 1) every number is 1/2. Projecting twice changes nothing, so P·P = P. null when a = 0.
+ */
+export function projectionMatrix(a: Vec2): Mat2 | null {
+  const aa = dot(a, a);
+  if (aa === 0) return null;
+  // Column j of a aᵀ is a times a's number j.
+  return [scale(a[0] / aa, a), scale(a[1] / aa, a)];
+}
+
+/**
+ * The little square drawn where two lines meet at a right angle: its corners in order, starting at `corner`,
+ * with sides `size` long along `a` and along `b`. Works in 2D or 3D. null if a or b has no length.
+ */
+export function rightAngleMark<V extends number[]>(corner: V, a: V, b: V, size: number): V[] | null {
+  const la = Math.hypot(...a);
+  const lb = Math.hypot(...b);
+  if (la < TINY || lb < TINY) return null;
+  const at = (s: number, t: number) => corner.map((c, i) => c + (s * a[i]) / la + (t * b[i]) / lb) as V;
+  return [corner, at(size, 0), at(size, size), at(0, size)];
+}
+
+/** Everything a projection picture draws: the shadow, the error (v minus its shadow), and the right-angle mark. */
+export interface ProjectionPicture<V> {
+  projection: V;
+  /** v − projection: the walk from the shadow up to v. Always at right angles to the line or plane. */
+  error: V;
+  /** The right-angle mark at the shadow, between the error and the line or plane. null when the error is ~0. */
+  mark: V[] | null;
+}
+
+/** How big the right-angle mark is: 0.3, but never more than half the error, so it fits. */
+function markSize(errorLength: number): number {
+  return Math.min(0.3, errorLength / 2);
+}
+
+/**
+ * The picture for projecting v onto the line through a. The mark sits at the shadow, with one side along the
+ * line (pointing back towards the origin, or along a if the shadow is at the origin) and one along the error.
+ * null when a = 0 (there is no line).
+ */
+export function projectionPicture(v: Vec2, a: Vec2): ProjectionPicture<Vec2> | null {
+  const projection = projectOnto(v, a);
+  if (!projection) return null;
+  const error = sub(v, projection);
+  const back = length(projection) > TINY ? scale(-1, projection) : a;
+  const e = length(error);
+  return { projection, error, mark: e < 0.01 ? null : rightAngleMark(projection, back, error, markSize(e)) };
+}
+
+/** The same picture in 3D, for projecting v onto the plane spanned by u and w. null when u and w are on one line. */
+export function projectionPicture3(v: Vec3, u: Vec3, w: Vec3): ProjectionPicture<Vec3> | null {
+  const projection = projectOntoPlane(v, u, w);
+  if (!projection) return null;
+  const error: Vec3 = [v[0] - projection[0] + 0, v[1] - projection[1] + 0, v[2] - projection[2] + 0];
+  // A side along the plane: back towards the origin, or along u if the shadow is at the origin.
+  const along = length3(projection) > TINY ? scale3(-1, projection) : u;
+  const e = length3(error);
+  return { projection, error, mark: e < 0.01 ? null : rightAngleMark(projection, along, error, markSize(e)) };
+}
+
+/** The best line b = C + D·t through some points (t, b), and the normal equations Aᵀ A x = Aᵀ b it came from. */
+export interface LeastSquares {
+  C: number;
+  D: number;
+  /** Aᵀ A = [[n, Σt], [Σt, Σt²]]. It is symmetric, so rows and columns are the same. */
+  AtA: Mat2;
+  /** Aᵀ b = (Σb, Σt·b). */
+  Atb: Vec2;
+}
+
+/**
+ * The line b = C + D·t that makes the sum of squared vertical errors smallest (least squares).
+ * A has a row (1, t) for each point; solve Aᵀ A (C, D) = Aᵀ b. Points (1, 1), (2, 2), (3, 2) give C = 2/3, D = 1/2.
+ * null when there are fewer than two different t values (then many lines fit equally well).
+ */
+export function leastSquaresLine(points: Vec2[]): LeastSquares | null {
+  const n = points.length;
+  const st = points.reduce((s, [t]) => s + t, 0);
+  const stt = points.reduce((s, [t]) => s + t * t, 0);
+  const sb = points.reduce((s, [, b]) => s + b, 0);
+  const stb = points.reduce((s, [t, b]) => s + t * b, 0);
+  const AtA: Mat2 = [[n, st], [st, stt]];
+  const Atb: Vec2 = [sb, stb];
+  if (n < 2 || Math.abs(det2(AtA)) < TINY) return null;
+  const [C, D] = solve2(AtA, Atb)!;
+  return { C: C + 0, D: D + 0, AtA, Atb };
+}
+
+/** For each point (t, b), the vertical error segment from the point to the line b = C + D·t. */
+export function lineErrors(points: Vec2[], C: number, D: number): [Vec2, Vec2][] {
+  return points.map(([t, b]) => [[t, b], [t, C + D * t]]);
+}
+
+/** Keep a dragged point inside a box: x between xs[0] and xs[1], y between ys[0] and ys[1]. */
+export function clampToBox([x, y]: Vec2, xs: [number, number], ys: [number, number]): Vec2 {
+  return [Math.min(xs[1], Math.max(xs[0], x)), Math.min(ys[1], Math.max(ys[0], y))];
+}
+
+/** The sum of squared vertical errors of the line b = C + D·t: the number least squares makes smallest. */
+export function sumSquaredErrors(points: Vec2[], C: number, D: number): number {
+  return points.reduce((s, [t, b]) => s + (b - C - D * t) ** 2, 0);
+}
+
+/**
+ * Gram–Schmidt: turn independent vectors (any size, all the same length) into arrows 1 long and at right angles
+ * that span the same space. Take each vector, remove its parts along the arrows already made, scale to length 1.
+ * (1, 1), (1, 0) give (1/√2, 1/√2), (1/√2, −1/√2). null if the vectors are dependent (one becomes 0).
+ */
+export function gramSchmidt(vectors: number[][]): number[][] | null {
+  const qs: number[][] = [];
+  for (const v of vectors) {
+    let w = [...v];
+    for (const q of qs) {
+      const along = w.reduce((s, x, i) => s + x * q[i], 0);
+      w = w.map((x, i) => x - along * q[i]);
+    }
+    const len = Math.hypot(...w);
+    if (len < 1e-9 * Math.max(1, Math.hypot(...v))) return null;
+    qs.push(w.map((x) => x / len + 0));
+  }
+  return qs;
+}
+
+/** The steps of Gram–Schmidt on two 2D vectors, for the animation. */
+export interface GramSchmidtSteps {
+  /** v2's shadow on v1: the part of v2 that gets taken away. */
+  projection: Vec2;
+  /** v2 minus that shadow: at right angles to v1. */
+  w2: Vec2;
+  /** The final arrows, both 1 long. */
+  q1: Vec2;
+  q2: Vec2;
+}
+
+/** Gram–Schmidt on v1 and v2, keeping the in-between arrow. null when they lie on one line. */
+export function gramSchmidtSteps(v1: Vec2, v2: Vec2): GramSchmidtSteps | null {
+  const qs = gramSchmidt([v1, v2]);
+  if (!qs) return null;
+  const projection = projectOnto(v2, v1)!;
+  return { projection, w2: sub(v2, projection), q1: qs[0] as Vec2, q2: qs[1] as Vec2 };
+}
+
+/**
+ * Where the two arrows are at time t (0 to 1) of the 3-step animation:
+ * step 1 (t to 1/3) keeps v1 and shows v2's shadow on it, step 2 (to 2/3) slides v2 down to w2 = v2 − shadow,
+ * step 3 (to 1) shrinks or stretches both to length 1. null when v1 and v2 lie on one line.
+ */
+export function gramSchmidtAt(v1: Vec2, v2: Vec2, t: number): { a1: Vec2; a2: Vec2; step: number } | null {
+  const s = gramSchmidtSteps(v1, v2);
+  if (!s) return null;
+  const step = currentStep(3, t);
+  const local = easeInOut(Math.min(1, Math.max(0, t * 3 - step)));
+  if (step === 0) return { a1: v1, a2: v2, step };
+  if (step === 1) return { a1: v1, a2: lerpVec(v2, s.w2, local), step };
+  return { a1: lerpVec(v1, s.q1, local), a2: lerpVec(s.w2, s.q2, local), step };
+}
+
+/**
+ * true when m is orthogonal: its columns are 1 long and at right angles (Qᵀ Q = I).
+ * Such a matrix is a rotation or a flip: it keeps every length and every angle. A shear is not one.
+ */
+export function isOrthogonalMatrix(m: Mat2, tolerance = 1e-9): boolean {
+  const [c1, c2] = m;
+  return (
+    Math.abs(dot(c1, c1) - 1) < tolerance && Math.abs(dot(c2, c2) - 1) < tolerance && Math.abs(dot(c1, c2)) < tolerance
+  );
+}

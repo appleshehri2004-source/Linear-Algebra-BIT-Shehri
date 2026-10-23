@@ -1,6 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import {
   add,
+  clampToBox,
+  gramSchmidt,
+  gramSchmidtAt,
+  isOrthogonalMatrix,
+  leastSquaresLine,
+  lineErrors,
+  projectionMatrix,
+  projectionPicture,
+  projectionPicture3,
+  projectOntoPlane,
+  sumSquaredErrors,
   stripeLines,
   centroid,
   adBcPieces,
@@ -1331,5 +1342,167 @@ describe('change of basis (Module 7)', () => {
     expect(currentStep(3, 0.5)).toBe(1);
     expect(currentStep(3, 0.9)).toBe(2);
     expect(currentStep(3, 1)).toBe(2);
+  });
+});
+
+describe('orthogonality (Module 6)', () => {
+  const shear: Mat2 = [[1, 0], [1, 1]];
+  const rand = seeded(61);
+  const randVec3 = (): Vec3 => [rand() * 6 - 3, rand() * 6 - 3, rand() * 6 - 3];
+  const randVec2 = (): Vec2 => [rand() * 8 - 4, rand() * 8 - 4];
+
+  it('projectOntoPlane: (1, 2, 3) onto the floor is (1, 2, 0)', () => {
+    expectClose(projectOntoPlane([1, 2, 3], [1, 0, 0], [0, 1, 0])!, [1, 2, 0]);
+    expect(projectOntoPlane([1, 2, 3], [1, 0, 0], [2, 0, 0])).toBeNull();
+  });
+
+  it('projectOntoPlane: the error is at right angles to the plane, for 200 random cases', () => {
+    for (let i = 0; i < 200; i++) {
+      const [v, u, w] = [randVec3(), randVec3(), randVec3()];
+      const p = projectOntoPlane(v, u, w)!;
+      const error: Vec3 = [v[0] - p[0], v[1] - p[1], v[2] - p[2]];
+      expect(dot3(error, u)).toBeCloseTo(0, 9);
+      expect(dot3(error, w)).toBeCloseTo(0, 9);
+    }
+  });
+
+  it('projectionMatrix: for a = (1, 1) every number is 1/2, and P·P = P', () => {
+    const P = projectionMatrix([1, 1])!;
+    expectClose(P, [[0.5, 0.5], [0.5, 0.5]]);
+    expectClose(matMul(P, P), P);
+    expect(projectionMatrix([0, 0])).toBeNull();
+  });
+
+  it('projectionMatrix: P·P = P and P·v matches projectOnto, for 200 random lines', () => {
+    for (let i = 0; i < 200; i++) {
+      const [a, v] = [randVec2(), randVec2()];
+      const P = projectionMatrix(a)!;
+      expectClose(matMul(P, P), P);
+      expectClose(matVec(P, v), projectOnto(v, a)!);
+    }
+  });
+
+  it('projectionPicture: the error always meets the line at a right angle, and the mark is a square', () => {
+    for (let i = 0; i < 300; i++) {
+      const [v, a] = [randVec2(), randVec2()];
+      const pic = projectionPicture(v, a)!;
+      expect(dot(pic.error, a)).toBeCloseTo(0, 9);
+      expectClose(add(pic.projection, pic.error), v);
+      // No mark only when v is (almost) on the line already.
+      if (!pic.mark) {
+        expect(length(pic.error)).toBeLessThan(0.01);
+        continue;
+      }
+      const [c, s1, , s2] = pic.mark;
+      expect(dot(sub(s1, c), sub(s2, c))).toBeCloseTo(0, 9);
+      expect(length(sub(s1, c))).toBeCloseTo(length(sub(s2, c)), 9);
+    }
+  });
+
+  it('projectionPicture: no mark when v is already on the line, and the mark fits on a short error', () => {
+    expect(projectionPicture([2, 2], [1, 1])!.mark).toBeNull();
+    expect(projectionPicture([2, 0], [0, 0])).toBeNull();
+    const mark = projectionPicture([1, 0.2], [1, 0])!.mark!;
+    expect(length(sub(mark[3], mark[0]))).toBeCloseTo(0.1, 9); // half of the 0.2 error
+  });
+
+  it('projectionPicture3: the mark is at right angles in 3D, for 200 random cases', () => {
+    for (let i = 0; i < 200; i++) {
+      const pic = projectionPicture3(randVec3(), randVec3(), randVec3())!;
+      if (!pic.mark) {
+        expect(length3(pic.error)).toBeLessThan(0.01);
+        continue;
+      }
+      const [c, s1, , s2] = pic.mark;
+      const side1: Vec3 = [s1[0] - c[0], s1[1] - c[1], s1[2] - c[2]];
+      const side2: Vec3 = [s2[0] - c[0], s2[1] - c[1], s2[2] - c[2]];
+      expect(dot3(side1, side2)).toBeCloseTo(0, 9);
+    }
+  });
+
+  it('leastSquaresLine: (1, 1), (2, 2), (3, 2) give C = 2/3 and D = 1/2', () => {
+    const fit = leastSquaresLine([[1, 1], [2, 2], [3, 2]])!;
+    expect(fit.C).toBeCloseTo(2 / 3, 9);
+    expect(fit.D).toBeCloseTo(1 / 2, 9);
+    expectClose(fit.AtA, [[3, 6], [6, 14]]);
+    expectClose(fit.Atb, [5, 11]);
+    expect(sumSquaredErrors([[1, 1], [2, 2], [3, 2]], fit.C, fit.D)).toBeCloseTo(1 / 6, 9);
+  });
+
+  it('leastSquaresLine: null when every point has the same t', () => {
+    expect(leastSquaresLine([[2, 1], [2, 3]])).toBeNull();
+    expect(leastSquaresLine([[2, 1]])).toBeNull();
+  });
+
+  it('no line beats the best line, for 500 random point sets and random lines', () => {
+    for (let i = 0; i < 500; i++) {
+      const points: Vec2[] = Array.from({ length: 3 + (i % 4) }, randVec2);
+      const fit = leastSquaresLine(points);
+      if (!fit) continue;
+      const best = sumSquaredErrors(points, fit.C, fit.D);
+      const C = rand() * 10 - 5;
+      const D = rand() * 6 - 3;
+      expect(sumSquaredErrors(points, C, D)).toBeGreaterThanOrEqual(best - 1e-9);
+      // Nudging the best line a tiny bit also never helps.
+      expect(sumSquaredErrors(points, fit.C + 0.01, fit.D - 0.01)).toBeGreaterThanOrEqual(best);
+    }
+  });
+
+  it('lineErrors: each segment goes straight up or down from the point to the line', () => {
+    expect(lineErrors([[1, 1], [3, 2]], 0.5, 0.5)).toEqual([[[1, 1], [1, 1]], [[3, 2], [3, 2]]]);
+    expect(lineErrors([[2, 0]], 1, 1)).toEqual([[[2, 0], [2, 3]]]);
+  });
+
+  it('clampToBox keeps a dragged point inside the picture', () => {
+    expect(clampToBox([7, -2], [0, 5], [0, 4])).toEqual([5, 0]);
+    expect(clampToBox([2, 3], [0, 5], [0, 4])).toEqual([2, 3]);
+  });
+
+  it('gramSchmidt: (1, 1), (1, 0) give (1/√2, 1/√2) and (1/√2, −1/√2)', () => {
+    const [q1, q2] = gramSchmidt([[1, 1], [1, 0]])!;
+    expectClose(q1, [Math.SQRT1_2, Math.SQRT1_2]);
+    expectClose(q2, [Math.SQRT1_2, -Math.SQRT1_2]);
+    expect(gramSchmidt([[1, 2], [2, 4]])).toBeNull();
+  });
+
+  it('gramSchmidt: QᵀQ = I for 200 sets of three random independent 3D vectors', () => {
+    for (let i = 0; i < 200; i++) {
+      const vs = [randVec3(), randVec3(), randVec3()];
+      if (Math.abs(det3(vs as Mat3)) < 0.01) continue;
+      const Q = gramSchmidt(vs)!;
+      const QtQ = Q.map((a) => Q.map((b) => dot3(a as Vec3, b as Vec3)));
+      QtQ.flat().forEach((n, k) => expect(Math.abs(n - (k % 4 === 0 ? 1 : 0))).toBeLessThan(1e-9));
+    }
+  });
+
+  it('gramSchmidtAt: starts at v1, v2; after step 2 they are at right angles; ends 1 long', () => {
+    const v1: Vec2 = [2, 1];
+    const v2: Vec2 = [1, 2];
+    expect(gramSchmidtAt(v1, v2, 0)).toEqual({ a1: v1, a2: v2, step: 0 });
+    const middle = gramSchmidtAt(v1, v2, 2 / 3)!;
+    expect(dot(middle.a1, middle.a2)).toBeCloseTo(0, 9);
+    const end = gramSchmidtAt(v1, v2, 1)!;
+    expect(length(end.a1)).toBeCloseTo(1, 9);
+    expect(length(end.a2)).toBeCloseTo(1, 9);
+    expect(dot(end.a1, end.a2)).toBeCloseTo(0, 9);
+    expect(gramSchmidtAt([1, 1], [2, 2], 0.5)).toBeNull();
+  });
+
+  it('isOrthogonalMatrix: a rotation by 30° is, a shear is not', () => {
+    expect(isOrthogonalMatrix(rotation(30))).toBe(true);
+    expect(isOrthogonalMatrix([[1, 0], [0, -1]])).toBe(true); // a flip
+    expect(isOrthogonalMatrix(shear)).toBe(false);
+    expect(isOrthogonalMatrix([[2, 0], [0, 2]])).toBe(false);
+  });
+
+  it('an orthogonal matrix keeps lengths and dot products; a shear does not', () => {
+    for (let i = 0; i < 200; i++) {
+      const Q = rotation(rand() * 360);
+      const [v, w] = [randVec2(), randVec2()];
+      expect(length(matVec(Q, v))).toBeCloseTo(length(v), 9);
+      expect(dot(matVec(Q, v), matVec(Q, w))).toBeCloseTo(dot(v, w), 9);
+    }
+    expect(length(matVec(shear, [0, 1]))).not.toBeCloseTo(1, 3);
+    expect(dot(matVec(shear, [1, 0]), matVec(shear, [0, 1]))).toBe(1); // the right angle at the origin is lost
   });
 });

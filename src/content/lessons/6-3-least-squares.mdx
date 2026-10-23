@@ -1,0 +1,69 @@
+---
+title: Least squares
+module: 6
+order: 3
+mit: https://ocw.mit.edu/courses/18-06-linear-algebra-spring-2010/resources/lecture-16-projection-matrices-and-least-squares/
+---
+
+import Formula from '../../components/Formula.astro';
+import LeastSquaresView from '../../components/LeastSquaresView.tsx';
+import Exercise from '../../components/Exercise.tsx';
+
+## Question
+
+Three measurements: at times <Formula tex="t = 1, 2, 3" /> you measure <Formula tex="b = 1, 2, 2" />. No straight line goes through all three. Which line comes **closest**, and what does "closest" even mean?
+
+## Play
+
+Drag the yellow points. The violet line is the best fit. The pink segments are the errors: how far each point is above or below the line. The best line makes the **sum of their squares** as small as possible.
+
+Then press **Try your own line** and move the C and D sliders. Can you beat the best line?
+
+<LeastSquaresView client:visible points={[[1, 1], [2, 2], [3, 2]]} />
+
+## Numbers
+
+We want <Formula tex="C + Dt = b" /> at every point. That is three equations, but only two unknowns:
+
+<Formula display tex="\begin{aligned} C + D &= 1 \\ C + 2D &= 2 \\ C + 3D &= 2 \end{aligned} \qquad A = \begin{bmatrix} 1 & 1 \\ 1 & 2 \\ 1 & 3 \end{bmatrix}, \quad \vec{b} = \begin{bmatrix} 1 \\ 2 \\ 2 \end{bmatrix}" />
+
+There is no exact solution. So solve the normal equations <Formula tex="A^T A\,\hat{x} = A^T \vec{b}" /> instead:
+
+<Formula display tex="\begin{bmatrix} 3 & 6 \\ 6 & 14 \end{bmatrix} \begin{bmatrix} C \\ D \end{bmatrix} = \begin{bmatrix} 5 \\ 11 \end{bmatrix} \quad\Rightarrow\quad C = \tfrac{2}{3}, \; D = \tfrac{1}{2}" />
+
+The best line is <Formula tex="b = \tfrac{2}{3} + \tfrac{1}{2}t" />. It passes through <Formula tex="\tfrac{7}{6}, \tfrac{5}{3}, \tfrac{13}{6}" />, so the errors are <Formula tex="-\tfrac{1}{6}, \tfrac{1}{3}, -\tfrac{1}{6}" />. The sum of their squares is <Formula tex="\tfrac{1}{36} + \tfrac{4}{36} + \tfrac{1}{36} = \tfrac{1}{6}" />.
+
+## Explain
+
+**This is a projection.** <Formula tex="A\vec{x}" /> can only reach the column space of <Formula tex="A" />, a plane inside 3D. <Formula tex="\vec{b}" /> is not on that plane. The closest point we can reach is <Formula tex="\vec{b}" />'s shadow on the plane (Lesson 6.2).
+
+**The error is perpendicular.** The error vector <Formula tex="\vec{e} = \vec{b} - A\hat{x}" /> holds the three pink lengths. It is perpendicular to both columns of <Formula tex="A" />, so <Formula tex="A^T \vec{e} = 0" />. That is where the normal equations come from. Check: <Formula tex="(1, 1, 1) \cdot (-\tfrac{1}{6}, \tfrac{1}{3}, -\tfrac{1}{6}) = 0" /> and <Formula tex="(1, 2, 3) \cdot (-\tfrac{1}{6}, \tfrac{1}{3}, -\tfrac{1}{6}) = 0" />.
+
+**Why your line never wins.** Your C and D give some point <Formula tex="A\vec{x}" /> on the plane. Its distance to <Formula tex="\vec{b}" /> is the square root of your sum of squared errors. The shadow is the closest point of the plane, so every other choice is farther away (Pythagoras again).
+
+**What's in the normal equations.** <Formula tex="A^T A" /> holds the number of points, <Formula tex="\Sigma t" /> and <Formula tex="\Sigma t^2" />. <Formula tex="A^T \vec{b}" /> holds <Formula tex="\Sigma b" /> and <Formula tex="\Sigma t b" />. Watch them change as you drag.
+
+## Predict
+
+Move the three points so they lie exactly on one line. What will the sum of squared errors be? And what happens to the error if you drag one point far away?
+
+<details>
+  <summary>Reveal</summary>
+  **0.** When <Formula tex="\vec{b}" /> is in the column space, its shadow is itself and the line goes through every point. A far-away point pulls the line towards it a lot, because its error gets **squared**. Least squares listens hard to outliers.
+</details>
+
+## Practice
+
+<Exercise id="6.3-normal" client:visible />
+
+<Exercise id="6.3-fit" client:visible />
+
+<Exercise id="6.3-error" client:visible />
+
+## Go deeper
+
+**Why squares?** Squares make the maths a projection, so the answer comes from one small linear system. Adding up plain distances (not squared) gives a fit that ignores outliers more, but it needs a step-by-step search to find.
+
+**More than lines.** To fit a parabola <Formula tex="C + Dt + Et^2" />, give <Formula tex="A" /> a third column holding the <Formula tex="t^2" /> values. Everything else stays the same.
+
+**When it fails.** If every point has the same <Formula tex="t" />, the two columns of <Formula tex="A" /> lie on one line. Then <Formula tex="A^T A" /> has no inverse, and many lines fit equally well. Drag all three points onto one vertical line and the demo tells you.
