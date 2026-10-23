@@ -17,6 +17,8 @@
   --row1: #2f6fe0; /* equation 1 of a system (row 1, and its line): blue */
   --row2: #b02fc4; /* equation 2: purple */
   --row3: #0e8a8a; /* equation 3: teal */
+  --space: #7048e8; /* a column space or row space (where vectors can reach): violet */
+  --null: #d6336c; /* a null space or left null space (what gets squashed to 0): pink */
 
   --bg: #fdfdfb;
   --text: #1c1c1e;
@@ -46,6 +48,8 @@
     --row1: #6ea2ff;
     --row2: #e27cf2;
     --row3: #3fd0c9;
+    --space: #a48bff;
+    --null: #f783ac;
 
     --bg: #16161a;
     --text: #ececf0;
@@ -133,4 +137,10 @@ a {
 }
 .sum {
   color: var(--sum);
+}
+.space {
+  color: var(--space);
+}
+.null {
+  color: var(--null);
 }

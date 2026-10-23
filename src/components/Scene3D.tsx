@@ -7,7 +7,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Html, OrbitControls } from '@react-three/drei';
 import * as THREE from 'three';
-import type { Mat3, Vec3 } from '../lib/linalg';
+import { length3, normalize3, planeCorners, type Mat3, type Vec3 } from '../lib/linalg';
 import './Scene3D.css';
 
 interface Props {
@@ -23,6 +23,12 @@ interface Props {
   vector?: Vec3;
   /** How far away the camera starts: 1 is normal, 2 is twice as far (for long arrows). */
   zoomOut?: number;
+  /** A basis of the column space, drawn in violet where it is (it doesn't move): 1 vector is a line, 2 a plane. */
+  columnSpace?: Vec3[];
+  /** A basis of the null space, drawn in pink in the input and moved by the matrix, so it gets squashed to 0. */
+  nullSpace?: Vec3[];
+  /** Pink arrows, given where they are now (already moved). One squashed to (almost) 0 is drawn as a dot. */
+  nullVectors?: Vec3[];
 }
 
 /** The site's colours, read from the CSS variables so light and dark mode both work. */
@@ -38,6 +44,8 @@ function useColours() {
       faint: get('--grid-faint'),
       moving: get('--grid-moving'),
       muted: get('--muted'),
+      space: get('--space'),
+      null: get('--null'),
     };
   };
   const [colours, setColours] = useState(read);
@@ -105,6 +113,40 @@ function Arrow({ tip, color, label }: { tip: Vec3; color: string; label?: string
   );
 }
 
+/** A space through the origin from its basis: 1 vector is a long line, 2 vectors a see-through square. 0 or 3 draw nothing. */
+function Subspace({ basis, color }: { basis: Vec3[]; color: string }) {
+  const shape = useMemo(() => {
+    if (basis.length === 1) {
+      const e = normalize3(basis[0]);
+      return { line: new Float32Array([-4 * e[0], -4 * e[1], -4 * e[2], 4 * e[0], 4 * e[1], 4 * e[2]]) };
+    }
+    if (basis.length === 2) {
+      const [a, b, c, d] = planeCorners(basis[0], basis[1], 3);
+      // Two triangles make the square; its 4 edges are the outline.
+      return {
+        triangles: new Float32Array([...a, ...b, ...c, ...a, ...c, ...d]),
+        outline: new Float32Array([...a, ...b, ...b, ...c, ...c, ...d, ...d, ...a]),
+      };
+    }
+    return {};
+  }, [basis.flat().join()]);
+
+  return (
+    <>
+      {shape.line && <Lines points={shape.line} color={color} />}
+      {shape.triangles && (
+        <mesh>
+          <bufferGeometry>
+            <bufferAttribute attach="attributes-position" args={[shape.triangles, 3]} />
+          </bufferGeometry>
+          <meshBasicMaterial color={color} transparent opacity={0.22} depthWrite={false} side={THREE.DoubleSide} />
+        </mesh>
+      )}
+      {shape.outline && <Lines points={shape.outline} color={color} />}
+    </>
+  );
+}
+
 /** Turn our columns-storage matrix into a three.js 4x4 matrix (three.js's set() takes the numbers row by row). */
 function toMatrix4([a, b, c]: Mat3): THREE.Matrix4 {
   return new THREE.Matrix4().set(a[0], b[0], c[0], 0, a[1], b[1], c[1], 0, a[2], b[2], c[2], 0, 0, 0, 0, 1);
@@ -116,7 +158,17 @@ const AXES = new Float32Array([-3.5, 0, 0, 3.5, 0, 0, 0, -3.5, 0, 0, 3.5, 0, 0, 
 const CUBE = new THREE.BoxGeometry(1, 1, 1).translate(0.5, 0.5, 0.5);
 const CUBE_EDGES = new THREE.EdgesGeometry(CUBE);
 
-export default function Scene3D({ matrix, showK = true, showCube = true, showSheet = false, vector, zoomOut = 1 }: Props) {
+export default function Scene3D({
+  matrix,
+  showK = true,
+  showCube = true,
+  showSheet = false,
+  vector,
+  zoomOut = 1,
+  columnSpace,
+  nullSpace,
+  nullVectors,
+}: Props) {
   const colours = useColours();
   const box = useRef<HTMLDivElement>(null);
 
@@ -151,6 +203,7 @@ export default function Scene3D({ matrix, showK = true, showCube = true, showShe
         {/* Everything in this group is moved by the matrix. */}
         <group matrixAutoUpdate={false} matrix={moved}>
           {showSheet && <Lines points={FLOOR} color={colours.moving} />}
+          {nullSpace && <Subspace basis={nullSpace} color={colours.null} />}
           {showCube && (
             <>
               <mesh geometry={CUBE}>
@@ -167,6 +220,17 @@ export default function Scene3D({ matrix, showK = true, showCube = true, showShe
         <Arrow tip={jhat} color={colours.jhat} label="ĵ" />
         {showK && <Arrow tip={khat} color={colours.khat} label="k̂" />}
         {vector && <Arrow tip={vector} color={colours.vec} label="v" />}
+        {columnSpace && <Subspace basis={columnSpace} color={colours.space} />}
+        {nullVectors?.map((tip, i) =>
+          length3(tip) > 0.05 ? (
+            <Arrow key={i} tip={tip} color={colours.null} />
+          ) : (
+            <mesh key={i}>
+              <sphereGeometry args={[0.09, 16, 12]} />
+              <meshBasicMaterial color={colours.null} />
+            </mesh>
+          ),
+        )}
 
         {/* Drag with one finger (or the mouse) to orbit; pinch or scroll to zoom. */}
         <OrbitControls enablePan={false} enableDamping minDistance={3} maxDistance={18} />

@@ -5,6 +5,7 @@
 import { useMemo, type ReactNode } from 'react';
 import { Text, Vector } from 'mafs';
 import {
+  distance,
   gridLines,
   identity,
   mapAt,
@@ -117,11 +118,12 @@ export default function TransformPlayer({
         <MathPath d={toPath(moved)} className="moving-grid" />
         <MathPath d={toPath(axes)} className="moving-axes" />
         {extra && <MathPath d={toPath(extra)} className="moving-extra" />}
-        {showBasis && (
-          <>
-            <Vector tail={origin} tip={ihat} color="var(--ihat)" weight={3} />
-            <Vector tail={origin} tip={jhat} color="var(--jhat)" weight={3} />
-          </>
+        {/* An arrow squashed to (almost) nothing would still show its head, so skip it. */}
+        {showBasis && distance(origin, ihat) > 0.05 && (
+          <Vector tail={origin} tip={ihat} color="var(--ihat)" weight={3} />
+        )}
+        {showBasis && distance(origin, jhat) > 0.05 && (
+          <Vector tail={origin} tip={jhat} color="var(--jhat)" weight={3} />
         )}
         {trackedTip && (
           <>

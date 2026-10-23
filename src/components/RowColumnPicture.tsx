@@ -6,7 +6,6 @@ import { add, augmentedRows, equationLine, equationText, formatNumber, scale, so
 import Plane from './Plane';
 import './Demo.css';
 import './EliminationPlayer.css';
-import './RowColumnPicture.css';
 
 interface Props {
   /** The matrix A, stored as its columns. Must have det ≠ 0. */

@@ -545,10 +545,17 @@ export interface EliminationStep {
   changedRow: number | null;
 }
 
-/** Every step of elimination, and the answer (null when there is no unique solution). */
+/**
+ * Every step of elimination, and what it found:
+ * - solution: the answer, or null when there is no unique solution (none at all, or infinitely many).
+ * - pivotColumns: the columns of A that got a pivot (counting from 0). How many there are is the rank.
+ * - rref: the matrix at the end, with every pivot 1 and 0s above and below it.
+ */
 export interface Elimination {
   steps: EliminationStep[];
   solution: number[] | null;
+  pivotColumns: number[];
+  rref: number[][];
 }
 
 /** Numbers this close to 0 count as 0: rounding errors shouldn't count as a pivot. */
@@ -557,64 +564,98 @@ const TINY = 1e-9;
 /**
  * Gaussian elimination on an augmented matrix [A | b], written down step by step.
  * NOTE: unlike every other matrix in this file, the augmented matrix is stored as ROWS, because
- * elimination works on rows. x + 2y = 5, 3x + 4y = 6 is [[1, 2, 5], [3, 4, 6]]. Works for 2 or 3 equations.
+ * elimination works on rows. x + 2y = 5, 3x + 4y = 6 is [[1, 2, 5], [3, 4, 6]]. The last number of each
+ * row is b; any number of equations and unknowns works (2x3, 3x3, 2x2...).
  *
  * The order is the one taught in class:
  * 1. Going down: under each pivot, make every number 0 ("R2 → R2 − 3·R1"). Swap rows if a pivot is 0.
+ *    A column with no pivot is skipped: its unknown is "free".
  * 2. Going up: make each pivot 1 ("R2 → (−1/2)·R2"), then make every number above it 0.
- * At the end the left side is the identity, and the right-hand column is the solution.
+ * When every column has a pivot, the left side ends as the identity and the right-hand column is the solution.
  * Row operations never change the solution: every step's equations are solved by the same x.
  */
 export function rrefSteps(augmented: number[][]): Elimination {
   const m = augmented.map((row) => [...row]);
-  const n = m.length;
+  const unknowns = m[0].length - 1;
   const steps: EliminationStep[] = [{ description: 'Start', matrix: copyRows(m), changedRow: null }];
   const record = (description: string, changedRow: number) =>
     steps.push({ description, matrix: copyRows(m), changedRow });
+  const pivotColumns: number[] = [];
 
-  // 1. Going down.
-  for (let c = 0; c < n; c++) {
-    if (Math.abs(m[c][c]) < TINY) {
-      const below = m.findIndex((row, r) => r > c && Math.abs(row[c]) >= TINY);
+  // 1. Going down. p is the row the next pivot goes in.
+  for (let c = 0, p = 0; c < unknowns && p < m.length; c++) {
+    if (Math.abs(m[p][c]) < TINY) {
+      const below = m.findIndex((row, r) => r > p && Math.abs(row[c]) >= TINY);
       if (below === -1) {
-        steps.push({
-          description: `No unique solution: column ${c + 1} has no pivot`,
-          matrix: copyRows(m),
-          changedRow: null,
-        });
-        return { steps, solution: null };
+        steps.push({ description: `Column ${c + 1} has no pivot: move on`, matrix: copyRows(m), changedRow: null });
+        continue;
       }
-      [m[c], m[below]] = [m[below], m[c]];
-      record(`R${c + 1} ↔ R${below + 1}`, c);
+      [m[p], m[below]] = [m[below], m[p]];
+      record(`R${p + 1} ↔ R${below + 1}`, p);
     }
-    for (let r = c + 1; r < n; r++) {
-      const k = m[r][c] / m[c][c];
+    for (let r = p + 1; r < m.length; r++) {
+      const k = m[r][c] / m[p][c];
       if (Math.abs(k) < TINY) continue;
-      m[r] = m[r].map((x, j) => x - k * m[c][j]);
+      m[r] = m[r].map((x, j) => cleanZero(x - k * m[p][j]));
       m[r][c] = 0; // exactly 0, not 1e-17
-      record(`R${r + 1} → R${r + 1} ${k > 0 ? '−' : '+'} ${multiplier(Math.abs(k))}R${c + 1}`, r);
+      record(`R${r + 1} → R${r + 1} ${k > 0 ? '−' : '+'} ${multiplier(Math.abs(k))}R${p + 1}`, r);
     }
+    pivotColumns.push(c);
+    p++;
   }
 
-  // 2. Going up.
-  for (let c = n - 1; c >= 0; c--) {
-    const pivot = m[c][c];
+  // 2. Going up: pivot number p sits in row p.
+  for (let p = pivotColumns.length - 1; p >= 0; p--) {
+    const c = pivotColumns[p];
+    const pivot = m[p][c];
     if (Math.abs(pivot - 1) >= TINY) {
-      m[c] = m[c].map((x) => x / pivot);
-      m[c][c] = 1;
+      m[p] = m[p].map((x) => cleanZero(x / pivot));
+      m[p][c] = 1;
       const factor = formatNumber(1 / pivot).replace('-', '−');
-      record(`R${c + 1} → ${factor.includes('/') ? `(${factor})` : factor}·R${c + 1}`, c);
+      record(`R${p + 1} → ${factor.includes('/') ? `(${factor})` : factor}·R${p + 1}`, p);
     }
-    for (let r = c - 1; r >= 0; r--) {
+    for (let r = p - 1; r >= 0; r--) {
       const k = m[r][c];
       if (Math.abs(k) < TINY) continue;
-      m[r] = m[r].map((x, j) => x - k * m[c][j]);
+      m[r] = m[r].map((x, j) => cleanZero(x - k * m[p][j]));
       m[r][c] = 0;
-      record(`R${r + 1} → R${r + 1} ${k > 0 ? '−' : '+'} ${multiplier(Math.abs(k))}R${c + 1}`, r);
+      record(`R${r + 1} → R${r + 1} ${k > 0 ? '−' : '+'} ${multiplier(Math.abs(k))}R${p + 1}`, r);
     }
   }
 
-  return { steps, solution: m.map((row) => row[n] + 0) };
+  const rref = copyRows(m);
+  // A row with only 0s on the left but not on the right says "0 = 3": impossible.
+  const impossible = rref.findIndex((row) => isZeroRow(row.slice(0, -1)) && Math.abs(row[unknowns]) >= TINY);
+  if (impossible !== -1) {
+    steps.push({
+      description: `No unique solution: R${impossible + 1} says 0 = ${formatNumber(rref[impossible][unknowns])}, so there is no solution`,
+      matrix: rref,
+      changedRow: null,
+    });
+    return { steps, solution: null, pivotColumns, rref };
+  }
+  if (pivotColumns.length < unknowns) {
+    const free = [...Array(unknowns).keys()].filter((c) => !pivotColumns.includes(c));
+    steps.push({
+      description: `No unique solution: column ${free[0] + 1} has no pivot`,
+      matrix: rref,
+      changedRow: null,
+    });
+    return { steps, solution: null, pivotColumns, rref };
+  }
+  const solution = new Array<number>(unknowns).fill(0);
+  pivotColumns.forEach((c, p) => (solution[c] = rref[p][unknowns] + 0));
+  return { steps, solution, pivotColumns, rref };
+}
+
+/** Rounding errors (like 1e-17) become exactly 0. */
+function cleanZero(x: number): number {
+  return Math.abs(x) < TINY ? 0 : x;
+}
+
+/** true when every number in the list is (about) 0. */
+function isZeroRow(row: number[]): boolean {
+  return row.every((x) => Math.abs(x) < TINY);
 }
 
 /** "3·" for 3, "3/2·" for 1.5, and nothing at all for 1 (R2 − R1, not R2 − 1·R1). */
@@ -702,4 +743,200 @@ export function randomSystem(size: 2 | 3, rand: () => number = Math.random): num
   // A 0 in the top-left corner would need a row swap first: allowed, but not for the first example.
   if (Math.abs(det) < TINY || rows[0][0] === 0) return randomSystem(size, rand);
   return rows.map((row) => [...row, row.reduce((sum, k, i) => sum + k * answer[i], 0)]);
+}
+
+// ---------- Rank and the four subspaces (Module 4 part 2) ----------
+// These take a matrix of any size stored as its COLUMNS, like applyColumns: a 2x3 matrix is 3 columns of
+// 2 numbers. The rows (1, 2, 3) and (2, 4, 6) are the columns [[1, 2], [2, 4], [3, 6]].
+
+/** Swap rows and columns. The columns of the transpose are the rows of the matrix (and the other way round). */
+export function transpose(m: number[][]): number[][] {
+  return m[0].map((_, r) => m.map((col) => col[r]));
+}
+
+/** Elimination on A·x = 0, with A given as columns. The rows are A's rows with a 0 on the end. */
+function eliminate(columns: number[][]): Elimination {
+  return rrefSteps(transpose(columns).map((row) => [...row, 0]));
+}
+
+/** How many columns get a pivot = how many dimensions the output has (2 = a plane, 1 = a line, 0 = a point). */
+export function rank(columns: number[][]): number {
+  return eliminate(columns).pivotColumns.length;
+}
+
+/**
+ * Where the matrix can land: the column space. Its basis is the original columns that got a pivot
+ * (the other columns are made of these, so they add nothing new).
+ */
+export function columnSpaceBasis(columns: number[][]): number[][] {
+  return eliminate(columns).pivotColumns.map((c) => [...columns[c]]);
+}
+
+/**
+ * Everything the matrix squashes to 0: the null space. One basis vector per free column (a column with no
+ * pivot): set that unknown to 1, the other free ones to 0, and read the pivot unknowns off the rref.
+ * Rows (1, 2) and (2, 4): x + 2y = 0, so y = 1 gives x = −2, the vector (−2, 1).
+ */
+export function nullSpaceBasis(columns: number[][]): number[][] {
+  const { pivotColumns, rref } = eliminate(columns);
+  const unknowns = columns.length;
+  const free = [...Array(unknowns).keys()].filter((c) => !pivotColumns.includes(c));
+  return free.map((f) => {
+    const v = new Array<number>(unknowns).fill(0);
+    v[f] = 1;
+    pivotColumns.forEach((c, p) => (v[c] = -rref[p][f] + 0));
+    return v;
+  });
+}
+
+/** The rows' span, a space in the input: the column space of the transpose. */
+export function rowSpaceBasis(columns: number[][]): number[][] {
+  return columnSpaceBasis(transpose(columns));
+}
+
+/** The left null space, in the output: vectors y with yᵀA = 0. It is the null space of the transpose. */
+export function leftNullSpaceBasis(columns: number[][]): number[][] {
+  return nullSpaceBasis(transpose(columns));
+}
+
+/** Every solution of A·x = b: one particular solution, plus any mix of the null space directions. */
+export interface CompleteSolution {
+  particular: number[];
+  directions: number[][];
+}
+
+/**
+ * All solutions of A·x = b (A as columns), or null when there are none (b is not in the column space).
+ * The particular solution sets every free unknown to 0. Rows (1, 2), (2, 4) with b = (3, 6):
+ * x = (3, 0) + t·(−2, 1). With b = (3, 7) elimination ends with "0 = 1": no solution.
+ */
+export function completeSolution(columns: number[][], b: number[]): CompleteSolution | null {
+  const unknowns = columns.length;
+  const { pivotColumns, rref } = rrefSteps(transpose(columns).map((row, r) => [...row, b[r]]));
+  const impossible = rref.some((row) => isZeroRow(row.slice(0, -1)) && Math.abs(row[unknowns]) >= TINY);
+  if (impossible) return null;
+  const particular = new Array<number>(unknowns).fill(0);
+  pivotColumns.forEach((c, p) => (particular[c] = rref[p][unknowns] + 0));
+  return { particular, directions: nullSpaceBasis(columns) };
+}
+
+// ---------- Cramer's rule ----------
+
+/**
+ * The answer to A·x = v by Cramer's rule, with the determinants it uses.
+ * numerators[i] is det(A with column i swapped for v); the answer's number i is numerators[i] / det.
+ */
+export interface Cramer<V> {
+  solution: V;
+  det: number;
+  numerators: number[];
+}
+
+/**
+ * Cramer's rule for 2x2. x = det([v, column 2]) / det(A), y = det([column 1, v]) / det(A). null when det = 0.
+ * Columns (−2, 0), (1, −1) and v = (−4, −2): numerators 6 and 4, det 2, so x = 3, y = 2.
+ */
+export function cramer2(m: Mat2, v: Vec2): Cramer<Vec2> | null {
+  const det = det2(m);
+  if (Math.abs(det) < TINY) return null;
+  const numerators = [det2([v, m[1]]), det2([m[0], v])];
+  return { solution: [numerators[0] / det + 0, numerators[1] / det + 0], det, numerators };
+}
+
+/** Cramer's rule for 3x3: the same idea, one column swapped for v at a time. null when det = 0. */
+export function cramer3(m: Mat3, v: Vec3): Cramer<Vec3> | null {
+  const det = det3(m);
+  if (Math.abs(det) < TINY) return null;
+  const numerators = [det3([v, m[1], m[2]]), det3([m[0], v, m[2]]), det3([m[0], m[1], v])];
+  return { solution: numerators.map((n) => n / det + 0) as Vec3, det, numerators };
+}
+
+/** v made 1 long, keeping its direction. */
+export function normalize3(v: Vec3): Vec3 {
+  const len = length3(v);
+  return [v[0] / len + 0, v[1] / len + 0, v[2] / len + 0];
+}
+
+/**
+ * Two arrows, 1 long and at right angles, that span the same plane as u and w (u and w must not be on one line).
+ * The first points along u; the second is w with its u-part taken away (Gram–Schmidt). Used to draw a plane as a square.
+ */
+export function orthonormalPair(u: Vec3, w: Vec3): [Vec3, Vec3] {
+  const e1 = normalize3(u);
+  const along = dot3(w, e1);
+  const e2 = normalize3([w[0] - along * e1[0], w[1] - along * e1[1], w[2] - along * e1[2]]);
+  return [e1, e2];
+}
+
+/** The 4 corners of a square centred on the origin, lying in the plane spanned by u and w, `size` from the centre to each side. */
+export function planeCorners(u: Vec3, w: Vec3, size: number): Vec3[] {
+  const [e1, e2] = orthonormalPair(u, w);
+  return [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(
+    ([a, b]) => [0, 1, 2].map((i) => size * (a * e1[i] + b * e2[i]) + 0) as Vec3,
+  );
+}
+
+/** The parallelogram made by u and w: its corners 0, u, u + w, w. */
+export function parallelogram(u: Vec2, w: Vec2): Vec2[] {
+  return [[0, 0], u, add(u, w), w];
+}
+
+/** The two parallelograms of Cramer's rule for one unknown, and their signed areas. */
+export interface CramerPicture {
+  /** Its sides, before the matrix: î and x (for y), or x and ĵ (for x). */
+  inputSides: [Vec2, Vec2];
+  input: Vec2[];
+  /** Its area is the unknown itself. */
+  inputArea: number;
+  /** After the matrix: column 1 and v (for y), or v and column 2 (for x). */
+  outputSides: [Vec2, Vec2];
+  output: Vec2[];
+  /** det(A) times the input area: Cramer's top determinant. */
+  outputArea: number;
+}
+
+/**
+ * Cramer's rule as areas. For y: the parallelogram made by î and x has area y (its height above the x-axis,
+ * times a base of 1). The matrix sends î to column 1 and x to v, and multiplies every area by det(A).
+ * So the area made by column 1 and v is det(A)·y, and y = that area / det(A). For x, use x and ĵ the same way.
+ * `unknown` is 0 for x and 1 for y.
+ */
+export function cramerPicture(m: Mat2, x: Vec2, unknown: 0 | 1): CramerPicture {
+  const v = matVec(m, x);
+  const inputSides: [Vec2, Vec2] = unknown === 1 ? [[1, 0], x] : [x, [0, 1]];
+  const outputSides: [Vec2, Vec2] = unknown === 1 ? [m[0], v] : [v, m[1]];
+  return {
+    inputSides,
+    input: parallelogram(...inputSides),
+    inputArea: det2(inputSides) + 0,
+    outputSides,
+    output: parallelogram(...outputSides),
+    outputArea: det2(outputSides) + 0,
+  };
+}
+
+/** v made 1 long, keeping its direction. */
+export function normalize(v: Vec2): Vec2 {
+  const len = length(v);
+  return [v[0] / len + 0, v[1] / len + 0];
+}
+
+/**
+ * If p is within `tolerance` of the line through the origin along `direction`, move it onto the line
+ * (straight across, to the nearest point). Otherwise leave it. Dragging rarely lands exactly on a line,
+ * so this makes "b is on the column space" reachable by hand.
+ * With `step`, the point on the line is also rounded to a whole number of steps along `direction`
+ * (step 0.5 along (1, 2) gives (1, 2), (1.5, 3), (2, 4)...), so the answers come out tidy.
+ */
+export function snapToLine(p: Vec2, direction: Vec2, tolerance: number, step?: number): Vec2 {
+  const onLine = projectOnto(p, direction);
+  if (!onLine || distance(p, onLine) > tolerance) return p;
+  if (!step) return onLine;
+  const copies = Math.round(dot(p, direction) / dot(direction, direction) / step) * step;
+  return [copies * direction[0] + 0, copies * direction[1] + 0];
+}
+
+/** One solution from a complete solution: particular + t copies of the first direction (or just particular if there are none). */
+export function pointOnSolution({ particular, directions }: CompleteSolution, t: number): number[] {
+  return particular.map((p, i) => p + t * (directions[0]?.[i] ?? 0) + 0);
 }

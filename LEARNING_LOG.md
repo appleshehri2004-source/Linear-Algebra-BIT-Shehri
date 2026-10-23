@@ -317,3 +317,44 @@ The same system twice: lines crossing (row picture) next to columns adding up to
 - **A hidden browser tab doesn't run React's after-render code.** Every exercise (even in Lesson 3.1) said "Loading a question…" while the preview was hidden, and worked as soon as it was on screen. Not a bug in the site.
 - **Long formulas don't fit a phone.** A chain of four matrices was 686 px wide; one matrix per step fits.
 - **Checked on the iPhone Simulator** (iPhone 17e, Safari): Next takes one step at a time, 9/2 shows as a clean fraction, and the lines end as x = −4 (upright) and y = 9/2 (flat), crossing at the yellow dot.
+
+## Day 9 (2026-10-23): Module 4 part 2, rank and the four subspaces
+
+Lessons 4.5 to 4.8: rank, column space and null space; the complete solution; the four fundamental subspaces; Cramer's rule as areas. (There is no lesson 4.4 yet: the list goes from 4.3 to 4.5.)
+
+### New files
+
+**`src/components/SubspaceView.tsx`** (Lesson 4.5)
+The input plane and the output plane side by side. The null space is pink in the input, with pink arrows on it; the column space is violet in the output. On Play the pink arrows ride along with the grid and all land on the origin. Buttons for rank 2, 1 and 0.
+
+**`src/components/CompleteSolutionView.tsx`** (Lesson 4.6)
+Drag b in the output. Near the violet column space line it snaps on, and the input shows every solution as a gold line, parallel to the pink null space. A t slider walks one solution along it, and A·x stays on b. Off the line: "No solution".
+
+**`src/components/FourSubspacesView.tsx`** (Lesson 4.7)
+Row space ⟂ null space in the input, column space ⟂ left null space in the output, with right-angle marks. Drag column 1, slide k (column 2 = k · column 1): the matrix stays rank 1 and both angles stay 90°.
+
+**`src/components/CramerView.tsx`** (Lesson 4.8)
+The parallelogram made by î and x (area y) next to the one made by column 1 and v (area det(A)·y). "Find x" does the same with x and ĵ. Drag x and the three lines of working update.
+
+**`src/content/lessons/4-5-…` to `4-8-…`** and **12 new questions** in `module4.ts`.
+
+### Changed files
+
+- **`linalg.ts`** and **`linalg.test.ts`**: `rrefSteps` now keeps going when a column has no pivot, works for any size, and returns the pivot columns and the finished matrix. New: `transpose`, `rank`, the four `…Basis` functions, `completeSolution`, `cramer2`, `cramer3`, `cramerPicture`, `snapToLine`, `pointOnSolution`, and helpers for drawing planes in 3D (232 tests now).
+- **`Stage3D.tsx`** and **`Scene3D.tsx`**: `showSubspaces` draws the column space (violet) and null space (pink) in 3D; `zoomOut` for long columns.
+- **`TransformPlayer.tsx`**: an arrow squashed to nothing is hidden (it used to leave a stray arrowhead at the origin).
+- **`global.css`**: colours `--space` (violet: column and row space) and `--null` (pink: null spaces).
+- **`Demo.css`**: the side-by-side layout moved here from `RowColumnPicture.css` (deleted) so every demo can use it.
+
+### Things I learned
+
+- **Rank is just "how many pivots".** Elimination already finds it: a column with no pivot means its unknown is free, and each free unknown is one direction of the null space.
+- **rank + null space size = number of columns.** Every dimension the output loses turns up in the null space. A test checks it on 200 random matrices.
+- **The null space is at right angles to the rows by definition.** A·x = 0 says each row dotted with x is 0. So the 90° in Lesson 4.7 can never break, whatever the matrix: a test checks 200 random rank-1 matrices.
+- **Every solution = one solution + the null space.** If two x's both give b, their difference gives 0. That's why the gold line is always parallel to the pink one.
+- **Cramer's rule is about areas.** î and x make a parallelogram of area y; the matrix multiplies it by det(A); so y = (that new area) ÷ det(A).
+- **In 3D, putting the null space inside the "moving" group squashes it for free.** three.js applies the matrix to it, so the pink line shrinks to a point with no extra code.
+- **I applied a matrix twice by mistake.** TransformPlayer already moves its yellow vector by A, and I gave it v = A·x, so it drew A·A·x. Giving it x fixed it.
+- **Dragging onto an exact line is nearly impossible by hand.** b only snapped within 0.25 of a square and I missed twice with a mouse, so it's 0.4 now, and it lands on tidy points like (2, 4) so the answers are clean.
+- **The site lives under /Linear-Algebra-BIT-Shehri/.** Serving `dist` on its own gave 404s for every script; it has to be served under that folder name. Another chat's dev server was also running, so I previewed the built site on my own port.
+- **A demo with client:visible only starts once it's on screen.** My first angle readings in 4.7 came from the page before the demo had started, so I redid them on the live demo.

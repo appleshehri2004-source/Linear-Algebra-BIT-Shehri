@@ -12,6 +12,7 @@ import {
   angleBetween,
   applyColumns,
   cross3,
+  dot3,
   det3,
   distance,
   identity3,
@@ -65,6 +66,23 @@ import {
   randomSystem,
   inverse2,
   rrefSteps,
+  rank,
+  transpose,
+  columnSpaceBasis,
+  nullSpaceBasis,
+  rowSpaceBasis,
+  leftNullSpaceBasis,
+  completeSolution,
+  cramer2,
+  cramer3,
+  normalize3,
+  orthonormalPair,
+  planeCorners,
+  parallelogram,
+  cramerPicture,
+  normalize,
+  snapToLine,
+  pointOnSolution,
   solve2,
 } from './linalg';
 
@@ -866,5 +884,245 @@ describe('augmentedRows', () => {
   it('turns A (stored as columns) and v into the rows of [A | v]', () => {
     // Columns (2, 1) and (-1, 1): the equations 2x − y = 1 and x + y = 5.
     expect(augmentedRows([[2, 1], [-1, 1]], [1, 5])).toEqual([[2, -1, 1], [1, 1, 5]]);
+  });
+});
+
+describe('rrefSteps on systems without a unique solution', () => {
+  it('skips a column with no pivot and keeps going', () => {
+    // Columns (1, 2, 3), (2, 4, 6), (0, 1, 1), written as rows: column 2 has no pivot, column 3 does.
+    const { pivotColumns, rref } = rrefSteps([[1, 2, 0, 0], [2, 4, 1, 0], [3, 6, 1, 0]]);
+    expect(pivotColumns).toEqual([0, 2]);
+    expect(rref).toEqual([[1, 2, 0, 0], [0, 0, 1, 0], [0, 0, 0, 0]]);
+  });
+
+  it('says when a row has become 0 = something', () => {
+    const { steps, solution } = rrefSteps([[1, 2, 3], [2, 4, 7]]);
+    expect(solution).toBeNull();
+    expect(steps[steps.length - 1].description).toMatch(/0 = 1/);
+  });
+
+  it('works for more unknowns than equations', () => {
+    expect(rrefSteps([[1, 2, 3, 0], [2, 4, 6, 0]]).pivotColumns).toEqual([0]);
+  });
+});
+
+/** Turn a matrix given as rows into the columns that the subspace functions want. */
+const fromRows = (rows: number[][]) => transpose(rows);
+
+/** true when u and w point along the same line (one is a multiple of the other). */
+function sameLine(u: number[], w: number[]): boolean {
+  return isClose(u[0] * w[1] - u[1] * w[0], 0, 1e-9);
+}
+
+describe('transpose', () => {
+  it('turns rows into columns', () => {
+    expect(transpose([[1, 2, 3], [4, 5, 6]])).toEqual([[1, 4], [2, 5], [3, 6]]);
+  });
+});
+
+describe('rank', () => {
+  it('is 2 for the identity, 1 for columns (1, 0), (0, 0), 0 for the zero matrix', () => {
+    expect(rank([[1, 0], [0, 1]])).toBe(2);
+    expect(rank([[1, 0], [0, 0]])).toBe(1);
+    expect(rank([[0, 0], [0, 0]])).toBe(0);
+  });
+
+  it('is 2 for the 3x3 matrix with columns (1, 2, 3), (2, 4, 6), (0, 1, 1)', () => {
+    expect(rank([[1, 2, 3], [2, 4, 6], [0, 1, 1]])).toBe(2);
+  });
+
+  it('is 3 for Day 8’s 3x3 system', () => {
+    expect(rank(fromRows([[1, 1, 1], [0, 2, 5], [2, 5, -1]]))).toBe(3);
+  });
+});
+
+describe('the four subspaces', () => {
+  it('rows (1, 2), (2, 4): the null space is the line through (−2, 1)', () => {
+    const A = fromRows([[1, 2], [2, 4]]);
+    expect(nullSpaceBasis(A)).toEqual([[-2, 1]]);
+    expect(columnSpaceBasis(A)).toEqual([[1, 2]]);
+    expect(rowSpaceBasis(A)).toEqual([[1, 2]]);
+    expect(leftNullSpaceBasis(A)).toEqual([[-2, 1]]);
+  });
+
+  it('rows (1, 2, 3), (2, 4, 6): rank 1, null space dimension 2, left null space dimension 1', () => {
+    const A = fromRows([[1, 2, 3], [2, 4, 6]]);
+    expect(rank(A)).toBe(1);
+    expect(nullSpaceBasis(A)).toHaveLength(2);
+    expect(leftNullSpaceBasis(A)).toHaveLength(1);
+    // Every null space vector really is sent to 0.
+    for (const v of nullSpaceBasis(A)) expect(applyColumns(A, v)).toEqual([0, 0]);
+  });
+
+  it('the identity squashes nothing: its null space is just 0 (no basis vectors)', () => {
+    expect(nullSpaceBasis([[1, 0], [0, 1]])).toEqual([]);
+    expect(columnSpaceBasis([[1, 0], [0, 1]])).toEqual([[1, 0], [0, 1]]);
+  });
+
+  it('the zero matrix squashes everything: the null space is the whole plane', () => {
+    expect(nullSpaceBasis([[0, 0], [0, 0]])).toEqual([[1, 0], [0, 1]]);
+    expect(columnSpaceBasis([[0, 0], [0, 0]])).toEqual([]);
+  });
+
+  it('rank + null space dimension = number of columns, for many random matrices', () => {
+    let seed = 7;
+    const rand = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+    for (let i = 0; i < 200; i++) {
+      const cols = 2 + Math.floor(rand() * 2);
+      const rows = 2 + Math.floor(rand() * 2);
+      const A = Array.from({ length: cols }, () => Array.from({ length: rows }, () => Math.floor(rand() * 5) - 2));
+      expect(rank(A) + nullSpaceBasis(A).length).toBe(cols);
+      expect(rank(transpose(A))).toBe(rank(A));
+    }
+  });
+
+  it('for any rank-1 2x2 matrix: row space ⟂ null space, column space ⟂ left null space', () => {
+    let seed = 11;
+    const rand = () => ((seed = (seed * 16807) % 2147483647) / 2147483647) * 6 - 3;
+    for (let i = 0; i < 200; i++) {
+      const c1: [number, number] = [rand(), rand()];
+      const k = rand();
+      const A = [c1, [k * c1[0], k * c1[1]]];
+      if (Math.hypot(...c1) < 0.1) continue;
+      expect(rank(A)).toBe(1);
+      const [row] = rowSpaceBasis(A);
+      const [nul] = nullSpaceBasis(A);
+      const [col] = columnSpaceBasis(A);
+      const [left] = leftNullSpaceBasis(A);
+      expect(dot(row as Vec2, nul as Vec2)).toBeCloseTo(0, 9);
+      expect(dot(col as Vec2, left as Vec2)).toBeCloseTo(0, 9);
+      expect(sameLine(col, c1)).toBe(true);
+    }
+  });
+});
+
+describe('completeSolution', () => {
+  const A = fromRows([[1, 2], [2, 4]]);
+
+  it('b = (3, 6): x = (3, 0) + t·(−2, 1)', () => {
+    expect(completeSolution(A, [3, 6])).toEqual({ particular: [3, 0], directions: [[-2, 1]] });
+  });
+
+  it('b = (3, 7): no solution', () => {
+    expect(completeSolution(A, [3, 7])).toBeNull();
+  });
+
+  it('every point on the solution line really solves A·x = b', () => {
+    const { particular, directions } = completeSolution(A, [3, 6])!;
+    for (const t of [-2, 0.5, 3]) {
+      const x = particular.map((p, i) => p + t * directions[0][i]);
+      expect(applyColumns(A, x)).toEqual([3, 6]);
+    }
+  });
+
+  it('with an invertible matrix there is one solution and no directions', () => {
+    expect(completeSolution([[2, 1], [-1, 1]], [1, 5])).toEqual({ particular: [2, 3], directions: [] });
+  });
+});
+
+describe('cramer2', () => {
+  it('columns (−2, 0), (1, −1), output (−4, −2): numerators 6 and 4, det 2, answer (3, 2)', () => {
+    expect(cramer2([[-2, 0], [1, -1]], [-4, -2])).toEqual({ solution: [3, 2], det: 2, numerators: [6, 4] });
+  });
+
+  it('gives null when det = 0', () => {
+    expect(cramer2([[1, 2], [2, 4]], [3, 6])).toBeNull();
+  });
+});
+
+describe('cramer3', () => {
+  it('agrees with rrefSteps on Day 8’s system: (5, 3, −2)', () => {
+    const rows = [[1, 1, 1, 6], [0, 2, 5, -4], [2, 5, -1, 27]];
+    const A = fromRows(rows.map((row) => row.slice(0, 3))) as Mat3;
+    const v = rows.map((row) => row[3]) as Vec3;
+    const { solution } = cramer3(A, v)!;
+    const fromElimination = rrefSteps(rows).solution!;
+    solution.forEach((n, i) => expect(n).toBeCloseTo(fromElimination[i], 9));
+    [5, 3, -2].forEach((n, i) => expect(solution[i]).toBeCloseTo(n, 9));
+  });
+});
+
+describe('drawing planes in 3D', () => {
+  it('normalize3 keeps the direction and makes the length 1', () => {
+    expect(normalize3([0, 3, 4])).toEqual([0, 0.6, 0.8]);
+  });
+
+  it('orthonormalPair gives two unit arrows at right angles in the same plane', () => {
+    const u: Vec3 = [1, 2, 3];
+    const w: Vec3 = [0, 1, 1];
+    const [e1, e2] = orthonormalPair(u, w);
+    expect(dot3(e1, e2)).toBeCloseTo(0, 9);
+    expect(dot3(e1, e1)).toBeCloseTo(1, 9);
+    expect(dot3(e2, e2)).toBeCloseTo(1, 9);
+    // Both are at right angles to u × w, so they lie in the plane of u and w.
+    const normal = cross3(u, w);
+    expect(dot3(e1, normal)).toBeCloseTo(0, 9);
+    expect(dot3(e2, normal)).toBeCloseTo(0, 9);
+  });
+
+  it('planeCorners on the floor gives the square from (-2, -2) to (2, 2)', () => {
+    expect(planeCorners([1, 0, 0], [0, 1, 0], 2)).toEqual([[-2, -2, 0], [2, -2, 0], [2, 2, 0], [-2, 2, 0]]);
+  });
+});
+
+describe('Cramer’s rule as areas', () => {
+  const A: Mat2 = [[-2, 0], [1, -1]];
+
+  it('parallelogram lists the corners 0, u, u + w, w', () => {
+    expect(parallelogram([1, 0], [3, 2])).toEqual([[0, 0], [1, 0], [4, 2], [3, 2]]);
+  });
+
+  it('for y: area made by î and x is y = 2; made by column 1 and v it is det(A)·y = 4', () => {
+    const p = cramerPicture(A, [3, 2], 1);
+    expect(p.inputArea).toBe(2);
+    expect(p.outputArea).toBe(4);
+    expect(p.outputSides).toEqual([[-2, 0], [-4, -2]]);
+  });
+
+  it('for x: area made by x and ĵ is x = 3; made by v and column 2 it is det(A)·x = 6', () => {
+    const p = cramerPicture(A, [3, 2], 0);
+    expect(p.inputArea).toBe(3);
+    expect(p.outputArea).toBe(6);
+  });
+
+  it('the output parallelogram is the input one moved by the matrix, and the areas match cramer2', () => {
+    for (const x of [[3, 2], [-1, 4], [0.5, -2]] as Vec2[]) {
+      const v = matVec(A, x);
+      const { numerators, det } = cramer2(A, v)!;
+      for (const unknown of [0, 1] as const) {
+        const p = cramerPicture(A, x, unknown);
+        expect(p.output).toEqual(transformShape(A, p.input));
+        expect(p.outputArea).toBeCloseTo(numerators[unknown], 9);
+        expect(p.outputArea / det).toBeCloseTo(x[unknown], 9);
+      }
+    }
+  });
+});
+
+describe('helpers for dragging b (Lesson 4.6)', () => {
+  it('normalize makes a vector 1 long', () => {
+    expect(normalize([3, 4])).toEqual([0.6, 0.8]);
+  });
+
+  it('snapToLine moves a nearby point onto the line, and leaves a far one alone', () => {
+    const near = snapToLine([3, 6.1], [1, 2], 0.25);
+    expect(near[0]).toBeCloseTo(3.04, 9);
+    expect(near[1]).toBeCloseTo(6.08, 9);
+    // After snapping, b really is in the column space: there is a solution.
+    expect(completeSolution([[1, 2], [2, 4]], near)).not.toBeNull();
+    expect(snapToLine([3, 7], [1, 2], 0.25)).toEqual([3, 7]);
+  });
+
+  it('snapToLine with a step lands on tidy points along the line', () => {
+    expect(snapToLine([2.1, 4.1], [1, 2], 0.25, 0.5)).toEqual([2, 4]);
+    expect(snapToLine([1.6, 3.1], [1, 2], 0.25, 0.5)).toEqual([1.5, 3]);
+    expect(snapToLine([3, 7], [1, 2], 0.25, 0.5)).toEqual([3, 7]);
+  });
+
+  it('pointOnSolution walks along the solution line, and every point solves A·x = b', () => {
+    const A = [[1, 2], [2, 4]];
+    const all = completeSolution(A, [3, 6])!;
+    expect(pointOnSolution(all, 1)).toEqual([1, 1]);
+    for (const t of [-1.5, 0, 2]) expect(applyColumns(A, pointOnSolution(all, t))).toEqual([3, 6]);
   });
 });
