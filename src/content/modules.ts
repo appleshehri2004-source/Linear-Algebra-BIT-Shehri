@@ -4,6 +4,7 @@ import { getCollection, type CollectionEntry } from 'astro:content';
 export const moduleNames: Record<number, string> = {
   1: 'Vectors',
   2: 'Linear transformations',
+  3: 'The determinant',
 };
 
 /** A module's name, or "Untitled" if it isn't named above yet. */

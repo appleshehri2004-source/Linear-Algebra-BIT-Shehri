@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import {
   add,
+  stripeLines,
+  centroid,
+  adBcPieces,
+  BLOB,
+  orientation,
+  polygonArea,
+  transformShape,
+  UNIT_SQUARE,
   angleBetween,
   applyColumns,
   cross3,
@@ -556,5 +564,97 @@ describe('liftColumns', () => {
   it('does to (x, y, 0) what the 3x2 matrix does to (x, y)', () => {
     const columns: [Vec3, Vec3] = [[2, -1, -2], [0, 1, 1]];
     expect(matVec3(liftColumns(columns), [1, 1, 0])).toEqual(applyColumns(columns, [1, 1]));
+  });
+});
+
+/** A repeatable "random" number maker (mulberry32), so a failing test fails the same way every time. */
+function seeded(seed: number): () => number {
+  return () => {
+    seed = (seed + 0x6d2b79f5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/** A random 2x2 matrix with whole numbers from -5 to 5. */
+function randomMatrix(rand: () => number): Mat2 {
+  const n = () => Math.floor(rand() * 11) - 5;
+  return [[n(), n()], [n(), n()]];
+}
+
+describe('det2 of a product', () => {
+  it('det(AB) = det(A) det(B) for 3 random pairs', () => {
+    const rand = seeded(3);
+    for (let i = 0; i < 3; i++) {
+      const a = randomMatrix(rand);
+      const b = randomMatrix(rand);
+      expect(det2(matMul(a, b))).toBe(det2(a) * det2(b));
+    }
+  });
+});
+
+describe('polygonArea', () => {
+  it('is 1 for the unit square', () => {
+    expect(polygonArea(UNIT_SQUARE)).toBe(1);
+  });
+
+  it('is negative when the corners go clockwise', () => {
+    expect(polygonArea([...UNIT_SQUARE].reverse())).toBe(-1);
+  });
+
+  it('the unit square lands on a shape whose area is det2', () => {
+    for (const m of [[[3, 0], [0, 2]], [[1, 0], [1, 1]], [[1, 1], [2, -1]], [[2, 4], [1, 2]]] as Mat2[]) {
+      expect(polygonArea(transformShape(m, UNIT_SQUARE))).toBeCloseTo(det2(m), 9);
+    }
+  });
+
+  it('the blob scales by the same factor as the square', () => {
+    const before = polygonArea(BLOB);
+    expect(before).toBeGreaterThan(0); // listed anticlockwise
+    const m: Mat2 = [[3, 0], [0, 2]];
+    expect(polygonArea(transformShape(m, BLOB))).toBeCloseTo(6 * before, 9);
+  });
+});
+
+describe('orientation', () => {
+  it('says kept, flat or flipped', () => {
+    expect(orientation(det2([[3, 0], [0, 2]]))).toBe('kept');
+    expect(orientation(det2([[2, 1], [4, 2]]))).toBe('flat');
+    expect(orientation(det2([[1, 1], [2, -1]]))).toBe('flipped');
+  });
+});
+
+describe('adBcPieces', () => {
+  it('the box minus the pieces leaves ad - bc', () => {
+    for (const m of [[[3, 1], [1, 2]], [[2, 1], [1, 3]], [[4, 2], [1, 3]]] as Mat2[]) {
+      const { box, triangles, rectangles } = adBcPieces(m);
+      const cut = [...triangles, ...rectangles].reduce((sum, p) => sum + p.area, 0);
+      expect(box.area - cut).toBeCloseTo(det2(m), 9);
+    }
+  });
+
+  it('cuts two bc rectangles for columns (3, 1) and (1, 2)', () => {
+    const { rectangles } = adBcPieces([[3, 1], [1, 2]]);
+    expect(rectangles.map((r) => r.area)).toEqual([1, 1]);
+  });
+});
+
+describe('centroid', () => {
+  it('is the middle of the unit square', () => {
+    expect(centroid(UNIT_SQUARE)).toEqual([0.5, 0.5]);
+  });
+});
+
+describe('stripeLines', () => {
+  it('covers the unit square with 45° lines', () => {
+    const lines = stripeLines(UNIT_SQUARE, 0.5);
+    // y = x + k for k = -1, -0.5, 0, 0.5, 1
+    expect(lines).toHaveLength(5);
+    for (const [[xa, ya], [xb, yb]] of lines) expect(yb - ya).toBeCloseTo(xb - xa, 9);
+  });
+
+  it('works for a flat shape (no area)', () => {
+    expect(stripeLines([[0, 0], [2, 2], [0, 0]], 0.5).length).toBeGreaterThan(0);
   });
 });

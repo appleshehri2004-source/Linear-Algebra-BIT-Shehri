@@ -12,6 +12,8 @@
   --positive: #1a7f3c; /* a positive number, or "yes" (e.g. independent) */
   --zero: #5e5e66; /* exactly zero */
   --negative: #c42f2f; /* a negative number, or "no" (e.g. dependent) */
+  --area-kept: #2f6fe0; /* an area patch facing the usual way (det > 0): blue */
+  --area-flipped: #b02fc4; /* an area patch flipped over (det < 0): purple */
 
   --bg: #fdfdfb;
   --text: #1c1c1e;
@@ -36,6 +38,8 @@
     --positive: #5ee08f;
     --zero: #a0a0aa;
     --negative: #ff7b7b;
+    --area-kept: #6ea2ff;
+    --area-flipped: #e27cf2;
 
     --bg: #16161a;
     --text: #ececf0;

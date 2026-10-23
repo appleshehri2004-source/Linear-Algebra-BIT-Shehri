@@ -12,8 +12,10 @@ interface Props {
   tail?: Vec2;
   /** A colour such as "var(--vec)". */
   color?: string;
-  /** true: the tip jumps to whole numbers. */
+  /** true: the tip jumps to whole numbers (or to multiples of `step`). */
   snap?: boolean;
+  /** The size of a snap jump, e.g. 0.5 for half squares. Default: 1. */
+  step?: number;
   /** A short name drawn next to the tip, e.g. "v". */
   label?: string;
   /** The tip can't be dragged past this distance from the origin (match the Plane's range). */
@@ -26,6 +28,7 @@ export default function DragVector({
   tail = [0, 0],
   color = 'var(--vec)',
   snap = false,
+  step = 1,
   label,
   limit = 5,
 }: Props) {
@@ -33,7 +36,7 @@ export default function DragVector({
 
   function move(point: Vec2) {
     let p = clampVec(point, limit);
-    if (snap) p = snapVec(p);
+    if (snap) p = snapVec(p, step);
     // The point is where the tip is on the plane; the vector is the walk from tail to tip.
     onChange(sub(p, tail));
   }

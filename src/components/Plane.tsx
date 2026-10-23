@@ -10,12 +10,15 @@ import './Plane.css';
 interface Props {
   /** The plane shows -range to range on both axes. */
   range?: number;
+  /** Show only this stretch of the x-axis and y-axis instead, e.g. x={[-1, 5]} for a picture in one corner. */
+  x?: [number, number];
+  y?: [number, number];
   /** Called with the point (in maths coordinates) when the plane is clicked or tapped. */
   onClick?: (p: [number, number]) => void;
   children?: ReactNode;
 }
 
-export default function Plane({ range = 5, onClick, children }: Props) {
+export default function Plane({ range = 5, x, y, onClick, children }: Props) {
   const box = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState(320);
   // Mafs numbers its arrowheads and grids with a counter that keeps growing while the site is built,
@@ -71,7 +74,7 @@ export default function Plane({ range = 5, onClick, children }: Props) {
         <Mafs
           width={size}
           height={size}
-          viewBox={{ x: [-range, range], y: [-range, range], padding: 0.3 }}
+          viewBox={{ x: x ?? [-range, range], y: y ?? [-range, range], padding: 0.3 }}
           preserveAspectRatio="contain"
           // The plane stays still: only arrow tips move. (Mafs lets you slide it around by default.)
           pan={false}

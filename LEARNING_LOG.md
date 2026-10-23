@@ -235,3 +235,42 @@ The last three lessons of Module 2, with 3 exercises each.
 - **three.js likes "up" to be y; maths likes it to be z.** Telling the camera `up = (0, 0, 1)` means none of the maths has to change.
 - **A finger on a 3D picture can scroll the page instead of turning it.** CSS `touch-action: none` asks the browser not to scroll, and a `touchmove` listener backs it up for iPhone Safari, like the 2D planes already had.
 - **Checked on the iPhone Simulator** (iPhone 17e): orbit and Play work. The Simulator uses the Mac's graphics chip, so whether it's smooth needs a real iPhone.
+
+## Day 7 (2026-10-23): Module 3, the determinant
+
+Lessons 3.1 to 3.4: area scaling, orientation, computing determinants, and det(AB) = det(A) det(B).
+
+### New files
+
+**`src/components/AreaPatch.tsx`** (and `AreaPatch.css`)
+The unit square turns into a parallelogram as the transformation plays, with its signed area written inside it, live. When the area goes negative the patch turns purple, gets stripes, the plane says "orientation flipped" in its top-left corner, and the sentence under the plane gets a purple box. Options: a blob that scales by the same factor, draggable î and ĵ (they snap to half squares), a matrix editor, the "ad − bc" sum, and preset buttons. `PatchShape` is just the drawing, so other demos can reuse it.
+
+**`src/components/AdBcPicture.tsx`** (Lesson 3.3)
+The picture behind ad − bc, in steps: draw a box around the parallelogram, cut away four triangles, then two rectangles. What's left is ad − bc.
+
+**`src/components/DetProductDemo.tsx`** (Lesson 3.4)
+Pick B and A from buttons, press Play, and the square's area goes 1 → det(B) → det(A)·det(B).
+
+**`src/exercises/module3.ts`**
+10 practice questions, including working out 2×2 and 3×3 determinants by hand.
+
+**`src/content/lessons/3-1-area-scaling.mdx`, `3-2-orientation.mdx`, `3-3-computing.mdx`, `3-4-det-product.mdx`**
+
+### Changed files
+
+- **`linalg.ts`** and **`linalg.test.ts`**: new `polygonArea` (the shoelace formula), `transformShape`, `UNIT_SQUARE`, `BLOB`, `orientation`, `centroid`, `stripeLines` and `adBcPieces`, all with tests. New test: det(AB) = det(A)·det(B) for 3 random pairs (140 tests now). `det2` now gives 0 instead of -0.
+- **`PredictReveal.tsx`**: new `guessArea` mode: type a number for the new area instead of tapping a point.
+- **`DragVector.tsx`**: new `step`, so a tip can snap to half squares.
+- **`Plane.tsx`**: new `x` and `y`, to show just one corner of the plane (used by the ad − bc picture).
+- **`global.css`**: new colours `--area-kept` (blue) and `--area-flipped` (purple). I avoided red and green so the patch can't be confused with î and ĵ.
+
+### Things I learned
+
+- **One number scales every area.** A matrix keeps grid lines straight and evenly spaced, so every tiny square changes by the same factor as the unit square. The blob went 0.71 → 4.25, × 6, just like the square.
+- **A negative determinant means the plane is flipped over**, and you can't flip without passing through 0: dragging î across ĵ, the area goes 4 → 0 → −2.
+- **Even a Mirror animation passes through 0.** Sliding from "do nothing" to a mirror squashes the square flat halfway (area 0.72 on the way down, then negative).
+- **det(AB) = det(A)·det(B) needs no algebra.** B multiplies every area by det(B), then A multiplies every area by det(A).
+- **-0 is a real number in JavaScript.** 0·(−3) − 0·0 gives -0, and the test for det(AB) caught it. Adding 0 turns -0 into 0.
+- **SVG stripe patterns went blurry.** The pattern tile was 0.3 squares wide, and the browser turned it into pixels *before* zooming it up, so it showed as grey mush. Drawing the stripes as real lines cut to the parallelogram's shape (a clip path) fixed it.
+- **Mafs's own stylesheet turned my stripe colour grey.** A colour set on the element itself (`style={{ stroke: … }}`) wins.
+- **Checked in iPhone Safari on the Simulator** (iPhone 17e): dragging î across ĵ with a finger flips the patch to purple stripes, and the sentence says "orientation flipped".

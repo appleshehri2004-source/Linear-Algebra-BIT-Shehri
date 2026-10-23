@@ -36,7 +36,7 @@ export function matVec(m: Mat2, v: Vec2): Vec2 {
  */
 export function det2(m: Mat2): number {
   const [[a, c], [b, d]] = m;
-  return a * d - b * c;
+  return a * d - b * c + 0; // + 0 turns -0 into 0
 }
 
 /** Subtract: the vector that goes from the tip of v to the tip of u. */
@@ -423,4 +423,95 @@ export function rowToLine([a, b]: [number, number]): Mat2 {
  */
 export function liftColumns([c1, c2]: [Vec3, Vec3]): Mat3 {
   return [c1, c2, [0, 0, 0]];
+}
+
+// ---------- Area (Module 3: the determinant) ----------
+
+/**
+ * The signed area inside a closed shape whose corners are listed in order (the "shoelace formula").
+ * Positive when the corners go anticlockwise, negative when they go clockwise.
+ * A matrix with a negative determinant flips the order, so the area turns negative too.
+ */
+export function polygonArea(points: Vec2[]): number {
+  let twice = 0;
+  points.forEach(([x1, y1], i) => {
+    const [x2, y2] = points[(i + 1) % points.length];
+    twice += x1 * y2 - x2 * y1;
+  });
+  return twice / 2 + 0;
+}
+
+/** The middle of a shape: the average of its corners. Used to place a label inside it. */
+export function centroid(points: Vec2[]): Vec2 {
+  const sum = points.reduce((acc, p) => add(acc, p), [0, 0] as Vec2);
+  return scale(1 / points.length, sum);
+}
+
+/** Move every corner of a shape with the matrix. */
+export function transformShape(m: Mat2, points: Vec2[]): Vec2[] {
+  return points.map((p) => matVec(m, p));
+}
+
+/** The unit square's corners, anticlockwise from the origin: 0, i-hat, i-hat + j-hat, j-hat. */
+export const UNIT_SQUARE: Vec2[] = [[0, 0], [1, 0], [1, 1], [0, 1]];
+
+/** A small blob shape (corners anticlockwise) for showing that every shape scales by the same factor. */
+export const BLOB: Vec2[] = [
+  [-1, 0.6], [-0.7, 0.4], [-0.4, 0.6], [-0.3, 1], [-0.45, 1.4], [-0.8, 1.6], [-1.1, 1.35], [-1.15, 0.95],
+];
+
+/**
+ * Diagonal lines (going up at 45°), `gap` apart, that cover the box around a shape.
+ * Cut them to the shape's outline (an SVG clip path) to draw stripes inside it.
+ */
+export function stripeLines(points: Vec2[], gap: number): Vec2[][] {
+  const xs = points.map((p) => p[0]);
+  const ys = points.map((p) => p[1]);
+  const [x0, x1, y0, y1] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
+  // Each line is y = x + k. These k values reach every corner of the box.
+  const lines: Vec2[][] = [];
+  for (let k = Math.floor((y0 - x1) / gap) * gap; k <= y1 - x0; k += gap) {
+    lines.push([[x0, x0 + k], [x1, x1 + k]]);
+  }
+  return lines;
+}
+
+/**
+ * Which way a shape faces after a transformation, from its signed area (or a determinant):
+ * 'kept' (same way round), 'flat' (squashed to a line or a point) or 'flipped' (turned over, like a mirror).
+ * Areas closer to 0 than `tolerance` count as flat, so a slider passing through 0 shows it.
+ */
+export function orientation(area: number, tolerance = 0.005): 'kept' | 'flat' | 'flipped' {
+  if (Math.abs(area) < tolerance) return 'flat';
+  return area > 0 ? 'kept' : 'flipped';
+}
+
+/** One piece of the "a·d − b·c" picture: a shape and its area. */
+export interface AreaPiece {
+  points: Vec2[];
+  area: number;
+}
+
+/**
+ * The picture behind det = ad − bc, for a matrix with columns (a, c) and (b, d), all four numbers positive.
+ * The parallelogram sits inside an (a + b) by (c + d) rectangle. Cut away from the rectangle:
+ * two triangles of area ac/2, two triangles of area bd/2, and two rectangles of area bc.
+ * What's left is the parallelogram: (a + b)(c + d) − ac − bd − 2bc = ad − bc.
+ */
+export function adBcPieces(m: Mat2): { box: AreaPiece; triangles: AreaPiece[]; rectangles: AreaPiece[] } {
+  const [[a, c], [b, d]] = m;
+  const piece = (points: Vec2[]): AreaPiece => ({ points, area: Math.abs(polygonArea(points)) });
+  return {
+    box: piece([[0, 0], [a + b, 0], [a + b, c + d], [0, c + d]]),
+    triangles: [
+      piece([[0, 0], [a, 0], [a, c]]), // under î
+      piece([[b, d], [b, c + d], [a + b, c + d]]), // the same shape at the top
+      piece([[a, c], [a + b, c], [a + b, c + d]]), // right of ĵ's copy
+      piece([[0, 0], [b, d], [0, d]]), // left of ĵ
+    ],
+    rectangles: [
+      piece([[a, 0], [a + b, 0], [a + b, c], [a, c]]), // bottom right corner
+      piece([[0, d], [b, d], [b, c + d], [0, c + d]]), // top left corner
+    ],
+  };
 }

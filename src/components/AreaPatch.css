@@ -1,0 +1,38 @@
+/* The area sentence under the plane takes the patch's colour, so the flip is easy to spot. */
+.area-status.kept {
+  color: var(--area-kept);
+}
+
+.area-status.flat {
+  color: var(--zero);
+}
+
+/* Flipped: a coloured box around the sentence, big enough to notice on a phone. */
+.area-status.flipped {
+  color: var(--area-flipped);
+  border: 2px solid var(--area-flipped);
+  border-radius: 0.4rem;
+  padding: 0.3rem 0.6rem;
+  max-width: 480px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* The stripes inside a flipped patch. They stay 2px wide however much the plane is zoomed. */
+.area-stripes {
+  fill: none;
+  stroke-width: 2px;
+  vector-effect: non-scaling-stroke;
+}
+
+/* "det = a·d − b·c = …" under the plane. */
+.area-formula {
+  text-align: center;
+  font-size: 1.15rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.area-formula .ihat,
+.area-formula .jhat {
+  font-weight: 600; /* the colours come from .ihat and .jhat in global.css */
+}

@@ -1,0 +1,90 @@
+---
+title: Computing determinants
+module: 3
+order: 3
+threeBlueOneBrown: https://www.3blue1brown.com/lessons/determinant
+mit: https://ocw.mit.edu/courses/18-06-linear-algebra-spring-2010/resources/lecture-19-determinant-formulas-and-cofactors/
+tongji: 第一章 §5 行列式按行（列）展开
+---
+
+import Formula from '../../components/Formula.astro';
+import AdBcPicture from '../../components/AdBcPicture.tsx';
+import AreaPatch from '../../components/AreaPatch.tsx';
+import Stage3D from '../../components/Stage3D.tsx';
+import PredictReveal from '../../components/PredictReveal.tsx';
+import Exercise from '../../components/Exercise.tsx';
+
+## Question
+
+So far we found areas by looking at rectangles and slants. Is there a formula that works for **any** matrix? And what about volume in 3D?
+
+## Play
+
+Step through the picture. The parallelogram made by <span class="ihat">**î**</span> <Formula tex="= (a, c) = (3, 1)" /> and <span class="jhat">**ĵ**</span> <Formula tex="= (b, d) = (1, 2)" /> sits inside a box. Cut away the grey pieces, and what's left is its area.
+
+<AdBcPicture client:visible matrix={[[3, 1], [1, 2]]} />
+
+Now type any numbers. The line under the plane works out <Formula tex="ad - bc" /> for you, and the patch shows it's the same as the area.
+
+<AreaPatch client:visible matrix={[[3, 1], [1, 2]]} editor showFormula />
+
+## Numbers
+
+For the matrix <Formula tex="\begin{bmatrix} a & b \\ c & d \end{bmatrix} = \begin{bmatrix} 3 & 1 \\ 1 & 2 \end{bmatrix}" />:
+
+- The box is <Formula tex="(a + b)(c + d) = 4 \times 3 = 12" />.
+- The four triangles: <Formula tex="2 \times \tfrac{ac}{2} + 2 \times \tfrac{bd}{2} = 3 + 2 = 5" />.
+- The two corner rectangles: <Formula tex="2 \times bc = 2" />.
+- What's left: <Formula tex="12 - 5 - 2 = 5" />, and <Formula tex="ad - bc = 3 \cdot 2 - 1 \cdot 1 = 5" />.
+
+## Explain
+
+**The 2×2 formula:**
+
+<Formula display tex="\det \begin{bmatrix} a & b \\ c & d \end{bmatrix} = ad - bc" />
+
+**Why it looks like that.** Expand the box: <Formula tex="(a + b)(c + d) = ac + ad + bc + bd" />. Taking away <Formula tex="ac + bd + 2bc" /> leaves <Formula tex="ad - bc" />. The picture only works when all four numbers are positive, but the formula works always, including the sign.
+
+**Reading it.** <Formula tex="ad" /> is the rectangle you'd get if there were no slant (<Formula tex="b = c = 0" />). The <Formula tex="bc" /> part measures how much the slants squash the parallelogram.
+
+**In 3D: volume.** A 3×3 matrix turns the unit cube into a slanted box called a *parallelepiped*. Its determinant is the box's volume (negative if space is flipped). Press **Play**, then try the buttons.
+
+<Stage3D
+  client:visible
+  matrix={[[2, 0, 0], [1, 3, 0], [0, 1, 1]]}
+  presets={[
+    { name: 'Volume 6', matrix: [[2, 0, 0], [1, 3, 0], [0, 1, 1]] },
+    { name: 'Shear', matrix: [[1, 0, 0], [0, 1, 0], [1, 0, 1]] },
+    { name: 'Flat', matrix: [[1, 0, 0], [0, 1, 0], [1, 1, 0]] },
+    { name: 'Mirror', matrix: [[1, 0, 0], [0, 1, 0], [0, 0, -1]] },
+  ]}
+/>
+
+To work out a 3×3 determinant by hand, go along the top row. Each number multiplies the 2×2 determinant left when you cross out its row and column, with signs <Formula tex="+, -, +" />:
+
+<Formula display tex="\det \begin{bmatrix} 2 & 1 & 0 \\ 0 & 3 & 1 \\ 0 & 0 & 1 \end{bmatrix} = 2 \det \begin{bmatrix} 3 & 1 \\ 0 & 1 \end{bmatrix} - 1 \det \begin{bmatrix} 0 & 1 \\ 0 & 1 \end{bmatrix} + 0 = 2 \cdot 3 - 1 \cdot 0 = 6" />
+
+## Predict
+
+<span class="ihat">**î**</span> lands on <Formula tex="(4, 1)" /> and <span class="jhat">**ĵ**</span> on <Formula tex="(2, 3)" />. Use <Formula tex="ad - bc" /> to work out the new area, type it, then press **Reveal**.
+
+<PredictReveal client:visible guessArea matrix={[[4, 1], [2, 3]]} range={7} />
+
+<details>
+  <summary>How to work it out</summary>
+  The matrix is <Formula tex="\begin{bmatrix} 4 & 2 \\ 1 & 3 \end{bmatrix}" />, so <Formula tex="a = 4,\ b = 2,\ c = 1,\ d = 3" />. Then <Formula tex="ad - bc = 4 \cdot 3 - 2 \cdot 1 = 10" />.
+</details>
+
+## Practice
+
+<Exercise id="3.3-det2" client:visible />
+
+<Exercise id="3.3-det3-triangle" client:visible />
+
+<Exercise id="3.3-det3" client:visible />
+
+## Go deeper
+
+When a 3×3 matrix has only zeros below the diagonal (a *triangular* matrix), its determinant is just the three diagonal numbers multiplied. In the 3D demo, the "Volume 6" matrix is like that: <Formula tex="2 \times 3 \times 1 = 6" />. Can you see why with the picture? (Hint: the shears don't change volume.)
+
+The 3D determinant is also <Formula tex="\hat{\imath}' \cdot (\hat{\jmath}' \times \hat{k}')" />: the cross product gives the area of the floor made by the last two columns, as a vector standing up from that floor, and the dot product multiplies it by the height of the first column.

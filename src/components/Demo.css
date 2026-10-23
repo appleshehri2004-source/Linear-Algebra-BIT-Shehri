@@ -73,3 +73,16 @@
   font-variant-numeric: tabular-nums;
   margin-right: -0.6rem; /* sit close to the bracket it multiplies */
 }
+
+/* A box for typing one number under a demo, e.g. a guess in PredictReveal. */
+.predict-number {
+  font: inherit;
+  width: 5rem;
+  min-height: 2.75rem;
+  padding: 0.3rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 0.4rem;
+  background: var(--bg);
+  color: var(--text);
+  text-align: center;
+}
