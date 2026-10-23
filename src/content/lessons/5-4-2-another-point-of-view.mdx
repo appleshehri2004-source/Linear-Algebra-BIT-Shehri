@@ -1,0 +1,82 @@
+---
+title: 'A⁻¹ M A: the same transformation, another point of view'
+description: "Write the same transformation in another basis: see why P⁻¹MP is the matrix Jennifer would use."
+section: '5.4'
+part: 2
+threeBlueOneBrown: https://www.3blue1brown.com/lessons/change-of-basis
+mit: https://ocw.mit.edu/courses/18-06-linear-algebra-spring-2010/resources/lecture-28-similar-matrices-and-jordan-form/
+tongji: 第五章 §3 相似矩阵
+---
+
+import Formula from '../../components/Formula.astro';
+import ChangeOfBasisPlayer from '../../components/ChangeOfBasisPlayer.tsx';
+import Exercise from '../../components/Exercise.tsx';
+
+*3Blue1Brown calls Jennifer's matrix A. Here it's the same matrix we called P in Lesson 4.4.1, so the title's A⁻¹MA is our P⁻¹MP.*
+
+## Question
+
+We write "turn everything 90° anticlockwise" as the matrix <Formula tex="M = \begin{bmatrix} 0 & -1 \\ 1 & 0 \end{bmatrix}" />. Jennifer wants the **same** turn, but she thinks in her numbers. What matrix should **she** write?
+
+## Play
+
+Both pictures start with Jennifer's arrow <Formula tex="(1, 2)" />: her numbers, drawn as if they were ours. Press **Play**.
+
+**Left:** three steps. Watch the caption: translate her numbers into ours with <Formula tex="P" />, turn with <Formula tex="M" />, translate back with <Formula tex="P^{-1}" />.
+
+**Right:** her matrix <Formula tex="P^{-1} M P" />, all at once.
+
+Do they end in the same place? Drag the slider to replay any step.
+
+<ChangeOfBasisPlayer client:visible basis={[[2, 1], [-1, 1]]} matrix={[[0, 1], [-1, 0]]} vector={[1, 2]} />
+
+## Numbers
+
+Follow her arrow <Formula tex="(1, 2)" /> through the three steps:
+
+<Formula display tex="\underbrace{\begin{bmatrix} 2 & -1 \\ 1 & 1 \end{bmatrix} \begin{bmatrix} 1 \\ 2 \end{bmatrix} = \begin{bmatrix} 0 \\ 3 \end{bmatrix}}_{\text{1. into our numbers}} \qquad \underbrace{\begin{bmatrix} 0 & -1 \\ 1 & 0 \end{bmatrix} \begin{bmatrix} 0 \\ 3 \end{bmatrix} = \begin{bmatrix} -3 \\ 0 \end{bmatrix}}_{\text{2. turn 90°}} \qquad \underbrace{\tfrac{1}{3} \begin{bmatrix} 1 & 1 \\ -1 & 2 \end{bmatrix} \begin{bmatrix} -3 \\ 0 \end{bmatrix} = \begin{bmatrix} -1 \\ 1 \end{bmatrix}}_{\text{3. back to hers}}" />
+
+Multiply the three matrices together (right to left, Lesson 2.1.1) and you get her matrix:
+
+<Formula display tex="P^{-1} M P = \begin{bmatrix} 1/3 & -2/3 \\ 5/3 & -1/3 \end{bmatrix}, \qquad \begin{bmatrix} 1/3 & -2/3 \\ 5/3 & -1/3 \end{bmatrix} \begin{bmatrix} 1 \\ 2 \end{bmatrix} = \begin{bmatrix} 1/3 - 4/3 \\ 5/3 - 2/3 \end{bmatrix} = \begin{bmatrix} -1 \\ 1 \end{bmatrix}" />
+
+Same answer, <Formula tex="(-1, 1)" />, in one step.
+
+## Explain
+
+**Read P⁻¹MP from right to left**, like any chain of matrices:
+
+1. <Formula tex="P" />: "here's an arrow in Jennifer's numbers; say it in ours".
+2. <Formula tex="M" />: "do the transformation, in our numbers, where we know how".
+3. <Formula tex="P^{-1}" />: "say the answer in Jennifer's numbers again".
+
+Multiplied together, the three steps are one matrix. It does the same turn, but it speaks Jennifer's language: her numbers in, her numbers out.
+
+**Same transformation, different matrix.** <Formula tex="M" /> and <Formula tex="P^{-1} M P" /> look nothing alike. One has 0s and 1s; the other has thirds. But they describe **the same movement of space**, each in its own language. Matrices like this are called **similar**.
+
+**The columns still mean something.** The first column of her matrix, <Formula tex="(1/3, 5/3)" />, is where her b₁ lands after the turn, written in her numbers. Check: turning <Formula tex="(2, 1)" /> gives <Formula tex="(-1, 2)" />, and <Formula tex="\tfrac{1}{3}(2, 1) + \tfrac{5}{3}(-1, 1) = (-1, 2)" />. ✓
+
+## Predict
+
+Our matrix <Formula tex="2I = \begin{bmatrix} 2 & 0 \\ 0 & 2 \end{bmatrix}" /> doubles every arrow. What is Jennifer's matrix for "double every arrow"?
+
+<details>
+  <summary>Reveal</summary>
+  Also <Formula tex="\begin{bmatrix} 2 & 0 \\ 0 & 2 \end{bmatrix}" />. Doubling every arrow doubles her b₁ and b₂ too, so in her numbers they go to <Formula tex="(2, 0)" /> and <Formula tex="(0, 2)" />. In symbols: <Formula tex="P^{-1}(2I)P = 2P^{-1}P = 2I" />. A stretch that's the same in every direction looks the same in every language.
+</details>
+
+## Practice
+
+<Exercise id="7.2-column" client:visible />
+
+<Exercise id="7.2-apply" client:visible />
+
+<Exercise id="7.2-stretch" client:visible />
+
+## Go deeper
+
+**What similar matrices share.** <Formula tex="M" /> and <Formula tex="P^{-1}MP" /> are the same movement, so anything about the movement itself agrees. Both multiply areas by the same number: <Formula tex="\det(P^{-1}MP) = \det M" /> (Lesson 3.2.1). For our example both are 1.
+
+**Picking the best language.** The point of changing basis is often to find the grid where a transformation is simplest. When that grid is made of eigenvectors, her matrix has numbers only on the diagonal: pure stretching. That's the idea behind eigenvalues.
+
+**Order matters.** <Formula tex="P M P^{-1}" /> is a different matrix. It goes the other way: it translates **our** numbers into Jennifer's, does <Formula tex="M" /> as if <Formula tex="M" /> were written in **her** numbers, and translates back. Getting the order wrong is the most common mistake here, so always ask: which language goes in, and which comes out?

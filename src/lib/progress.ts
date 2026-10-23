@@ -4,6 +4,7 @@
 // Every storage call is wrapped in try/catch. Some browsers block storage (private mode,
 // strict privacy settings, some in-app browsers). Then progress is kept in memory instead:
 // the site still works, it just forgets everything when the page is reloaded.
+import { oldLessonIds } from '../content/old-lesson-ids';
 
 /** How one exercise went. firstTry: solved at least once with no wrong tries. */
 export interface ExerciseScore {
@@ -34,6 +35,7 @@ export function emptyProgress(): Progress {
 /**
  * Turn saved text back into progress. Anything broken or unexpected (old data, a typo made
  * by hand in the browser's dev tools) is skipped instead of crashing the page.
+ * Lessons saved under their old id (before the site followed Lay's book) count under their new id.
  */
 export function parseProgress(raw: string | null): Progress {
   const progress = emptyProgress();
@@ -48,7 +50,7 @@ export function parseProgress(raw: string | null): Progress {
 
   if (isObject(data.lessons)) {
     for (const [id, done] of Object.entries(data.lessons)) {
-      if (done === true) progress.lessons[id] = true;
+      if (done === true) progress.lessons[oldLessonIds[id] ?? id] = true;
     }
   }
   if (isObject(data.exercises)) {

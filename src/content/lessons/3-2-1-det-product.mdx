@@ -1,0 +1,84 @@
+---
+title: det(AB) = det(A) det(B)
+description: "If B doubles areas and A triples them, AB multiplies them by six. See why det(AB) = det(A) det(B)."
+section: '3.2'
+part: 1
+threeBlueOneBrown: https://www.3blue1brown.com/lessons/determinant
+mit: https://ocw.mit.edu/courses/18-06-linear-algebra-spring-2010/resources/lecture-18-properties-of-determinants/
+tongji: 第二章 §2 矩阵的运算
+---
+
+import Formula from '../../components/Formula.astro';
+import DetProductDemo from '../../components/DetProductDemo.tsx';
+import PredictReveal from '../../components/PredictReveal.tsx';
+import Exercise from '../../components/Exercise.tsx';
+
+## Question
+
+Multiplying two matrices means doing one transformation, then the other (Lesson 2.1.1). If <Formula tex="B" /> multiplies area by 2 and <Formula tex="A" /> multiplies area by 3, what does <Formula tex="AB" /> do to area?
+
+## Play
+
+Pick a matrix for **B** (done first) and one for **A** (done second), then press **Play**. Watch the number in the patch after each step.
+
+<DetProductDemo
+  client:visible
+  range={6}
+  startA={0}
+  startB={1}
+  presets={[
+    { name: 'Stretch x ×3', matrix: [[3, 0], [0, 1]] },
+    { name: 'Stretch y ×2', matrix: [[1, 0], [0, 2]] },
+    { name: 'Shear', matrix: [[1, 0], [1, 1]] },
+    { name: 'Rotate 90°', matrix: [[0, 1], [-1, 0]] },
+    { name: 'Mirror', matrix: [[-1, 0], [0, 1]] },
+  ]}
+/>
+
+## Numbers
+
+With B = *Stretch y ×2* and A = *Stretch x ×3*:
+
+- After step 1 (B), the area of the square is <Formula tex="\det B = 2" />.
+- Step 2 (A) multiplies **every** area by <Formula tex="\det A = 3" />, including the area that's already 2. So the area becomes <Formula tex="3 \times 2 = 6" />.
+
+Multiplying the matrices gives the same answer:
+
+<Formula display tex="AB = \begin{bmatrix} 3 & 0 \\ 0 & 1 \end{bmatrix} \begin{bmatrix} 1 & 0 \\ 0 & 2 \end{bmatrix} = \begin{bmatrix} 3 & 0 \\ 0 & 2 \end{bmatrix}, \qquad \det(AB) = 6" />
+
+Now try B = *Mirror*: <Formula tex="\det B = -1" />, and the final area is <Formula tex="3 \times (-1) = -3" />: flipped.
+
+## Explain
+
+<Formula display tex="\det(AB) = \det(A)\,\det(B)" />
+
+**Why.** <Formula tex="B" /> multiplies every area by <Formula tex="\det B" />. Then <Formula tex="A" /> multiplies every area, whatever it is by now, by <Formula tex="\det A" />. Doing both multiplies by <Formula tex="\det A \times \det B" />. That's all there is to it. Proving it with the formula <Formula tex="ad - bc" /> takes a page of algebra; with pictures there is nothing to prove.
+
+**Order doesn't matter here,** even though <Formula tex="AB \ne BA" /> in general: <Formula tex="\det A \det B = \det B \det A" />, because ordinary numbers can be multiplied in any order.
+
+**Signs multiply too.** One flip and no flip: flipped (negative). Two flips: back the right way round (positive), just like <Formula tex="(-1)(-1) = 1" />.
+
+## Predict
+
+First shear (columns <Formula tex="(1, 0), (1, 1)" />), then scale everything by 2 (columns <Formula tex="(2, 0), (0, 2)" />). What is the final area of the unit square?
+
+<PredictReveal client:visible guessArea steps={[[[1, 0], [1, 1]], [[2, 0], [0, 2]]]} />
+
+<details>
+  <summary>How to work it out</summary>
+  The shear has determinant 1 (it keeps area). Scaling by 2 in both directions has determinant <Formula tex="2 \times 2 = 4" />. Together: <Formula tex="4 \times 1 = 4" />.
+</details>
+
+## Practice
+
+<Exercise id="3.4-product" client:visible />
+
+<Exercise id="3.4-power" client:visible />
+
+<Exercise id="3.4-missing" client:visible />
+
+## Go deeper
+
+If <Formula tex="\det A = 0" />, then <Formula tex="\det(AB) = 0" /> for every <Formula tex="B" />: once the plane is squashed flat, nothing done before or after can give it area again. This is why a matrix with determinant 0 can't be undone. You'll meet *inverse* matrices in the next module.
+
+If <Formula tex="A" /> can be undone by <Formula tex="A^{-1}" />, then <Formula tex="\det(A)\det(A^{-1}) = \det(\text{doing nothing}) = 1" />. So <Formula tex="\det(A^{-1}) = 1 / \det A" />.

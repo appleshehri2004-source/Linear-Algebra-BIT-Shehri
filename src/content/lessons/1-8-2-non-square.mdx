@@ -1,0 +1,68 @@
+---
+title: Non-square matrices
+description: "A 3 by 2 matrix lifts the plane into space; a 1 by 2 matrix squashes it onto a line. See what non-square matrices do."
+section: '1.8'
+part: 2
+threeBlueOneBrown: https://www.3blue1brown.com/lessons/nonsquare-matrices
+tongji: 第二章 §2 矩阵的运算
+---
+
+import Formula from '../../components/Formula.astro';
+import NonSquareDemo from '../../components/NonSquareDemo.tsx';
+import NumberLineDemo from '../../components/NumberLineDemo.tsx';
+import Exercise from '../../components/Exercise.tsx';
+
+## Question
+
+Every matrix so far was square: 2 by 2 or 3 by 3. What could a matrix with 3 rows and 2 columns do? Or 1 row and 2 columns?
+
+## Play
+
+**From 2D to 3D.** Drag <span class="vec">**v**</span> on the flat plane on the left. On the right, press **Play** to watch the whole plane lift out of the floor and land as a tilted sheet in 3D space. Turn the 3D view to see the sheet edge-on.
+
+<NonSquareDemo client:visible columns={[[2, -1, -2], [0, 1, 1]]} vector={[1, 1]} />
+
+**From 2D to a number line.** Drag <span class="vec">**v**</span>, then press **Play**: the whole plane is squashed onto the x-axis, which acts as a number line.
+
+<NumberLineDemo client:visible row={[1, -2]} vector={[4, 3]} />
+
+## Numbers
+
+The 3 by 2 matrix has two columns, one for <span class="ihat">**î**</span> and one for <span class="jhat">**ĵ**</span>. Each column has three numbers, because each one lands in 3D:
+
+<Formula display tex="\begin{bmatrix} 2 & 0 \\ -1 & 1 \\ -2 & 1 \end{bmatrix} \begin{bmatrix} 1 \\ 1 \end{bmatrix} = 1 \begin{bmatrix} 2 \\ -1 \\ -2 \end{bmatrix} + 1 \begin{bmatrix} 0 \\ 1 \\ 1 \end{bmatrix} = \begin{bmatrix} 2 \\ 0 \\ -1 \end{bmatrix}" />
+
+The 1 by 2 matrix also has two columns, but each column is just one number: <span class="ihat">**î**</span> lands on 1 and <span class="jhat">**ĵ**</span> lands on −2.
+
+<Formula display tex="\begin{bmatrix} 1 & -2 \end{bmatrix} \begin{bmatrix} 4 \\ 3 \end{bmatrix} = 4 \cdot 1 + 3 \cdot (-2) = -2" />
+
+## Explain
+
+- **Columns = how many numbers go in.** There is one column for each basis arrow of the input. 2 columns means the input is 2D.
+- **Rows = how many numbers come out.** Each column says where a basis arrow lands, written with as many numbers as the output has. 3 rows means the output is 3D.
+- **Same rule as always.** Take <Formula tex="x" /> copies of column 1 plus <Formula tex="y" /> copies of column 2. Nothing about "multiply by the columns" needs the matrix to be square.
+- **A 3 by 2 matrix can't fill 3D.** Every output is built from just two columns, so all of them lie on one flat sheet through the origin. That sheet is the *column space*: the span of the columns, like in lesson 1.3.3.
+- **A 1 by 2 matrix is the dot product in disguise.** <Formula tex="\begin{bmatrix} 1 & -2 \end{bmatrix} \vec{v}" /> is the same sum as <Formula tex="(1, -2) \cdot \vec{v}" /> from lesson 6.1.1. Every point on a line at right angles to <Formula tex="(1, -2)" /> lands on the same number.
+
+## Predict
+
+Which points of the plane land on **0** on the number line under <Formula tex="\begin{bmatrix} 1 & -2 \end{bmatrix}" />?
+
+<details>
+  <summary>Reveal</summary>
+  All points with <Formula tex="x - 2y = 0" />, which is the line <Formula tex="y = x / 2" /> through <Formula tex="(0, 0)" />, <Formula tex="(2, 1)" /> and <Formula tex="(4, 2)" />. A whole line of points gets squashed onto one number, so (as with **Project** in lesson 1.9.2) this can't be undone. Try dragging <span class="vec">**v**</span> to <Formula tex="(2, 1)" /> and pressing Play.
+</details>
+
+## Practice
+
+<Exercise id="2.6-to-number" client:visible />
+
+<Exercise id="2.6-to-3d" client:visible />
+
+<Exercise id="2.6-shape" client:visible />
+
+## Go deeper
+
+A matrix with <Formula tex="m" /> rows and <Formula tex="n" /> columns (an "<Formula tex="m \times n" /> matrix") takes <Formula tex="n" />-dimensional vectors to <Formula tex="m" />-dimensional ones. Rows first, then columns, the same order as a seat number in a theatre.
+
+To multiply two matrices, you do one move and then the other, so the sizes have to fit: the output of the first must be the input of the second. A <Formula tex="1 \times 3" /> matrix can follow a <Formula tex="3 \times 2" /> one (2D to 3D, then 3D to a number), and the product is <Formula tex="1 \times 2" />. Try to explain why a <Formula tex="3 \times 2" /> matrix can't follow another <Formula tex="3 \times 2" /> one.

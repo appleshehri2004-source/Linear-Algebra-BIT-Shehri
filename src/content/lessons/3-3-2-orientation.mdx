@@ -1,0 +1,75 @@
+---
+title: Orientation
+description: "What does a negative determinant mean? Watch the plane flip over and see orientation as the sign of the area."
+section: '3.3'
+part: 2
+optional: true
+threeBlueOneBrown: https://www.3blue1brown.com/lessons/determinant
+mit: https://ocw.mit.edu/courses/18-06-linear-algebra-spring-2010/resources/lecture-18-properties-of-determinants/
+tongji: 第一章 行列式
+---
+
+import Formula from '../../components/Formula.astro';
+import AreaPatch from '../../components/AreaPatch.tsx';
+import PredictReveal from '../../components/PredictReveal.tsx';
+import Exercise from '../../components/Exercise.tsx';
+
+## Question
+
+An area can't be negative. So what does it mean when a determinant is **−3**?
+
+## Play
+
+Drag the tip of <span class="ihat">**î**</span> (green) slowly up and over to the other side of <span class="jhat">**ĵ**</span> (red). Watch the number in the patch: it shrinks to **0** when the two arrows lie on one line, then turns **negative**. The patch turns purple and striped, and says *orientation flipped*.
+
+<AreaPatch
+  client:visible
+  matrix={[[2, 0], [1, 2]]}
+  draggable
+  presets={[
+    { name: 'Start', matrix: [[2, 0], [1, 2]] },
+    { name: 'Flat', matrix: [[0.5, 1], [1, 2]] },
+    { name: 'Flipped', matrix: [[1, 1], [2, -1]] },
+  ]}
+/>
+
+## Numbers
+
+At the start, <span class="ihat">**î**</span> lands on <Formula tex="(2, 0)" /> and <span class="jhat">**ĵ**</span> on <Formula tex="(1, 2)" />. The area is <Formula tex="4" />.
+
+Press **Flat**: <span class="ihat">**î**</span> lands on <Formula tex="(0.5, 1)" />, exactly on the line through <span class="jhat">**ĵ**</span>. The square is squashed into a line, so the area is <Formula tex="0" />.
+
+Press **Flipped**: the columns are <Formula tex="(1, 1)" /> and <Formula tex="(2, -1)" />. The parallelogram has area 3, but it's been turned over:
+
+<Formula display tex="\det \begin{bmatrix} 1 & 2 \\ 1 & -1 \end{bmatrix} = -3" />
+
+## Explain
+
+**The sign of the determinant says which way round the plane is.** Normally, <span class="jhat">**ĵ**</span> is a quarter turn *anticlockwise* from <span class="ihat">**î**</span>. If after the transformation <span class="jhat">**ĵ**</span> is *clockwise* from <span class="ihat">**î**</span>, the plane has been flipped over, like a page turned face down. Then the determinant is negative.
+
+**The size is still the area.** <Formula tex="\det = -3" /> means "areas are multiplied by 3, and the plane is flipped". A mirror, for example, keeps areas the same but flips: its determinant is <Formula tex="-1" />.
+
+**You can't flip without passing through 0.** As you drag <span class="ihat">**î**</span> across <span class="jhat">**ĵ**</span>, the area changes smoothly. To get from positive to negative it has to pass through 0, the moment the two arrows lie on one line and the whole plane is squashed flat. That's why <Formula tex="\det A = 0" /> means the columns are *dependent* (Lesson 1.7.1).
+
+## Predict
+
+<span class="ihat">**î**</span> lands on <Formula tex="(0, 2)" /> and <span class="jhat">**ĵ**</span> lands on <Formula tex="(3, 0)" />. What is the determinant? Don't forget the sign. Type your guess, then press **Reveal**.
+
+<PredictReveal client:visible guessArea matrix={[[0, 2], [3, 0]]} />
+
+<details>
+  <summary>How to work it out</summary>
+  The square becomes a 3 by 2 rectangle, so the size is 6. But now <span class="ihat">**î**</span> points up and <span class="jhat">**ĵ**</span> points right: <span class="jhat">**ĵ**</span> is a quarter turn *clockwise* from <span class="ihat">**î**</span>. The plane is flipped, so the determinant is <Formula tex="-6" />.
+</details>
+
+## Practice
+
+<Exercise id="3.2-flipped" client:visible />
+
+<Exercise id="3.2-flat" client:visible />
+
+## Go deeper
+
+In 3D the same idea is the *right-hand rule*. Point your right hand's fingers along <span class="ihat">**î**</span> and curl them toward <span class="jhat">**ĵ**</span>: your thumb points along <span class="khat">**k̂**</span>. If after a transformation you need your *left* hand to do this, space has been flipped and the 3D determinant is negative.
+
+Two flips make a "no flip". What's the sign of the determinant if you mirror the plane, then mirror it again across a different line?

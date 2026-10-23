@@ -1,0 +1,89 @@
+---
+title: Gram–Schmidt and orthogonal matrices
+description: "Turn any two independent arrows into a right-angled pair of length 1, step by step, and meet orthogonal matrices."
+section: '6.4'
+part: 1
+mit: https://ocw.mit.edu/courses/18-06-linear-algebra-spring-2010/resources/lecture-17-orthogonal-matrices-and-gram-schmidt/
+tongji: 第五章 §1 向量的内积、长度及正交性（施密特正交化）
+---
+
+import Formula from '../../components/Formula.astro';
+import GramSchmidtView from '../../components/GramSchmidtView.tsx';
+import OrthogonalCompare from '../../components/OrthogonalCompare.tsx';
+import PredictReveal from '../../components/PredictReveal.tsx';
+import Exercise from '../../components/Exercise.tsx';
+
+## Question
+
+<span class="ihat">**î**</span> and <span class="jhat">**ĵ**</span> are 1 long and at right angles. That makes them easy to work with. Can we turn **any** two independent arrows into a pair like that, without changing the plane they span? And which matrices keep right angles right?
+
+## Play
+
+Drag <span class="vec">**v₁**</span> and <span class="vec2">**v₂**</span>, then press **Next step** three times:
+
+1. keep v₁,
+2. take away v₂'s shadow on v₁,
+3. scale both to length 1.
+
+<GramSchmidtView client:visible v1={[2, 1]} v2={[1, 2]} />
+
+Now compare a 30° rotation with a shear. Press **Play** and watch the small square in the corner between î and ĵ.
+
+<OrthogonalCompare
+  client:visible
+  pictures={[
+    { name: 'Rotation by 30°', matrix: [[0.8660254037844387, 0.5], [-0.5, 0.8660254037844387]] },
+    { name: 'Shear', matrix: [[1, 0], [1, 1]] },
+  ]}
+/>
+
+## Numbers
+
+Start with <Formula tex="\vec{v}_1 = (1, 1)" /> and <Formula tex="\vec{v}_2 = (1, 0)" />.
+
+**Step 1.** Keep <Formula tex="\vec{v}_1" />. The shadow of <Formula tex="\vec{v}_2" /> on it is <Formula tex="\frac{1}{2}(1, 1) = (\tfrac{1}{2}, \tfrac{1}{2})" />.
+
+**Step 2.** <Formula tex="\vec{w}_2 = (1, 0) - (\tfrac{1}{2}, \tfrac{1}{2}) = (\tfrac{1}{2}, -\tfrac{1}{2})" />. Check: <Formula tex="(1, 1) \cdot (\tfrac{1}{2}, -\tfrac{1}{2}) = 0" />. ✓
+
+**Step 3.** Divide each by its length:
+
+<Formula display tex="\vec{q}_1 = \frac{1}{\sqrt{2}} \begin{bmatrix} 1 \\ 1 \end{bmatrix}, \qquad \vec{q}_2 = \frac{1}{\sqrt{2}} \begin{bmatrix} 1 \\ -1 \end{bmatrix}, \qquad Q = \frac{1}{\sqrt{2}} \begin{bmatrix} 1 & 1 \\ 1 & -1 \end{bmatrix}, \qquad Q^T Q = I" />
+
+The shear <Formula tex="\begin{bmatrix} 1 & 1 \\ 0 & 1 \end{bmatrix}" /> sends ĵ to <Formula tex="(1, 1)" />, which is <Formula tex="\sqrt{2} \approx 1.41" /> long. Its columns have dot product <Formula tex="(1, 0) \cdot (1, 1) = 1" />, not 0. So it is not orthogonal.
+
+## Explain
+
+**Gram–Schmidt is projection, over and over.** Each new arrow loses its parts along the arrows already made (Lesson 6.3.1). What is left is perpendicular to all of them. Dividing by the length makes it 1 long. With three arrows in 3D, the third loses its shadows on both <Formula tex="\vec{q}_1" /> and <Formula tex="\vec{q}_2" />.
+
+**The span doesn't change.** <Formula tex="\vec{w}_2" /> is <Formula tex="\vec{v}_2" /> minus a copy of <Formula tex="\vec{v}_1" />, so it still lies in the same plane. Gram–Schmidt only straightens the grid. It doesn't move the space.
+
+**Orthogonal matrices.** A square matrix <Formula tex="Q" /> whose columns are 1 long and at right angles is called orthogonal. Then <Formula tex="Q^T Q = I" />, so <Formula tex="Q^{-1} = Q^T" />: undoing it is just a transpose.
+
+**They keep lengths and angles.** <Formula tex="(Q\vec{v}) \cdot (Q\vec{w}) = \vec{v}^T Q^T Q \vec{w} = \vec{v} \cdot \vec{w}" />. Dot products stay the same, and lengths and angles are made from dot products. Rotations and flips are orthogonal. A shear is not: its square bends into a slanted diamond.
+
+## Predict
+
+<Formula tex="Q" /> turns everything 90° anticlockwise. Tap where <Formula tex="(3, 4)" /> lands. How long will it be?
+
+<PredictReveal client:visible matrix={[[0, 1], [-1, 0]]} vector={[3, 4]} range={5} />
+
+<details>
+  <summary>Reveal the length</summary>
+  It lands at <Formula tex="(-4, 3)" />, and it is still <Formula tex="\sqrt{16 + 9} = 5" /> long, the same as <Formula tex="(3, 4)" />. A rotation is orthogonal, so it keeps lengths.
+</details>
+
+## Practice
+
+<Exercise id="6.4-gram-schmidt" client:visible />
+
+<Exercise id="6.4-missing" client:visible />
+
+<Exercise id="6.4-shear-length" client:visible />
+
+## Go deeper
+
+**A = QR.** Gram–Schmidt writes any matrix with independent columns as <Formula tex="A = QR" />: <Formula tex="Q" /> holds the clean arrows, and <Formula tex="R" /> (upper triangular) records how to rebuild the old arrows from them. Computers use this to solve least squares, because it avoids <Formula tex="A^T A" />.
+
+**Projections get easy.** With an orthonormal basis, the shadow of <Formula tex="\vec{v}" /> is just <Formula tex="(\vec{q}_1 \cdot \vec{v})\,\vec{q}_1 + (\vec{q}_2 \cdot \vec{v})\,\vec{q}_2" />. There are no normal equations to solve. That is exactly how the 3D demo in Lesson 6.3.1 works.
+
+**Determinant ±1.** An orthogonal matrix keeps areas too, so its determinant is 1 (a rotation) or −1 (a flip).

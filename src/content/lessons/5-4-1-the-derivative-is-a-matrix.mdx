@@ -1,0 +1,72 @@
+---
+title: The derivative is a matrix
+description: "The derivative is linear, so on polynomials it has a matrix. Build it and use it to differentiate."
+section: '5.4'
+part: 1
+threeBlueOneBrown: https://www.3blue1brown.com/lessons/abstract-vector-spaces
+tongji: 第六章 §4 线性变换, §5 线性变换的矩阵表示式
+---
+
+import Formula from '../../components/Formula.astro';
+import PolynomialVector from '../../components/PolynomialVector.tsx';
+import Exercise from '../../components/Exercise.tsx';
+
+## Question
+
+Taking a derivative feels like calculus, not linear algebra. But the derivative of a sum is the sum of the derivatives, and constants pull out. That sounds like a linear transformation. If it is one, where is its matrix?
+
+## Play
+
+The yellow curve is <Formula tex="p(x) = x^3 + 5x^2 + 4x + 5" />. The column under the sliders is the same polynomial as a vector: just its four coefficients. Move the sliders and watch both change together.
+
+Then press **Take the derivative**. Look at the matrix <Formula tex="D" />: where are its non-zero numbers? Press **Make p′ the new p** a few times. What happens after the fourth time?
+
+<PolynomialVector client:visible start={[5, 4, 5, 1]} />
+
+## Numbers
+
+Write the coefficients constant first. Then <Formula tex="x^3 + 5x^2 + 4x + 5" /> is the vector <Formula tex="(5, 4, 5, 1)" />, and
+
+<Formula display tex="D\vec{p} = \begin{bmatrix} 0 & 1 & 0 & 0 \\ 0 & 0 & 2 & 0 \\ 0 & 0 & 0 & 3 \\ 0 & 0 & 0 & 0 \end{bmatrix} \begin{bmatrix} 5 \\ 4 \\ 5 \\ 1 \end{bmatrix} = \begin{bmatrix} 4 \\ 10 \\ 3 \\ 0 \end{bmatrix}" />
+
+That's <Formula tex="3x^2 + 10x + 4" />, the same answer as the power rule: <Formula tex="3x^2 + 2 \cdot 5x + 4" />.
+
+## Explain
+
+**The basis is <Formula tex="1, x, x^2, x^3" />.** Every polynomial of degree at most 3 is a combination of these four, just like every arrow is a combination of <Formula tex="\hat{\imath}" /> and <Formula tex="\hat{\jmath}" />. The coefficients are the coordinates.
+
+**A matrix's columns are where the basis vectors go** (Lesson 1.9.1). So ask the derivative where each one goes:
+
+- <Formula tex="1 \to 0" />, so column 1 is all zeros.
+- <Formula tex="x \to 1" />, so column 2 is <Formula tex="(1, 0, 0, 0)" />.
+- <Formula tex="x^2 \to 2x" />, so column 3 is <Formula tex="(0, 2, 0, 0)" />.
+- <Formula tex="x^3 \to 3x^2" />, so column 4 is <Formula tex="(0, 0, 3, 0)" />.
+
+The power comes down as the number, and the term moves one place up. That puts 1, 2, 3 **just above** the main diagonal (the boxed numbers in the demo).
+
+**It really is linear.** <Formula tex="D(p + q) = Dp + Dq" /> and <Formula tex="D(cp) = c\,Dp" />, the two rules from Lesson 1.8.1. So everything we know about matrices applies: <Formula tex="D" /> has a null space, a rank, and eigenvalues.
+
+## Predict
+
+What does <Formula tex="D" /> do to the constant polynomial <Formula tex="p(x) = 7" />? So does <Formula tex="D" /> have an inverse?
+
+<details>
+  <summary>Reveal</summary>
+  <Formula tex="D(7, 0, 0, 0) = (0, 0, 0, 0)" />. Every constant is squashed to 0, so the null space is the line of constants, the rank is 3, and <Formula tex="\det D = 0" />. No inverse: from <Formula tex="p'" /> alone you can't tell what the constant was. That's the "+ C" in integration.
+</details>
+
+## Practice
+
+<Exercise id="9.2-derivative" client:visible />
+
+<Exercise id="9.2-twice" client:visible />
+
+<Exercise id="9.2-slope-at" client:visible />
+
+## Go deeper
+
+**<Formula tex="D^4 = 0" />.** Each derivative pushes everything one place up, and after four pushes nothing is left: the fourth derivative of a cubic is 0. A matrix with a power that is zero is called **nilpotent**. Its only eigenvalue is 0.
+
+**Integration is a matrix too**, from degree 3 to degree 4: <Formula tex="x^k \to x^{k+1}/(k+1)" />. It's a 5×4 matrix, and <Formula tex="D" /> after it gives back what you started with.
+
+**Eigenfunctions.** On all functions, <Formula tex="\frac{d}{dx} e^{\lambda x} = \lambda e^{\lambda x}" />. So <Formula tex="e^{\lambda x}" /> is an eigenvector of the derivative, with eigenvalue λ. That's why <Formula tex="e^x" /> is everywhere in differential equations.

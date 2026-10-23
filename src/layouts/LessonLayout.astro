@@ -3,7 +3,7 @@
 import type { CollectionEntry } from 'astro:content';
 import BaseLayout from './BaseLayout.astro';
 import LessonComplete from '../components/LessonComplete.tsx';
-import { moduleName } from '../content/modules';
+import { chapterOf, getSection, lessonNumber } from '../content/book';
 
 type Lesson = CollectionEntry<'lessons'>;
 
@@ -14,44 +14,50 @@ interface Props {
 }
 
 const { lesson, prev, next } = Astro.props;
-const { title, description, module, order, threeBlueOneBrown, mit, tongji, optional } = lesson.data;
+const { title, description, threeBlueOneBrown, mit, tongji, optional } = lesson.data;
+const number = lessonNumber(lesson.data);
+const section = getSection(lesson.data.section);
+const chapter = chapterOf(section.number);
 
 // BASE_URL comes from `base` in astro.config.mjs, e.g. "/Linear-Algebra-BIT-Shehri/" or "/".
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 const href = (l: Lesson) => `${base}/lessons/${l.id}/`;
-const label = (l: Lesson) => `${l.data.module}.${l.data.order} ${l.data.title}`;
-
-const hasSources = threeBlueOneBrown || mit || tongji;
+const label = (l: Lesson) => `${lessonNumber(l.data)} ${l.data.title}`;
 ---
 
-<BaseLayout title={`${module}.${order} ${title} · Visual Linear Algebra`} description={description}>
+<BaseLayout title={`${number} ${title} · Visual Linear Algebra`} description={description}>
   <nav class="top"><a href={`${base}/`}>← All lessons</a></nav>
 
   <main>
-    <p class="kicker">Module {module}: {moduleName(module)} · Lesson {module}.{order}{optional && ' · Optional (advanced)'}</p>
+    <p class="kicker">
+      Chapter {chapter.number}: {chapter.title} · §{section.number} {section.title} · Lesson {number}{optional && ' · Optional (advanced)'}
+    </p>
     <h1>{title}</h1>
 
     <slot />
 
     <LessonComplete lessonId={lesson.id} client:visible />
 
-    {
-      hasSources && (
-        <ul class="sources">
-          {threeBlueOneBrown && (
-            <li>
-              <a href={threeBlueOneBrown}>3Blue1Brown video</a>
-            </li>
-          )}
-          {mit && (
-            <li>
-              <a href={mit}>MIT 18.06 lecture</a>
-            </li>
-          )}
-          {tongji && <li>Tongji textbook: {tongji}</li>}
-        </ul>
-      )
-    }
+    <ul class="sources">
+      <li>
+        Lay, <cite>Linear Algebra and Its Applications</cite>, §{section.number} {section.title}{section.page !== undefined && `, p. ${section.page}`}
+      </li>
+      {
+        threeBlueOneBrown && (
+          <li>
+            <a href={threeBlueOneBrown}>3Blue1Brown video</a>
+          </li>
+        )
+      }
+      {
+        mit && (
+          <li>
+            <a href={mit}>MIT 18.06 lecture</a>
+          </li>
+        )
+      }
+      {tongji && <li>Tongji textbook: {tongji}</li>}
+    </ul>
   </main>
 
   <nav class="prev-next" aria-label="Previous and next lessons">

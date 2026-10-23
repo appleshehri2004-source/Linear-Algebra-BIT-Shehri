@@ -1,0 +1,67 @@
+---
+title: Functions are vectors too
+description: "Add and scale curves like arrows: functions and polynomials are vectors too, with coordinates of their own."
+section: '4.1'
+part: 1
+threeBlueOneBrown: https://www.3blue1brown.com/lessons/abstract-vector-spaces
+tongji: 第六章 §1 线性空间的定义与性质
+---
+
+import Formula from '../../components/Formula.astro';
+import FunctionSumView from '../../components/FunctionSumView.tsx';
+import Exercise from '../../components/Exercise.tsx';
+
+## Question
+
+So far a vector has been an arrow, or a list of numbers. But what made arrows useful was only two moves: **add** two of them, and **scale** one by a number. What else can you add and scale? Can a whole curve be "a vector"?
+
+## Play
+
+The green curve is <Formula tex="c \cdot f" />, a wave. The red curve is <Formula tex="g" />, a straight ramp. The yellow curve is their sum.
+
+Drag the yellow dot along the x-axis. The bar at that <Formula tex="x" /> stacks the green height on the red height. Where does its top land? Then move the **c** slider: stretch the wave, flatten it to 0, flip it upside down.
+
+<FunctionSumView client:visible />
+
+## Numbers
+
+Here <Formula tex="f(x) = 2\sin x" /> and <Formula tex="g(x) = 0.5x + 1" />. At <Formula tex="x = 1.5" />, with <Formula tex="c = 1" />:
+
+<Formula display tex="(f + g)(1.5) = f(1.5) + g(1.5) = 2\sin(1.5) + 1.75 \approx 1.99 + 1.75 = 3.74" />
+
+With <Formula tex="c = -1" />, the green height flips to <Formula tex="-1.99" />, and the sum becomes <Formula tex="-1.99 + 1.75 = -0.24" />.
+
+## Explain
+
+**Adding functions means adding heights, at every x at once.** The rule is
+
+<Formula display tex="(f + g)(x) = f(x) + g(x), \qquad (c f)(x) = c \cdot f(x)" />
+
+That's exactly how we added arrows <Formula tex="(a_1, a_2) + (b_1, b_2) = (a_1 + b_1, a_2 + b_2)" />, one entry at a time. A function just has an entry for every <Formula tex="x" />: infinitely many, instead of 2.
+
+**So the old tools still work.** "Zero vector" means the flat function <Formula tex="0" />. "<Formula tex="-f" />" means <Formula tex="f" /> flipped upside down. A "linear combination" <Formula tex="a f + b g" /> is a new curve built from two old ones. Nothing about arrows was special: only that you can add and scale, and that those moves follow the usual rules. Lesson 4.1.2 lists those rules.
+
+**Why bother?** Because every idea in this course (span, basis, linear maps, eigenvectors) now works on functions too. Next lesson, the derivative turns out to be a matrix.
+
+## Predict
+
+Set <Formula tex="c = 0" />. What does the yellow curve become, and why?
+
+<details>
+  <summary>Reveal</summary>
+  It lies exactly on the red ramp. <Formula tex="0 \cdot f" /> is the zero function, the flat line at height 0, and adding zero changes nothing: <Formula tex="0 + g = g" />. That's the zero vector at work.
+</details>
+
+## Practice
+
+<Exercise id="9.1-sum-at" client:visible />
+
+<Exercise id="9.1-scale-at" client:visible />
+
+<Exercise id="9.1-combination" client:visible />
+
+## Go deeper
+
+**Sound is a sum of functions.** A chord is the sum of a few sine waves, and a music app's equaliser scales each one up or down. That's a linear combination of functions.
+
+**Infinite dimensions.** An arrow in the plane needs 2 numbers. A general function needs a number for every <Formula tex="x" />, so no finite list of basis functions can build them all: the space of all functions is infinite-dimensional. Fourier series pick a clever infinite basis (sines and cosines) for it.

@@ -1,0 +1,81 @@
+---
+title: What makes a transformation linear
+description: "Move the whole plane and check two rules: grid lines stay straight and evenly spaced, and the origin stays put."
+section: '1.8'
+part: 1
+threeBlueOneBrown: https://www.3blue1brown.com/lessons/linear-transformations
+mit: https://ocw.mit.edu/courses/18-06-linear-algebra-spring-2010/resources/lecture-30-linear-transformations-and-their-matrices/
+tongji: 第六章 线性空间与线性变换
+---
+
+import Formula from '../../components/Formula.astro';
+import LinearityDemo from '../../components/LinearityDemo.tsx';
+import Exercise from '../../components/Exercise.tsx';
+
+## Question
+
+A *transformation* is a rule that moves every point of the plane somewhere: put a point in, get a point out. Some of them are called **linear**. What does a linear one look like?
+
+## Play
+
+Press **Play** to watch the whole plane move. The faint grid stays still, so you can see where things started. The brighter grid and the <span class="vec">**yellow diagonal**</span> move.
+
+Try each button. For each one, ask: do the lines stay straight? Does the origin stay put?
+
+<LinearityDemo client:visible />
+
+Watch **Sneaky** closely: the grid seems not to move at all.
+
+## Numbers
+
+**Moved origin** moves <Formula tex="(x, y)" /> to <Formula tex="(x + 1, y + 1)" />. Where does the origin go?
+
+<Formula display tex="(0, 0) \;\to\; (0 + 1,\ 0 + 1) = (1, 1)" />
+
+Not <Formula tex="(0, 0)" />, so it is not linear.
+
+**Curved lines** moves <Formula tex="(x, y)" /> to <Formula tex="(x,\ y + 0.15x^2)" />. Compare moving <Formula tex="2 \cdot (1, 0)" /> with moving <Formula tex="(1, 0)" /> and then doubling:
+
+<Formula display tex="(2, 0) \;\to\; (2,\ 0.6) \qquad \text{but} \qquad 2 \cdot \big(1,\ 0.15\big) = (2,\ 0.3)" />
+
+They disagree, so it is not linear either.
+
+## Explain
+
+A transformation is **linear** when it keeps two promises:
+
+1. **Lines stay lines.** Every straight line lands on a straight line. Grid lines end up parallel and evenly spaced.
+2. **The origin stays put.**
+
+In numbers, the same two promises read:
+
+<Formula display tex="T(\vec{u} + \vec{v}) = T(\vec{u}) + T(\vec{v}) \qquad\text{and}\qquad T(c\,\vec{v}) = c\,T(\vec{v})" />
+
+"Moving a sum is the same as adding the moved arrows" and "moving a stretched arrow is the same as stretching the moved arrow". Each counter-example breaks at least one:
+
+- **Curved lines** bends lines, so stretching first and moving second gives a different answer (see Numbers).
+- **Moved origin** keeps every line straight, but <Formula tex="T(\vec{0}) = (1, 1)" />. A linear map always sends <Formula tex="\vec{0}" /> to <Formula tex="\vec{0}" />, because <Formula tex="T(0\,\vec{v}) = 0\,T(\vec{v}) = \vec{0}" />.
+- **Sneaky** slides points along each horizontal grid line, in a wave. Every grid line lands on itself, so the grid looks untouched. But the diagonal comes out wavy, so not *every* line stays straight.
+
+So watching grid lines is not quite enough: the rule is about **every** straight line.
+
+## Predict
+
+A rule keeps the origin fixed and turns every grid line into a straight line. Must it be linear?
+
+<details>
+  <summary>Reveal</summary>
+  No. **Sneaky** does exactly that, but bends the diagonal. A linear transformation must keep *every* straight line straight, not only the grid lines.
+</details>
+
+## Practice
+
+<Exercise id="2.1-origin" client:visible />
+
+<Exercise id="2.1-scale" client:visible />
+
+<Exercise id="2.1-add" client:visible />
+
+## Go deeper
+
+**Moved origin** is an example of an *affine* map: a linear map followed by a slide. Computer graphics uses them all the time, and a trick called *homogeneous coordinates* turns them back into linear maps in one dimension higher. MIT 18.06 Lecture 30 (linked below) defines linear transformations with the two equations above and no pictures at all.

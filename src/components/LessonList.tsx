@@ -1,5 +1,6 @@
 // The list of all lessons on the home page, with the reader's saved progress:
-// "4 of 15 lessons complete" at the top, then a tick and an exercise count next to each lesson.
+// "4 of 15 lessons complete" at the top, then the book's chapters and sections,
+// with a tick and an exercise count next to each lesson.
 import { useEffect, useState } from 'react';
 import { emptyProgress, loadProgress, solvedCount, type Progress } from '../lib/progress';
 import './Progress.css';
@@ -7,7 +8,7 @@ import './Progress.css';
 export interface LessonLink {
   id: string;
   href: string;
-  /** e.g. "1.2" */
+  /** e.g. "1.3.2" */
   number: string;
   title: string;
   exerciseIds: string[];
@@ -15,22 +16,31 @@ export interface LessonLink {
   optional?: boolean;
 }
 
-export interface ModuleLinks {
-  module: number;
-  name: string;
+/** One section of the book, e.g. "1.3 Vector Equations", with its lessons. No lessons yet means "Coming soon". */
+export interface SectionLinks {
+  number: string;
+  title: string;
+  page?: number;
   lessons: LessonLink[];
 }
 
-interface Props {
-  modules: ModuleLinks[];
+/** One chapter of the book, with its active sections. */
+export interface ChapterLinks {
+  number: number;
+  title: string;
+  sections: SectionLinks[];
 }
 
-export default function LessonList({ modules }: Props) {
+interface Props {
+  chapters: ChapterLinks[];
+}
+
+export default function LessonList({ chapters }: Props) {
   // Starts empty so the built page and the browser agree, then reads what's saved.
   const [progress, setProgress] = useState<Progress>(emptyProgress);
   useEffect(() => setProgress(loadProgress()), []);
 
-  const allLessons = modules.flatMap((m) => m.lessons);
+  const allLessons = chapters.flatMap((c) => c.sections.flatMap((s) => s.lessons));
   const completed = allLessons.filter((l) => progress.lessons[l.id]).length;
 
   return (
@@ -43,41 +53,54 @@ export default function LessonList({ modules }: Props) {
         <progress max={allLessons.length} value={completed} aria-hidden="true" />
       </p>
 
-      {modules.map(({ module, name, lessons }) => (
-        <section key={module}>
+      {chapters.map((chapter) => (
+        <section key={chapter.number}>
           <h2>
-            Module {module}: {name}
+            Chapter {chapter.number}: {chapter.title}
           </h2>
-          <ul className="lessons">
-            {lessons.map((lesson) => {
-              const done = progress.lessons[lesson.id] === true;
-              const solved = solvedCount(progress, lesson.exerciseIds);
-              return (
-                <li key={lesson.id}>
-                  <a href={lesson.href}>
-                    <span className="number">{lesson.number}</span>
-                    <span className="title">{lesson.title}</span>
-                    <span className="badges">
-                      {lesson.optional && <span className="optional-badge">Optional</span>}
-                      {lesson.exerciseIds.length > 0 && (
-                        <span
-                          className="exercise-count"
-                          title={`${solved} of ${lesson.exerciseIds.length} exercises solved`}
-                        >
-                          {solved}/{lesson.exerciseIds.length}
-                        </span>
-                      )}
-                      <span className={done ? 'tick done' : 'tick'} aria-label={done ? 'complete' : 'not complete'}>
-                        {done ? '✓' : ''}
-                      </span>
-                    </span>
-                  </a>
-                </li>
-              );
-            })}
-          </ul>
+          {chapter.sections.map((section) => (
+            <div key={section.number} className="book-section">
+              <h3>
+                <span className="number">{section.number}</span> {section.title}
+                {section.page !== undefined && <span className="page"> · p. {section.page}</span>}
+              </h3>
+              {section.lessons.length === 0 ? (
+                <p className="coming-soon">Coming soon</p>
+              ) : (
+                <ul className="lessons">
+                  {section.lessons.map((lesson) => (
+                    <LessonRow key={lesson.id} lesson={lesson} progress={progress} />
+                  ))}
+                </ul>
+              )}
+            </div>
+          ))}
         </section>
       ))}
     </>
+  );
+}
+
+function LessonRow({ lesson, progress }: { lesson: LessonLink; progress: Progress }) {
+  const done = progress.lessons[lesson.id] === true;
+  const solved = solvedCount(progress, lesson.exerciseIds);
+  return (
+    <li>
+      <a href={lesson.href}>
+        <span className="number">{lesson.number}</span>
+        <span className="title">{lesson.title}</span>
+        <span className="badges">
+          {lesson.optional && <span className="optional-badge">Optional</span>}
+          {lesson.exerciseIds.length > 0 && (
+            <span className="exercise-count" title={`${solved} of ${lesson.exerciseIds.length} exercises solved`}>
+              {solved}/{lesson.exerciseIds.length}
+            </span>
+          )}
+          <span className={done ? 'tick done' : 'tick'} aria-label={done ? 'complete' : 'not complete'}>
+            {done ? '✓' : ''}
+          </span>
+        </span>
+      </a>
+    </li>
   );
 }

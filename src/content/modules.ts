@@ -1,29 +1,12 @@
 import { getCollection, type CollectionEntry } from 'astro:content';
+import { activeInBookOrder } from './book';
 
-// The name of each module. Add a line here when you start a new module.
-export const moduleNames: Record<number, string> = {
-  1: 'Vectors',
-  2: 'Linear transformations',
-  3: 'The determinant',
-  4: 'Systems of equations',
-  5: 'Duality and the cross product',
-  6: 'Orthogonality',
-  7: 'Change of basis',
-  8: 'Eigenvectors and eigenvalues',
-  9: 'Abstract vector spaces',
-};
-
-/** A module's name, or "Untitled" if it isn't named above yet. */
-export function moduleName(module: number): string {
-  return moduleNames[module] ?? 'Untitled';
-}
-
-/** All lessons in reading order: by module, then by order inside the module. */
+/**
+ * The lessons the site shows, in reading order: the order of the sections in Lay's textbook,
+ * then by part inside a section. Lessons in archived sections are left out (see src/content/book.ts).
+ */
 export async function getSortedLessons(): Promise<CollectionEntry<'lessons'>[]> {
-  const lessons = await getCollection('lessons');
-  return lessons.sort(
-    (a, b) => a.data.module - b.data.module || a.data.order - b.data.order,
-  );
+  return activeInBookOrder(await getCollection('lessons'));
 }
 
 /** The ids of the exercises a lesson uses, e.g. ["1.1-walk", "1.1-trip"], read from its <Exercise id="..." /> tags. */

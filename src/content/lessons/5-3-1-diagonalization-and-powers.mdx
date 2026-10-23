@@ -1,0 +1,84 @@
+---
+title: Diagonalization and powers
+description: "Apply a matrix again and again and watch eigenvectors take over: diagonalization makes A to the 100th easy."
+section: '5.3'
+part: 1
+threeBlueOneBrown: https://www.3blue1brown.com/lessons/eigenvalues
+mit: https://ocw.mit.edu/courses/18-06-linear-algebra-spring-2010/resources/lecture-22-diagonalization-and-powers-of-a/
+tongji: 第五章 §3 相似矩阵
+---
+
+import Formula from '../../components/Formula.astro';
+import PowerView from '../../components/PowerView.tsx';
+import Exercise from '../../components/Exercise.tsx';
+
+## Question
+
+What is <Formula tex="A^{100}" />? Multiplying a matrix by itself 100 times is a lot of work. Can eigenvectors make it easy?
+
+## Play
+
+Press **Step** to apply <Formula tex="A" /> once more, or drag the n slider. The yellow dots are <Formula tex="\vec{v}, A\vec{v}, A^2\vec{v}, \dots" />, and the cyan lines are <Formula tex="A" />'s eigenvectors.
+
+Then switch to **Eigenbasis view**: the same dots, written in the eigenvectors' numbers. What does each step do there?
+
+Try all three examples. In **Fibonacci**, read the readout. In **Markov**, where do the dots settle?
+
+<PowerView
+  client:visible
+  examples={[
+    { name: '[3 1; 0 2]', matrix: [[3, 0], [1, 2]], vector: [0, 1], maxN: 5, note: 'In the eigenbasis, each step multiplies the first number by 3 and the second by 2.' },
+    { name: 'Fibonacci', matrix: [[1, 1], [1, 0]], vector: [1, 0], maxN: 10, note: 'Aⁿ(1, 0) = (F(n+1), F(n)). The dots hug the λ₁ ≈ 1.62 line, because the λ₂ part shrinks.' },
+    { name: 'Markov', matrix: [[0.9, 0.1], [0.2, 0.8]], vector: [1, 0], maxN: 30, range: 1.2, gridStep: 0.5, note: 'The λ = 0.7 part dies away, so the dots settle on the λ = 1 line at (2/3, 1/3).' },
+  ]}
+/>
+
+## Numbers
+
+<Formula tex="A = \begin{bmatrix} 3 & 1 \\ 0 & 2 \end{bmatrix}" /> has eigenvectors <Formula tex="(1, 0)" /> (λ = 3) and <Formula tex="(-1, 1)" /> (λ = 2). Put them in the columns of <Formula tex="P" />, and the λs on the diagonal of <Formula tex="D" />:
+
+<Formula display tex="A = P D P^{-1} = \begin{bmatrix} 1 & -1 \\ 0 & 1 \end{bmatrix} \begin{bmatrix} 3 & 0 \\ 0 & 2 \end{bmatrix} \begin{bmatrix} 1 & 1 \\ 0 & 1 \end{bmatrix}" />
+
+Then the middle <Formula tex="P^{-1}P" />s cancel in <Formula tex="A^n = (PDP^{-1})(PDP^{-1})\cdots" />, leaving
+
+<Formula display tex="A^n = P D^n P^{-1}, \qquad D^{10} = \begin{bmatrix} 3^{10} & 0 \\ 0 & 2^{10} \end{bmatrix} = \begin{bmatrix} 59049 & 0 \\ 0 & 1024 \end{bmatrix}" />
+
+That gives exactly the same <Formula tex="A^{10}" /> as ten multiplications (the site's tests check it).
+
+## Explain
+
+**Read PDP⁻¹ right to left,** like Lesson 5.4.2: translate into eigen-numbers (<Formula tex="P^{-1}" />), stretch each axis by its λ (<Formula tex="D" />), translate back (<Formula tex="P" />). In its own eigenbasis, <Formula tex="A" /> is just the diagonal matrix <Formula tex="D" />. That is what **diagonalization** means.
+
+**Powers are easy in the eigenbasis.** Applying <Formula tex="A" /> n times there is just stretching n times: the numbers become <Formula tex="(c_1\lambda_1^n,\; c_2\lambda_2^n)" />. That's what you saw in the eigenbasis view.
+
+**The biggest λ wins.** As n grows, the part with the biggest <Formula tex="|\lambda|" /> takes over, so <Formula tex="A^n\vec{v}" /> swings round towards that eigen-line.
+
+- **Fibonacci.** <Formula tex="\begin{bmatrix} 1 & 1 \\ 1 & 0 \end{bmatrix}" /> turns <Formula tex="(F_{k+1}, F_k)" /> into <Formula tex="(F_{k+1} + F_k, F_{k+1})" />. Its eigenvalues are <Formula tex="\tfrac{1 \pm \sqrt{5}}{2}" />, about 1.618 and −0.618. The second one shrinks to nothing, so <Formula tex="F_n" /> grows like <Formula tex="1.618^n" />, and <Formula tex="F_{10} = 55" />.
+- **Markov.** Each step, 10% of group 1 moves to group 2 and 20% of group 2 moves back. The eigenvalues are 1 and 0.7. <Formula tex="0.7^n \to 0" />, and λ = 1 leaves its eigenvector alone, so the split settles at <Formula tex="(2/3, 1/3)" />, whatever the start.
+
+**Not every matrix can do this.** A shear has only one eigen-line, so there aren't enough eigenvectors to fill <Formula tex="P" />. A rotation has no real ones. That is why PowerView has no eigenbasis view for them.
+
+## Predict
+
+In the Markov example, start with everyone in group 2 instead, <Formula tex="\vec{v} = (0, 1)" />. Where does it settle?
+
+<details>
+  <summary>Reveal</summary>
+  At the same <Formula tex="(2/3, 1/3)" />. The start only changes <Formula tex="c_1" /> and <Formula tex="c_2" />. The λ = 0.7 part dies away either way, and the λ = 1 part is fixed by the total (everyone adds up to 1).
+</details>
+
+## Practice
+
+<Exercise id="8.4-eigen-power" client:visible />
+
+<Exercise id="8.4-diagonal" client:visible />
+
+<Exercise id="8.4-fibonacci" client:visible />
+
+## Go deeper
+
+**A formula for Fibonacci.** Working out <Formula tex="P D^n P^{-1}" /> by hand gives Binet's formula, <Formula tex="F_n = \tfrac{1}{\sqrt{5}}\left(\varphi^n - (1 - \varphi)^n\right)" /> with <Formula tex="\varphi = \tfrac{1 + \sqrt{5}}{2}" />. A whole number from square roots of 5!
+
+**Google's PageRank** is a giant Markov matrix. The ranking of the web pages is its λ = 1 eigenvector, found by applying the matrix again and again, just like the dots in the Markov example.
+
+**Similar matrices again.** <Formula tex="A = PDP^{-1}" /> says A and D are similar (Lesson 5.4.2): the same transformation in two languages. Eigenvectors are the language where it's simplest.

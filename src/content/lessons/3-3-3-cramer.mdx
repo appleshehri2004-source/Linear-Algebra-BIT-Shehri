@@ -1,0 +1,85 @@
+---
+title: Cramer's rule as areas
+description: "Find one unknown with one division: Cramer’s rule explained with areas that the matrix stretches."
+section: '3.3'
+part: 3
+threeBlueOneBrown: https://www.3blue1brown.com/lessons/cramers-rule
+mit: https://ocw.mit.edu/courses/18-06-linear-algebra-spring-2010/resources/lecture-20-cramers-rule-inverse-matrix-and-volume/
+tongji: 第二章 §4 克拉默法则
+---
+
+import Formula from '../../components/Formula.astro';
+import CramerView from '../../components/CramerView.tsx';
+import PredictReveal from '../../components/PredictReveal.tsx';
+import Exercise from '../../components/Exercise.tsx';
+
+## Question
+
+Elimination finds <Formula tex="x" /> and <Formula tex="y" /> together. Can you find <Formula tex="y" /> **on its own**, with one division? And why would **areas** know the answer?
+
+## Play
+
+Drag the yellow <span class="vec">**x**</span> on the left. Compare the two areas, then press **Find x**.
+
+<CramerView client:visible matrix={[[-2, 0], [1, -1]]} start={[3, 2]} />
+
+## Numbers
+
+The system is:
+
+<Formula display tex="\begin{bmatrix} -2 & 1 \\ 0 & -1 \end{bmatrix} \begin{bmatrix} x \\ y \end{bmatrix} = \begin{bmatrix} -4 \\ -2 \end{bmatrix}, \qquad \det A = (-2)(-1) - (1)(0) = 2" />
+
+For <Formula tex="y" />, swap **column 2** for <Formula tex="\vec{v}" /> and take the determinant:
+
+<Formula display tex="y = \frac{\det \begin{bmatrix} -2 & -4 \\ 0 & -2 \end{bmatrix}}{\det A} = \frac{4 - 0}{2} = \frac{4}{2} = 2" />
+
+For <Formula tex="x" />, swap **column 1** for <Formula tex="\vec{v}" />:
+
+<Formula display tex="x = \frac{\det \begin{bmatrix} -4 & 1 \\ -2 & -1 \end{bmatrix}}{\det A} = \frac{4 + 2}{2} = \frac{6}{2} = 3" />
+
+Check: <Formula tex="3\,(-2, 0) + 2\,(1, -1) = (-6 + 2, \; 0 - 2) = (-4, -2)" />. ✓
+
+## Explain
+
+**Step 1: an area that equals y.** Make a parallelogram from <span class="ihat">**î**</span> and <Formula tex="\vec{x} = (x, y)" />. Its base is <span class="ihat">**î**</span>, 1 long, on the x-axis. Its height is how far <Formula tex="\vec{x}" /> is above the x-axis: <Formula tex="y" />. So its area is <Formula tex="1 \times y = y" />.
+
+<Formula display tex="\det\begin{bmatrix} 1 & x \\ 0 & y \end{bmatrix} = y" />
+
+**Step 2: move it with A.** <Formula tex="A" /> sends <span class="ihat">**î**</span> to column 1 and <Formula tex="\vec{x}" /> to <Formula tex="\vec{v}" />. So the parallelogram becomes the one made by column 1 and <Formula tex="\vec{v}" />.
+
+**Step 3: areas multiply by det A** (Lesson 3.3.1). The new area is <Formula tex="\det A \cdot y" />. But it is also the determinant of its two sides:
+
+<Formula display tex="\det\big[\,\text{col 1} \;\; \vec{v}\,\big] = \det A \cdot y \quad\Longrightarrow\quad y = \frac{\det\big[\,\text{col 1} \;\; \vec{v}\,\big]}{\det A}" />
+
+That's **Cramer's rule**. For <Formula tex="x" />, use <Formula tex="\vec{x}" /> and <span class="jhat">**ĵ**</span>: that parallelogram has area <Formula tex="x" />, and it becomes the one made by <Formula tex="\vec{v}" /> and column 2.
+
+**When det A = 0** you'd divide by 0. That matches Lesson 1.5.1: then there's no single answer.
+
+**Negative areas** (purple) are fine: they mean <Formula tex="y" /> (or <Formula tex="x" />) is negative. Drag <span class="vec">**x**</span> below the x-axis and try it.
+
+## Predict
+
+Cramer's rule depends on <Formula tex="A" /> multiplying every area by the same number. What area does the unit square have after this <Formula tex="A" />?
+
+<PredictReveal client:visible guessArea matrix={[[-2, 0], [1, -1]]} />
+
+<details>
+  <summary>Why</summary>
+  2, which is <Formula tex="\det A" />. Every shape's area is doubled, including the parallelogram made by <span class="ihat">**î**</span> and <Formula tex="\vec{x}" />: its area goes from 2 to 4.
+</details>
+
+## Practice
+
+<Exercise id="4.8-top" client:visible />
+
+<Exercise id="4.8-solve" client:visible />
+
+<Exercise id="4.8-area" client:visible />
+
+## Go deeper
+
+**In 3D**, it's the same idea with volumes. The box made by <span class="ihat">**î**</span>, <span class="jhat">**ĵ**</span> and <Formula tex="\vec{x}" /> has volume <Formula tex="z" />, so <Formula tex="z = \det[\,\text{col 1}\;\text{col 2}\;\vec{v}\,] / \det A" />. On Lesson 1.2.1's system, <Formula tex="x + y + z = 6" />, <Formula tex="2y + 5z = -4" />, <Formula tex="2x + 5y - z = 27" />, it gives <Formula tex="(5, 3, -2)" />, the same as elimination.
+
+**Not for big systems.** A system with <Formula tex="n" /> unknowns needs <Formula tex="n + 1" /> determinants, which is far slower than elimination. Cramer's rule is a way to **understand** the answer, not the fastest way to **find** it.
+
+**It also explains the inverse formula.** Each number of <Formula tex="A^{-1}" /> is a small determinant divided by <Formula tex="\det A" />. That's Cramer's rule, solved with <Formula tex="\vec{v} = \hat{\imath}" /> and then <Formula tex="\vec{v} = \hat{\jmath}" />.
