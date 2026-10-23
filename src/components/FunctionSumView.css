@@ -1,0 +1,27 @@
+/* The key above lesson 9.1's plot: which colour is which curve. */
+.fn-legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.25rem 1.25rem;
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0 0;
+  font-weight: 600;
+}
+
+/* A short line of the curve's colour before each name. */
+.fn-legend li::before {
+  content: '';
+  display: inline-block;
+  width: 1.2em;
+  height: 0.25em;
+  margin-right: 0.4em;
+  vertical-align: middle;
+  background: currentColor;
+  border-radius: 2px;
+}
+
+.fn-sum {
+  font-variant-numeric: tabular-nums;
+}

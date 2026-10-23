@@ -146,6 +146,16 @@ import {
   svdStepsAt,
   perp,
   unitCircle,
+  addFn,
+  scaleFn,
+  waveF,
+  rampG,
+  evalPoly,
+  addPoly,
+  scalePoly,
+  derivativeMatrix,
+  derivePoly,
+  polyTex,
 } from './linalg';
 
 describe('add', () => {
@@ -1954,5 +1964,67 @@ describe('SVD (Module 8)', () => {
   it('perp turns a quarter turn anticlockwise', () => {
     expect(perp([1, 0])).toEqual([0, 1]);
     expect(perp([2, 3])).toEqual([-3, 2]);
+  });
+});
+
+describe('functions and polynomials as vectors (Module 9)', () => {
+  it('addFn and scaleFn work height by height', () => {
+    const sum = addFn(waveF, rampG);
+    for (const x of [-2, 0, 1.5, 3]) {
+      expect(sum(x)).toBeCloseTo(waveF(x) + rampG(x), 12);
+      expect(scaleFn(-1.5, waveF)(x)).toBeCloseTo(-1.5 * waveF(x), 12);
+    }
+  });
+
+  it('evalPoly([5,3,1], 2) = 15, i.e. x² + 3x + 5 at x = 2', () => {
+    expect(evalPoly([5, 3, 1], 2)).toBe(15);
+    expect(evalPoly([5, 4, 5, 1], -1)).toBe(5 - 4 + 5 - 1);
+    expect(evalPoly([], 3)).toBe(0);
+  });
+
+  it('addPoly and scalePoly work coefficient by coefficient, padding a shorter list with zeros', () => {
+    expect(addPoly([1, 2, 3], [4, 5])).toEqual([5, 7, 3]);
+    expect(scalePoly(2, [5, 4, 5, 1])).toEqual([10, 8, 10, 2]);
+    expect(scalePoly(0, [3, -1])).toEqual([0, 0]); // never -0
+  });
+
+  it('adding coefficient lists adds the curves: (p + q)(x) = p(x) + q(x)', () => {
+    const p = [1, -2, 0.5, 3];
+    const q = [4, 0, -1];
+    for (const x of [-1.5, 0, 2]) expect(evalPoly(addPoly(p, q), x)).toBeCloseTo(evalPoly(p, x) + evalPoly(q, x), 10);
+  });
+
+  it('derivativeMatrix(4) has 1, 2, 3 just above the main diagonal', () => {
+    expect(derivativeMatrix(4)).toEqual([
+      [0, 0, 0, 0],
+      [1, 0, 0, 0],
+      [0, 2, 0, 0],
+      [0, 0, 3, 0],
+    ]);
+  });
+
+  it('D times [5,4,5,1] (x³ + 5x² + 4x + 5) gives [4,10,3,0], which is 3x² + 10x + 4', () => {
+    expect(applyColumns(derivativeMatrix(4), [5, 4, 5, 1])).toEqual([4, 10, 3, 0]);
+    expect(derivePoly([5, 4, 5, 1])).toEqual([4, 10, 3, 0]);
+    expect(polyTex(derivePoly([5, 4, 5, 1]))).toBe('3x^2 + 10x + 4');
+  });
+
+  it('the derivative is linear: D(p + q) = D(p) + D(q) and D(c·p) = c·D(p), for 20 random p, q, c', () => {
+    const rand = seeded(9);
+    const n = () => Math.round((rand() * 20 - 10) * 10) / 10;
+    for (let i = 0; i < 20; i++) {
+      const p = [n(), n(), n(), n()];
+      const q = [n(), n(), n(), n()];
+      const c = n();
+      derivePoly(addPoly(p, q)).forEach((v, k) => expect(v).toBeCloseTo(addPoly(derivePoly(p), derivePoly(q))[k], 10));
+      derivePoly(scalePoly(c, p)).forEach((v, k) => expect(v).toBeCloseTo(scalePoly(c, derivePoly(p))[k], 10));
+    }
+  });
+
+  it('polyTex writes a polynomial highest power first, without 1s or zeros', () => {
+    expect(polyTex([5, 4, 5, 1])).toBe('x^3 + 5x^2 + 4x + 5');
+    expect(polyTex([0, -1])).toBe('-x');
+    expect(polyTex([-2, 0, -1.5])).toBe('-1.5x^2 - 2');
+    expect(polyTex([0, 0, 0])).toBe('0');
   });
 });

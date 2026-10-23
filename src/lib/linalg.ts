@@ -1732,3 +1732,82 @@ export function surfaceAlong(a: Mat2, direction: Vec2, radius: number, height: n
     return [p[0], p[1], k * quadForm(a, p) + 0] as Vec3;
   });
 }
+
+// ---------- Abstract vector spaces ----------
+
+/** A function from numbers to numbers, like f(x) = sin x. In Module 9 these are vectors too. */
+export type Fn = (x: number) => number;
+
+/** f + g: the function whose height at every x is f(x) + g(x). */
+export function addFn(f: Fn, g: Fn): Fn {
+  return (x) => f(x) + g(x);
+}
+
+/** c·f: the function whose height at every x is c times f(x). */
+export function scaleFn(c: number, f: Fn): Fn {
+  return (x) => c * f(x);
+}
+
+/** Lesson 9.1's f: a wave, f(x) = 2 sin x. */
+export const waveF: Fn = (x) => 2 * Math.sin(x);
+
+/** Lesson 9.1's g: a gentle ramp, g(x) = 0.5x + 1. */
+export const rampG: Fn = (x) => 0.5 * x + 1;
+
+/**
+ * A polynomial is stored as its coefficients, constant first:
+ * [5, 4, 5, 1] means 5 + 4x + 5x² + x³. That list is the polynomial's coordinate vector.
+ */
+export type Poly = number[];
+
+/** The polynomial's value at x. evalPoly([5, 3, 1], 2) = 5 + 3·2 + 1·2² = 15. */
+export function evalPoly(p: Poly, x: number): number {
+  // Horner's way: start from the highest power, then "times x, add the next one" down to the constant.
+  return p.reduceRight((total, c) => total * x + c, 0);
+}
+
+/** p + q: add matching coefficients. A shorter list counts as having zeros at the end. */
+export function addPoly(p: Poly, q: Poly): Poly {
+  return Array.from({ length: Math.max(p.length, q.length) }, (_, i) => (p[i] ?? 0) + (q[i] ?? 0));
+}
+
+/** c·p: every coefficient times c. */
+export function scalePoly(c: number, p: Poly): Poly {
+  return p.map((n) => c * n + 0);
+}
+
+/**
+ * The derivative as an n×n matrix (stored as its columns) for polynomials with n coefficients.
+ * Column k is where x^k goes: its derivative k·x^(k−1), so the number k sits in row k − 1.
+ * That puts 1, 2, 3, ... just above the main diagonal. For n = 4:
+ *   [0 1 0 0]
+ *   [0 0 2 0]
+ *   [0 0 0 3]
+ *   [0 0 0 0]
+ */
+export function derivativeMatrix(n: number): number[][] {
+  return Array.from({ length: n }, (_, k) => Array.from({ length: n }, (_, r) => (r === k - 1 ? k : 0)));
+}
+
+/** The derivative of p, worked out with the derivative matrix. Same length as p (the top coefficient becomes 0). */
+export function derivePoly(p: Poly): Poly {
+  return applyColumns(derivativeMatrix(p.length), p);
+}
+
+/**
+ * A polynomial written for KaTeX, highest power first, skipping zeros:
+ * [4, 10, 3, 0] gives "3x^2 + 10x + 4", and [0, -1] gives "-x". All zeros gives "0".
+ */
+export function polyTex(p: Poly, variable = 'x'): string {
+  const terms: string[] = [];
+  for (let k = p.length - 1; k >= 0; k--) {
+    const c = roundTo(p[k], 2);
+    if (c === 0) continue;
+    const size = Math.abs(c);
+    const power = k === 0 ? '' : k === 1 ? variable : `${variable}^${k}`;
+    const number = size === 1 && k > 0 ? '' : String(size);
+    const sign = c < 0 ? '-' : '+';
+    terms.push(terms.length === 0 ? `${c < 0 ? '-' : ''}${number}${power}` : `${sign} ${number}${power}`);
+  }
+  return terms.length ? terms.join(' ') : '0';
+}

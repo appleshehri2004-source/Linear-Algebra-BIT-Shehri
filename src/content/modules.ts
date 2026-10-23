@@ -10,6 +10,7 @@ export const moduleNames: Record<number, string> = {
   6: 'Orthogonality',
   7: 'Change of basis',
   8: 'Eigenvectors and eigenvalues',
+  9: 'Abstract vector spaces',
 };
 
 /** A module's name, or "Untitled" if it isn't named above yet. */

@@ -527,3 +527,40 @@ The unit circle and two arrows at right angles, v₁ and v₂, turn into an elli
 - **"Exactly the same" needs care with rounding.** U·Σ·Vᵀ equals A only to about 15 decimal places. And `matrixAt` used to rebuild a rotation from its angle at t = 1, which was off in the last digit. Now both modes end on A itself. The tests check that U·Σ·Vᵀ is within 1e-9 of A for 10 matrices.
 - **Test angles with cross products, not acos.** acos near 0° loses about half the digits (1e-7 instead of 1e-15). The area of the parallelogram (cross2) shows "same line" to 12 decimal places.
 - **A hidden browser pane doesn't load lessons.** The demos only start once they scroll into view, and a hidden pane never reports that. The SVD demo looked broken until the pane was on screen.
+
+## Day 12 (continued): Module 9, abstract vector spaces
+
+### New files
+
+**`src/components/FunctionSumView.tsx`** and **`FunctionSumView.css`** (Lesson 9.1)
+Three curves: c·f (a green wave, 2 sin x), g (a red ramp, 0.5x + 1) and their sum (yellow). Drag the yellow dot along the x-axis. A bar at that x stacks the green height on the red one, and its top always lands on the yellow curve. The **c** slider stretches, flattens or flips the wave.
+
+**`src/components/PolynomialVector.tsx`** and **`PolynomialVector.css`** (Lesson 9.2)
+Four sliders for c₀ to c₃ in c₀ + c₁x + c₂x² + c₃x³. The curve and the column of coefficients change together. **Take the derivative** shows D × p = p′, with D's 1, 2, 3 boxed, and draws p′ in orange. **Make p′ the new p** takes the derivative again. After four presses, everything is 0.
+
+**`src/components/VectorSpaceQuiz.tsx`** and **`VectorSpaceQuiz.css`** (Lesson 9.3)
+Six sets, each with "Vector space" and "Not one" buttons. After you answer, the card says why: which rule breaks, with an example.
+
+**`src/components/Tex.tsx`**
+A small helper that draws KaTeX inside a React component, for maths that changes while you play, like p(x) = …. The lesson files still use Formula.astro.
+
+**`src/content/lessons/9-1-…`, `9-2-…` and `9-3-…`**, and 9 new questions in **`src/exercises/module9.ts`**.
+
+### Changed files
+
+- **`linalg.ts`** and **`linalg.test.ts`**:
+  - New functions: `addFn`, `scaleFn`, `waveF`, `rampG`, `evalPoly`, `addPoly`, `scalePoly`, `derivativeMatrix`, `derivePoly` and `polyTex`.
+  - The tests check D·(5, 4, 5, 1) = (4, 10, 3, 0), and that D(p + q) = Dp + Dq and D(cp) = c·Dp for 20 random p, q and c.
+  - 375 tests now.
+- **`modules.ts`**: module 9 is named "Abstract vector spaces".
+- **`exercises/index.ts`**: includes module 9.
+
+### Things I learned
+
+- **A vector is anything you can add and scale.** Functions add height by height: (f + g)(x) = f(x) + g(x). It's the same rule as adding arrows entry by entry. A function just has an entry for every x.
+- **A polynomial's coefficients are its coordinates.** The basis is 1, x, x², x³. So "degree at most 3" works just like ℝ⁴.
+- **The derivative's matrix comes from where the basis goes.** xᵏ → k·xᵏ⁻¹, so column k has the number k one row up. That puts 1, 2, 3 *just above* the main diagonal, not on it.
+- **D has no inverse.** Every constant goes to 0, so det D = 0. That's the "+ C" in integration. D⁴ = 0, because four derivatives wipe out a cubic.
+- **To check a set, ask three questions.** Is 0 in it? Does adding two members stay inside? Does scaling one (by −1 too) stay inside? "Degree exactly 2" fails the second: (x² + 1) + (−x² + x) = x + 1.
+- **Write polynomials constant first.** Then the number in place k is the coefficient of xᵏ, and the code never has to count backwards. `evalPoly` uses Horner's way, which starts from the top power: ((c₃x + c₂)x + c₁)x + c₀.
+- **A demo can't respond until the page wakes it up.** A script that moved a slider right after the page loaded did nothing, because the demo wasn't running yet. Once it was running, each slider move redrew all the curves in about 1 to 3 ms (on a Mac, in a phone-sized window).

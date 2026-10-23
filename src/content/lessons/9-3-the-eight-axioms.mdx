@@ -1,0 +1,77 @@
+---
+title: The eight axioms
+module: 9
+order: 3
+threeBlueOneBrown: https://www.3blue1brown.com/lessons/abstract-vector-spaces
+tongji: 第六章 §1 线性空间的定义与性质
+---
+
+import Formula from '../../components/Formula.astro';
+import VectorSpaceQuiz from '../../components/VectorSpaceQuiz.tsx';
+import Exercise from '../../components/Exercise.tsx';
+
+## Question
+
+Arrows, functions and polynomials all turned out to be "vectors". So what exactly does a set need to count as a **vector space**? And how do you spot a set that only looks like one?
+
+## Play
+
+For each set, decide: vector space, or not? If you say no, try to name the rule it breaks before you tap. Use the rules listed under **Explain**.
+
+<VectorSpaceQuiz client:visible />
+
+## Numbers
+
+Polynomials of degree exactly 2 look fine until you add two of them:
+
+<Formula display tex="(x^2 + 1) + (-x^2 + x) = x + 1" />
+
+The answer has degree 1, so it's outside the set. In the first quadrant, scaling breaks it: <Formula tex="-1 \cdot (2, 3) = (-2, -3)" /> is in the third quadrant.
+
+## Explain
+
+A **vector space** is a set where you can add any two members and scale any member by a number, **the answer always stays in the set**, and these eight rules hold for all <Formula tex="\vec{u}, \vec{v}, \vec{w}" /> in it and all numbers <Formula tex="a, b" />:
+
+1. <Formula tex="\vec{u} + \vec{v} = \vec{v} + \vec{u}" /> (order doesn't matter)
+2. <Formula tex="(\vec{u} + \vec{v}) + \vec{w} = \vec{u} + (\vec{v} + \vec{w})" /> (grouping doesn't matter)
+3. There is a zero vector: <Formula tex="\vec{0} + \vec{v} = \vec{v}" />
+4. Every <Formula tex="\vec{v}" /> has a <Formula tex="-\vec{v}" />: <Formula tex="\vec{v} + (-\vec{v}) = \vec{0}" />
+5. <Formula tex="1 \cdot \vec{v} = \vec{v}" />
+6. <Formula tex="a(b\vec{v}) = (ab)\vec{v}" />
+7. <Formula tex="a(\vec{u} + \vec{v}) = a\vec{u} + a\vec{v}" />
+8. <Formula tex="(a + b)\vec{v} = a\vec{v} + b\vec{v}" />
+
+**In practice, check three things.** For a set inside a space you already know (arrows, polynomials, functions), rules 1, 2 and 5 to 8 come for free. Ask only:
+
+- Is <Formula tex="\vec{0}" /> in it?
+- Does adding two members stay inside?
+- Does scaling a member (including by −1 and 0) stay inside?
+
+A set that passes is called a **subspace**. It's the same reason the null space in Lesson 4.5 always goes through the origin and never curves, now for any kind of vector.
+
+**Why the rules matter.** Every result in this course (span, basis, dimension, matrices, eigenvalues) was proved using only these rules. So any set that follows them gets all of linear algebra for free. That's the point of being abstract.
+
+## Predict
+
+Is the set of polynomials (degree at most 3) with <Formula tex="p(0) = 0" /> a vector space? What about those with <Formula tex="p(0) = 1" />?
+
+<details>
+  <summary>Reveal</summary>
+  <Formula tex="p(0) = 0" />: **yes**. The zero polynomial is in it, and if <Formula tex="p(0) = q(0) = 0" /> then <Formula tex="(p + q)(0) = 0" /> and <Formula tex="(cp)(0) = 0" />. <Formula tex="p(0) = 1" />: **no**. The zero polynomial gives 0, not 1, and <Formula tex="(p + q)(0) = 2" />.
+</details>
+
+## Practice
+
+<Exercise id="9.3-degree-two" client:visible />
+
+<Exercise id="9.3-shifted" client:visible />
+
+<Exercise id="9.3-negative" client:visible />
+
+## Go deeper
+
+**Matrices are vectors too.** All 2×2 matrices form a vector space with 4 dimensions: add them entry by entry, scale every entry. A basis is the four matrices with a single 1.
+
+**Dimension is what counts.** Polynomials of degree at most 3 and <Formula tex="\mathbb{R}^4" /> look different, but both have dimension 4, and the coefficient list matches them up perfectly. Mathematicians call them **isomorphic**: the same space wearing different clothes. Every <Formula tex="n" />-dimensional space (with real numbers) is <Formula tex="\mathbb{R}^n" /> in disguise.
+
+**Other numbers.** The "numbers" you scale by don't have to be real. With complex numbers you get complex vector spaces, which quantum mechanics is built on.

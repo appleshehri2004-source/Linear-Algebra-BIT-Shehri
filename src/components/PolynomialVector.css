@@ -1,0 +1,30 @@
+/* Lesson 9.2: the four coefficient sliders sit two by two on a wide screen, one above another on a phone. */
+.poly-sliders {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0 1.5rem;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.poly-sliders .slider {
+  margin: 0.5rem 0;
+}
+
+/* D (4x4) times p equals p′, all on one line even on a phone: smaller gaps and narrower number boxes.
+   (Two class names, so this beats .demo-row's wrapping.) If it still doesn't fit, it scrolls sideways. */
+.demo-row.poly-product {
+  flex-wrap: nowrap;
+  gap: 0.4rem;
+  overflow-x: auto;
+  justify-content: safe center;
+}
+
+.poly-product .matrix-view-cell {
+  min-width: 1.25em;
+  padding: 0 0.1rem;
+}
+
+.poly-name {
+  min-height: 3.5em; /* room for both lines, so the plot doesn't jump when p′ appears */
+}

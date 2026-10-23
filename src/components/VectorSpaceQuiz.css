@@ -1,0 +1,43 @@
+/* Lesson 9.3's quiz: one card per set, two big buttons, then the reason. */
+.vs-quiz ol {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0;
+  counter-reset: vs;
+}
+
+.vs-card {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  margin: 0.75rem 0;
+  counter-increment: vs;
+}
+
+.vs-set {
+  margin: 0 0 0.5rem;
+  font-weight: 600;
+}
+
+.vs-set::before {
+  content: counter(vs) '. ';
+  color: var(--muted);
+}
+
+.vs-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.vs-why {
+  margin: 0.75rem 0 0;
+}
+
+.vs-right {
+  color: var(--positive);
+}
+
+.vs-wrong {
+  color: var(--negative);
+}
