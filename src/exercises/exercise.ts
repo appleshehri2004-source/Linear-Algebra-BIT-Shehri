@@ -1,15 +1,15 @@
 // The shared shape of a practice question, plus helpers for making and checking them.
 // Each lesson's questions live in a module file (e.g. module1.ts) as small generator functions.
-import { isClose, roundTo, type Mat2, type Vec2 } from '../lib/linalg';
+import { isClose, roundTo, type Vec2 } from '../lib/linalg';
 
 /** One question, with its correct answer already worked out by linalg.ts. */
 export interface Question {
   /** The question. Put maths between dollar signs, e.g. "Work out $\\vec{v} + \\vec{w}$." */
   text: string;
-  /** A single number, or a vector (two numbers). */
-  answer: number | Vec2;
-  /** Names for the two answer boxes when the answer is a vector. Default: x and y. */
-  labels?: [string, string];
+  /** A single number, or a vector (two or three numbers). */
+  answer: number | number[];
+  /** Names for the answer boxes when the answer is a vector. Default: x, y (and z). */
+  labels?: string[];
   /** A short hint about rounding, e.g. "Round to 2 decimal places." */
   note?: string;
 }
@@ -37,18 +37,18 @@ export function randVec(rand: Rand, limit = 4): Vec2 {
   return v[0] === 0 && v[1] === 0 ? randVec(rand, limit) : v;
 }
 
-/** TeX for a column vector, e.g. vecTex([3, -1]) draws [3 over -1] in square brackets. */
-export function vecTex(v: Vec2): string {
-  return `\\begin{bmatrix} ${roundTo(v[0], 2)} \\\\ ${roundTo(v[1], 2)} \\end{bmatrix}`;
+/** TeX for a column vector, e.g. vecTex([3, -1]) draws [3 over -1] in square brackets. Works for 3D too. */
+export function vecTex(v: number[]): string {
+  return `\\begin{bmatrix} ${v.map((n) => roundTo(n, 2)).join(' \\\\ ')} \\end{bmatrix}`;
 }
 
 /**
- * TeX for a 2x2 matrix. The matrix is stored as columns, so column 1 (i-hat) is the left column:
+ * TeX for a matrix of any size. It is stored as columns, so column 1 (i-hat) is the left column:
  * matTex([[1, -2], [3, 0]]) draws [1 3 over -2 0].
  */
-export function matTex(m: Mat2): string {
-  const [[a, c], [b, d]] = m.map((col) => col.map((n) => roundTo(n, 2)));
-  return `\\begin{bmatrix} ${a} & ${b} \\\\ ${c} & ${d} \\end{bmatrix}`;
+export function matTex(columns: number[][]): string {
+  const rows = columns[0].map((_, r) => columns.map((col) => roundTo(col[r], 2)).join(' & '));
+  return `\\begin{bmatrix} ${rows.join(' \\\\ ')} \\end{bmatrix}`;
 }
 
 /** The correct answer as TeX, for showing after two wrong tries. */

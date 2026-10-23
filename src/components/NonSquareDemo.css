@@ -1,0 +1,24 @@
+/* Input plane and 3D output side by side on a wide screen, one above the other on a phone. */
+.non-square-views {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 40rem) {
+  .non-square-views {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.non-square-views figure {
+  margin: 0;
+  min-width: 0; /* let the plane shrink to fit its half */
+}
+
+.non-square-views figcaption {
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.9rem;
+  margin-bottom: 0.25rem;
+}

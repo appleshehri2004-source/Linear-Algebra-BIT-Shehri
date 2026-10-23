@@ -1,0 +1,78 @@
+---
+title: Composition = multiplication
+module: 2
+order: 4
+threeBlueOneBrown: https://www.3blue1brown.com/lessons/matrix-multiplication
+mit: https://ocw.mit.edu/courses/18-06-linear-algebra-spring-2010/resources/lecture-3-multiplication-and-inverse-matrices/
+tongji: 第二章 §2 矩阵的运算
+---
+
+import Formula from '../../components/Formula.astro';
+import CompositionDemo from '../../components/CompositionDemo.tsx';
+import PredictReveal from '../../components/PredictReveal.tsx';
+import Exercise from '../../components/Exercise.tsx';
+
+## Question
+
+If you rotate the plane and then shear it, you get one new transformation. What is its matrix, and does the order matter?
+
+## Play
+
+Press **Play** to rotate 90°, then shear. Watch where the yellow vector <Formula tex="\vec{v}" /> ends up. Then press **Swap**: the same two moves play in the other order.
+
+<CompositionDemo
+  client:visible
+  a={{ name: 'rotate', letter: 'R', matrix: [[0, 1], [-1, 0]] }}
+  b={{ name: 'shear', letter: 'S', matrix: [[1, 0], [1, 1]] }}
+  tracked={[2, 1]}
+/>
+
+## Numbers
+
+The rotation is <Formula tex="R = \begin{bmatrix} 0 & -1 \\ 1 & 0 \end{bmatrix}" /> and the shear is <Formula tex="S = \begin{bmatrix} 1 & 1 \\ 0 & 1 \end{bmatrix}" />.
+
+To find the matrix for "rotate, then shear", follow <span class="ihat">**î**</span> and <span class="jhat">**ĵ**</span> through both moves:
+
+- <span class="ihat">**î**</span>: rotating sends it to <Formula tex="(0, 1)" />, and shearing sends that to <Formula tex="0 \cdot (1, 0) + 1 \cdot (1, 1) = (1, 1)" />.
+- <span class="jhat">**ĵ**</span>: rotating sends it to <Formula tex="(-1, 0)" />, and shearing sends that to <Formula tex="-1 \cdot (1, 0) + 0 \cdot (1, 1) = (-1, 0)" />.
+
+So
+
+<Formula display tex="SR = \begin{bmatrix} 1 & -1 \\ 1 & 0 \end{bmatrix} \qquad RS = \begin{bmatrix} 0 & -1 \\ 1 & 1 \end{bmatrix}" />
+
+The two answers are different matrices. In the demo, <Formula tex="\vec{v} = (2, 1)" /> lands on <Formula tex="(1, 2)" /> one way and <Formula tex="(-1, 3)" /> the other way.
+
+## Explain
+
+**Multiplying two matrices means doing one transformation, then the other.** Each column of <Formula tex="SR" /> is where <Formula tex="S" /> sends a column of <Formula tex="R" />. That is exactly "follow î and ĵ through <Formula tex="R" />, then through <Formula tex="S" />."
+
+**Read right to left.** In <Formula tex="SR\vec{v}" />, the matrix next to <Formula tex="\vec{v}" /> acts first, just like <Formula tex="f(g(x))" /> does <Formula tex="g" /> first. So <Formula tex="SR" /> means "rotate, then shear".
+
+**Order matters.** Rotate then shear: the shear comes last, so the finished picture is slanted along the x-axis. Shear then rotate: the rotation comes last and turns the slanted picture a quarter turn, so the slant ends up along the y-axis. Different moves, different matrices: in general <Formula tex="AB \ne BA" />.
+
+**Why brackets don't matter.** <Formula tex="(AB)C" /> and <Formula tex="A(BC)" /> both mean "do <Formula tex="C" />, then <Formula tex="B" />, then <Formula tex="A" />". The brackets only change which two moves you *name* as one move first; the plane still goes through the same three moves in the same order. That's why <Formula tex="(AB)C = A(BC)" /> (associativity). With rows-times-columns sums, proving it takes a page of algebra. Thinking in transformations, there is nothing to prove.
+
+## Predict
+
+Rotate 90°, then shear. Where does <Formula tex="\vec{v} = (1, 2)" /> land? Tap your guess, then press **Reveal**.
+
+<PredictReveal client:visible steps={[[[0, 1], [-1, 0]], [[1, 0], [1, 1]]]} vector={[1, 2]} />
+
+<details>
+  <summary>How to work it out</summary>
+  Rotating sends <Formula tex="(1, 2)" /> to <Formula tex="(-2, 1)" />. Shearing slides each point sideways by its height: <Formula tex="(-2 + 1, 1) = (-1, 1)" />. Or in one step: <Formula tex="SR \begin{bmatrix} 1 \\ 2 \end{bmatrix} = 1 \cdot (1, 1) + 2 \cdot (-1, 0) = (-1, 1)" />.
+</details>
+
+## Practice
+
+<Exercise id="2.4-two-steps" client:visible />
+
+<Exercise id="2.4-product-column" client:visible />
+
+<Exercise id="2.4-order" client:visible />
+
+## Go deeper
+
+The usual "row times column" rule gives the same numbers. The top-left number of <Formula tex="AB" /> is row 1 of <Formula tex="A" /> dotted with column 1 of <Formula tex="B" />, because that's the x-part of where <Formula tex="A" /> sends column 1 of <Formula tex="B" />.
+
+Some pairs *do* commute: two rotations (turning by 30° then 50° is the same as 50° then 30°), or two scalings along the axes. Try to explain why with pictures. A rotation and a scaling by the same amount in every direction also commute. A rotation and a stretch along one axis don't.

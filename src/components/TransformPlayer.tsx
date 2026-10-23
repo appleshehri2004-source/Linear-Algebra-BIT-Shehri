@@ -2,31 +2,30 @@
 // The faint grid from <Plane> stays still; a brighter grid moves from "nothing changed" (t = 0)
 // to "fully transformed" (t = 1). i-hat (green) and j-hat (red) ride along, and so can one yellow vector.
 // Play, Pause, Rewind and a slider control t. Put extra Mafs drawings inside it as children.
-import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import { Text, Vector } from 'mafs';
 import {
-  easeInOut,
   gridLines,
   identity,
-  lerp,
   mapAt,
   matrixAt,
   matVec,
-  roundTo,
+  sequenceAt,
   type Mat2,
   type PointMap,
   type Vec2,
 } from '../lib/linalg';
 import Plane from './Plane';
+import PlayControls from './PlayControls';
+import { DURATION, usePlayback } from './usePlayback';
 import './Demo.css';
 import './TransformPlayer.css';
 
-/** How long a full play (t from 0 to 1) takes, in milliseconds. */
-const DURATION = 1500;
-
 interface Props {
-  /** The matrix to show, stored as its columns. Give this or `map`. */
+  /** The matrix to show, stored as its columns. Give this, `steps` or `map`. */
   matrix?: Mat2;
+  /** Several matrices that play one after another (first one first). Each gets its own share of t. */
+  steps?: Mat2[];
   /** A rule that may not be linear (for counter-examples). Used when there's no `matrix`. */
   map?: PointMap;
   /** A vector that moves with the grid, drawn in yellow. */
@@ -45,6 +44,10 @@ interface Props {
   onTChange?: (t: number) => void;
   /** Change this number to play the animation again from the start (e.g. after typing a new matrix). */
   playKey?: number;
+  /** false hides the Play / Rewind buttons and the slider (e.g. until a prediction is made). */
+  controls?: boolean;
+  /** Called with the point (in maths coordinates) when the plane is clicked or tapped. */
+  onPlaneClick?: (p: Vec2) => void;
   children?: ReactNode;
 }
 
@@ -67,6 +70,7 @@ function MathPath({ d, className }: { d: string; className: string }) {
 
 export default function TransformPlayer({
   matrix,
+  steps,
   map,
   tracked,
   trackedLabel = 'v',
@@ -76,74 +80,24 @@ export default function TransformPlayer({
   t: controlledT,
   onTChange,
   playKey,
+  controls = true,
+  onPlaneClick,
   children,
 }: Props) {
-  const sliderId = useId();
-  const [ownT, setOwnT] = useState(0);
-  const t = controlledT ?? ownT;
-  const [playing, setPlaying] = useState<'forward' | 'backward' | null>(null);
-  const frame = useRef(0);
-
-  // The animation loop runs outside React's normal flow, so it reads the latest callback from here.
-  const onTChangeRef = useRef(onTChange);
-  onTChangeRef.current = onTChange;
-  const lastT = useRef(t);
-  function setT(n: number) {
-    lastT.current = n;
-    setOwnT(n);
-    onTChangeRef.current?.(n);
-  }
-
-  // If the parent changed t itself (e.g. an arrow is being dragged), stop animating so we don't fight it.
-  useEffect(() => {
-    if (controlledT !== undefined && controlledT !== lastT.current) {
-      lastT.current = controlledT;
-      stop();
-    }
-  }, [controlledT]);
-
-  // Stop the animation when the component goes away.
-  useEffect(() => () => cancelAnimationFrame(frame.current), []);
-
-  function stop() {
-    cancelAnimationFrame(frame.current);
-    setPlaying(null);
-  }
-
-  /** Animate t from `from` to `target` (1 for Play, 0 for Rewind), easing in and out. */
-  function animateTo(target: 0 | 1, from = t) {
-    stop();
-    // Play from the end starts again from the beginning.
-    if (target === 1 && from === 1) from = 0;
-    if (from === target) return;
-    // A shorter distance takes a shorter time, so the speed feels the same.
-    const duration = DURATION * Math.abs(target - from);
-    const start = performance.now();
-    setPlaying(target === 1 ? 'forward' : 'backward');
-    const step = (now: number) => {
-      const s = Math.min(1, (now - start) / duration);
-      setT(lerp(from, target, easeInOut(s)));
-      if (s < 1) frame.current = requestAnimationFrame(step);
-      else setPlaying(null);
-    };
-    frame.current = requestAnimationFrame(step);
-  }
-
-  // When playKey changes (not when the page first loads), play from the start.
-  const firstPlayKey = useRef(playKey);
-  useEffect(() => {
-    if (playKey !== firstPlayKey.current) animateTo(1, 0);
-  }, [playKey]);
+  // A sequence of matrices takes longer to play: the usual time for each step.
+  const playback = usePlayback({ t: controlledT, onTChange, playKey, duration: DURATION * (steps?.length ?? 1) });
+  const { t } = playback;
 
   // A matrix keeps lines straight, so each grid line only needs its two ends; it reaches far past the
   // edge so stretched lines still cover the plane. A non-linear map can curve lines, so cut each into
   // short pieces (4 per square).
-  const extent = matrix ? range * 2 : range + 1;
-  const source = useMemo(() => gridLines(extent, matrix ? 1 : extent * 8), [extent, matrix === undefined]);
+  const linear = matrix !== undefined || steps !== undefined;
+  const extent = linear ? range * 2 : range + 1;
+  const source = useMemo(() => gridLines(extent, linear ? 1 : extent * 8), [extent, linear]);
 
   // Where a point is at time t.
-  const m: Mat2 = matrix ? matrixAt(matrix, t) : identity();
-  const place = (p: Vec2): Vec2 => (matrix ? matVec(m, p) : mapAt(map ?? ((q) => q), p, t));
+  const m: Mat2 = steps ? sequenceAt(steps, t) : matrix ? matrixAt(matrix, t) : identity();
+  const place = (p: Vec2): Vec2 => (linear ? matVec(m, p) : mapAt(map ?? ((q) => q), p, t));
 
   const moved = source.map((line) => line.map(place));
   // gridLines lists the lines from k = -extent upwards, a vertical and a horizontal one for each k.
@@ -159,7 +113,7 @@ export default function TransformPlayer({
 
   return (
     <div className="transform-player">
-      <Plane range={range}>
+      <Plane range={range} onClick={onPlaneClick}>
         <MathPath d={toPath(moved)} className="moving-grid" />
         <MathPath d={toPath(axes)} className="moving-axes" />
         {extra && <MathPath d={toPath(extra)} className="moving-extra" />}
@@ -180,44 +134,7 @@ export default function TransformPlayer({
         {children}
       </Plane>
 
-      <div className="demo-row">
-        <button
-          type="button"
-          className="demo-button"
-          onClick={() => (playing === 'forward' ? stop() : animateTo(1))}
-        >
-          {playing === 'forward' ? 'Pause' : 'Play'}
-        </button>
-        <button
-          type="button"
-          className="demo-button secondary"
-          onClick={() => (playing === 'backward' ? stop() : animateTo(0))}
-        >
-          {playing === 'backward' ? 'Pause' : 'Rewind'}
-        </button>
-      </div>
-
-      <div className="transform-scrub">
-        <label htmlFor={sliderId}>
-          t = <output htmlFor={sliderId}>{roundTo(t, 2).toFixed(2)}</output>
-        </label>
-        <input
-          id={sliderId}
-          type="range"
-          min={0}
-          max={1}
-          step={0.01}
-          value={t}
-          onChange={(e) => {
-            stop();
-            setT(Number(e.target.value));
-          }}
-        />
-        <div className="slider-ends" aria-hidden="true">
-          <span>before</span>
-          <span>after</span>
-        </div>
-      </div>
+      {controls && <PlayControls playback={playback} />}
     </div>
   );
 }

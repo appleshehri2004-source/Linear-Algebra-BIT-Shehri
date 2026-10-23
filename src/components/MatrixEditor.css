@@ -37,3 +37,33 @@
 .matrix-cell.jhat {
   color: var(--jhat);
 }
+
+.matrix-editor-grid .matrix-cell.khat,
+.matrix-view-cell.khat {
+  color: var(--khat);
+}
+
+/* A read-only matrix (MatrixView): plain numbers in the grid. */
+.matrix-view .matrix-editor-grid {
+  display: grid;
+  align-items: center;
+  justify-items: center;
+}
+
+.matrix-view-cell {
+  min-width: 1.6em;
+  padding: 0 0.2rem;
+  text-align: center;
+  border-radius: 0.3rem;
+}
+
+/* A number that is different in the other matrix. */
+.matrix-view-cell.marked {
+  outline: 2px solid var(--vec);
+  outline-offset: 1px;
+}
+
+/* A 3x3 matrix needs narrower boxes to fit a phone. */
+.matrix-editor-grid:has(.khat) .matrix-cell input {
+  width: 3.25rem;
+}

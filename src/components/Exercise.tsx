@@ -41,7 +41,7 @@ export default function Exercise({ id }: Props) {
     if (!generate) return;
     const q = generate(Math.random);
     setQuestion(q);
-    setTyped(typeof q.answer === 'number' ? [''] : ['', '']);
+    setTyped(typeof q.answer === 'number' ? [''] : q.answer.map(() => ''));
     setWrongTries(0);
     setFeedback(null);
   }
@@ -52,7 +52,7 @@ export default function Exercise({ id }: Props) {
   if (!question) return <div className="exercise exercise-loading">Loading a question…</div>;
 
   const isVector = typeof question.answer !== 'number';
-  const labels = question.labels ?? ['x', 'y'];
+  const labels = question.labels ?? ['x', 'y', 'z'];
   const solved = feedback === 'right';
   const showAnswer = wrongTries >= 2 && !solved;
 

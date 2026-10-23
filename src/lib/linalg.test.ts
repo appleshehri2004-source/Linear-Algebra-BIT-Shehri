@@ -2,6 +2,22 @@ import { describe, expect, it } from 'vitest';
 import {
   add,
   angleBetween,
+  applyColumns,
+  cross3,
+  det3,
+  distance,
+  identity3,
+  length3,
+  matMul3,
+  matrixAt3,
+  matVec3,
+  rotationAbout,
+  rotationAxisAngle,
+  rotY90,
+  liftColumns,
+  rowToLine,
+  sequenceAt,
+  type Mat3,
   bendDiagonal,
   bendLines,
   clampVec,
@@ -32,6 +48,7 @@ import {
   sub,
   type Mat2,
   type Vec2,
+  type Vec3,
 } from './linalg';
 
 describe('add', () => {
@@ -401,5 +418,143 @@ describe('gridLines', () => {
 describe('segmentPoints', () => {
   it('cuts the line from a to b into equal pieces', () => {
     expect(segmentPoints([0, 0], [2, 4], 2)).toEqual([[0, 0], [1, 2], [2, 4]]);
+  });
+});
+
+/** Check every number of two matrices (or vectors) is within a tiny rounding error. */
+function expectClose(actual: number[][] | number[], expected: number[][] | number[]) {
+  expect(actual.flat()).toHaveLength(expected.flat().length);
+  actual.flat().forEach((n, i) => expect(n).toBeCloseTo(expected.flat()[i] as number, 9));
+}
+
+describe('composition (matMul)', () => {
+  it('rotate first, then shear', () => {
+    expect(matMul(shear, rot90)).toEqual([[1, 1], [-1, 0]]);
+  });
+
+  it('shear first, then rotate', () => {
+    expect(matMul(rot90, shear)).toEqual([[0, 1], [-1, 1]]);
+  });
+});
+
+describe('distance', () => {
+  it('is the length of the gap between the tips', () => {
+    expect(distance([1, 1], [4, 5])).toBe(5);
+    expect(distance([2, 3], [2, 3])).toBe(0);
+  });
+});
+
+describe('sequenceAt', () => {
+  it('starts with nothing changed', () => {
+    expect(sequenceAt([rot90, shear], 0)).toEqual(identity());
+  });
+
+  it('has finished the first matrix half way through', () => {
+    expectClose(sequenceAt([rot90, shear], 0.5), rot90);
+  });
+
+  it('ends at the product, last one on the left', () => {
+    expectClose(sequenceAt([rot90, shear], 1), matMul(shear, rot90));
+    expectClose(sequenceAt([shear, rot90], 1), matMul(rot90, shear));
+  });
+});
+
+describe('3D', () => {
+  const m: Mat3 = [[1, 2, 0], [0, 1, 3], [4, 0, 1]];
+
+  it('matVec3: rotY90 sends i-hat to (0, 0, -1)', () => {
+    expect(matVec3(rotY90(), [1, 0, 0])).toEqual([0, 0, -1]);
+    expect(matVec3(rotY90(), [0, 0, 1])).toEqual([1, 0, 0]);
+    expect(matVec3(rotY90(), [0, 1, 0])).toEqual([0, 1, 0]);
+  });
+
+  it('matVec3: adds up copies of the columns', () => {
+    // 1·(1,2,0) + 2·(0,1,3) + 3·(4,0,1)
+    expect(matVec3(m, [1, 2, 3])).toEqual([13, 4, 9]);
+  });
+
+  it('matMul3: B first, then A', () => {
+    const v: Vec3 = [1, -2, 5];
+    expect(matVec3(matMul3(rotY90(), m), v)).toEqual(matVec3(rotY90(), matVec3(m, v)));
+    expect(matMul3(identity3(), m)).toEqual(m);
+  });
+
+  it('matMul3: four quarter turns get back to the start', () => {
+    const r = rotY90();
+    expect(matMul3(r, matMul3(r, matMul3(r, r)))).toEqual(identity3());
+  });
+
+  it('det3: volume scale', () => {
+    expect(det3(identity3())).toBe(1);
+    expect(det3(rotY90())).toBe(1);
+    expect(det3([[2, 0, 0], [0, 3, 0], [0, 0, 4]])).toBe(24);
+    expect(det3(m)).toBe(25); // 1·(1·1 - 0·3) - 0·(...) + 4·(2·3 - 1·0)
+    expect(det3([[1, 0, 0], [0, 1, 0], [0, 0, -1]])).toBe(-1); // a mirror flips space
+    expect(det3([[1, 2, 3], [2, 4, 6], [0, 0, 1]])).toBe(0); // two columns in a line: flat
+  });
+
+  it('cross3 follows the right-hand rule', () => {
+    expect(cross3([1, 0, 0], [0, 1, 0])).toEqual([0, 0, 1]);
+  });
+
+  it('rotationAbout the y-axis by 90° is rotY90', () => {
+    expectClose(rotationAbout([0, 1, 0], 90), rotY90());
+  });
+
+  it('rotationAxisAngle finds the axis and angle', () => {
+    const turn = rotationAxisAngle(rotY90())!;
+    expect(turn.degrees).toBeCloseTo(90);
+    expectClose(turn.axis.map((n) => n / length3(turn.axis)), [0, 1, 0]);
+
+    const half = rotationAxisAngle(rotationAbout([1, 1, 0], 180))!;
+    expect(half.degrees).toBeCloseTo(180);
+    expectClose(rotationAbout(half.axis, 180), rotationAbout([1, 1, 0], 180));
+
+    expect(rotationAxisAngle([[2, 0, 0], [0, 1, 0], [0, 0, 1]])).toBeNull();
+    expect(rotationAxisAngle([[-1, 0, 0], [0, 1, 0], [0, 0, 1]])).toBeNull(); // a mirror, not a turn
+  });
+
+  it('matrixAt3 turns a rotation without shrinking it', () => {
+    const half = matrixAt3(rotY90(), 0.5);
+    expect(length3(half[0])).toBeCloseTo(1);
+    expectClose(half, rotationAbout([0, 1, 0], 45));
+    expectClose(matrixAt3(rotY90(), 1), rotY90());
+  });
+
+  it('matrixAt3 slides any other matrix from I', () => {
+    const s: Mat3 = [[2, 0, 0], [0, 2, 0], [0, 0, 2]];
+    expect(matrixAt3(s, 0)).toEqual(identity3());
+    expect(matrixAt3(s, 0.5)).toEqual([[1.5, 0, 0], [0, 1.5, 0], [0, 0, 1.5]]);
+  });
+});
+
+describe('applyColumns (non-square matrices)', () => {
+  it('a 1x2 matrix takes a 2D vector to a number', () => {
+    expect(applyColumns([[1], [-2]], [4, 3])).toEqual([-2]);
+  });
+
+  it('a 3x2 matrix takes a 2D vector to a 3D one', () => {
+    expect(applyColumns([[2, -1, -2], [0, 1, 1]], [1, 1])).toEqual([2, 0, -1]);
+  });
+
+  it('agrees with matVec for a square matrix', () => {
+    expect(applyColumns(shear, [2, 3])).toEqual(matVec(shear, [2, 3]));
+  });
+
+  it('refuses a vector of the wrong size', () => {
+    expect(() => applyColumns([[1], [-2]], [1, 2, 3])).toThrow();
+  });
+});
+
+describe('rowToLine', () => {
+  it('lands (4, 3) on -2 on the x-axis for [1, -2]', () => {
+    expect(matVec(rowToLine([1, -2]), [4, 3])).toEqual([-2, 0]);
+  });
+});
+
+describe('liftColumns', () => {
+  it('does to (x, y, 0) what the 3x2 matrix does to (x, y)', () => {
+    const columns: [Vec3, Vec3] = [[2, -1, -2], [0, 1, 1]];
+    expect(matVec3(liftColumns(columns), [1, 1, 0])).toEqual(applyColumns(columns, [1, 1]));
   });
 });

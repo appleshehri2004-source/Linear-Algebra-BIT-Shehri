@@ -256,3 +256,171 @@ export function segmentPoints(a: Vec2, b: Vec2, pieces: number): Vec2[] {
   for (let i = 0; i <= pieces; i++) points.push(lerpVec(a, b, i / pieces));
   return points;
 }
+
+/** How far apart the tips of u and v are: the length of the arrow from one to the other. */
+export function distance(u: Vec2, v: Vec2): number {
+  return length(sub(u, v));
+}
+
+/**
+ * The matrix at time t when several matrices play one after another, each taking an equal share of t.
+ * At t = 1 it is the product of all of them, last one on the left: sequenceAt([A, B], 1) = matMul(B, A).
+ * Halfway through [A, B] (t = 0.5) A has just finished and B hasn't started.
+ */
+export function sequenceAt(steps: Mat2[], t: number): Mat2 {
+  let done = identity();
+  for (let k = 0; k < steps.length; k++) {
+    // How far through its own share this step is: 0 before it starts, 1 once it has finished.
+    const local = Math.min(1, Math.max(0, t * steps.length - k));
+    done = matMul(matrixAt(steps[k], local), done);
+  }
+  return done;
+}
+
+// ---------- 3D ----------
+
+/** A 3D vector [x, y, z]. */
+export type Vec3 = [number, number, number];
+
+/** A 3x3 matrix stored as its columns: [ihat, jhat, khat]. */
+export type Mat3 = [Vec3, Vec3, Vec3];
+
+/** The 3x3 matrix that changes nothing. */
+export function identity3(): Mat3 {
+  return [[1, 0, 0], [0, 1, 0], [0, 0, 1]];
+}
+
+/** Turn space 90° about the y-axis: i-hat goes to (0, 0, -1) and k-hat comes round to (1, 0, 0). */
+export function rotY90(): Mat3 {
+  return [[0, 0, -1], [0, 1, 0], [1, 0, 0]];
+}
+
+/** Multiply a 3x3 matrix by a vector: v[0] copies of i-hat, plus v[1] of j-hat, plus v[2] of k-hat. */
+export function matVec3(m: Mat3, v: Vec3): Vec3 {
+  const [ihat, jhat, khat] = m;
+  const part = (r: number) => v[0] * ihat[r] + v[1] * jhat[r] + v[2] * khat[r] + 0; // + 0 turns -0 into 0
+  return [part(0), part(1), part(2)];
+}
+
+/** matMul3(A, B) means "apply B first, then A". Each column of the answer is where A sends that column of B. */
+export function matMul3(a: Mat3, b: Mat3): Mat3 {
+  return [matVec3(a, b[0]), matVec3(a, b[1]), matVec3(a, b[2])];
+}
+
+export function dot3(v: Vec3, w: Vec3): number {
+  return v[0] * w[0] + v[1] * w[1] + v[2] * w[2];
+}
+
+/** The cross product: an arrow at right angles to both v and w (right-hand rule). */
+export function cross3(v: Vec3, w: Vec3): Vec3 {
+  return [v[1] * w[2] - v[2] * w[1], v[2] * w[0] - v[0] * w[2], v[0] * w[1] - v[1] * w[0]];
+}
+
+export function length3(v: Vec3): number {
+  return Math.hypot(v[0], v[1], v[2]);
+}
+
+/**
+ * The determinant of a 3x3 matrix: how much the matrix scales volume (negative: space is flipped).
+ * It is the volume of the box made by the three columns: i-hat · (j-hat × k-hat).
+ */
+export function det3(m: Mat3): number {
+  return dot3(m[0], cross3(m[1], m[2])) + 0;
+}
+
+export function lerpVec3(u: Vec3, v: Vec3, t: number): Vec3 {
+  return [lerp(u[0], v[0], t) + 0, lerp(u[1], v[1], t) + 0, lerp(u[2], v[2], t) + 0];
+}
+
+export function lerpMatrix3(a: Mat3, b: Mat3, t: number): Mat3 {
+  return [lerpVec3(a[0], b[0], t), lerpVec3(a[1], b[1], t), lerpVec3(a[2], b[2], t)];
+}
+
+/** The matrix that turns space by `degrees` about `axis` (anticlockwise when the axis points at you). */
+export function rotationAbout(axis: Vec3, degrees: number): Mat3 {
+  const len = length3(axis);
+  const k: Vec3 = [axis[0] / len, axis[1] / len, axis[2] / len];
+  const r = (degrees * Math.PI) / 180;
+  const c = Math.cos(r);
+  const s = Math.sin(r);
+  // Rodrigues' formula: the part along the axis stays, the rest turns around it.
+  const turn = (v: Vec3): Vec3 => {
+    const kv = cross3(k, v);
+    const along = dot3(k, v) * (1 - c);
+    return [v[0] * c + kv[0] * s + k[0] * along, v[1] * c + kv[1] * s + k[1] * along, v[2] * c + kv[2] * s + k[2] * along];
+  };
+  return [turn([1, 0, 0]), turn([0, 1, 0]), turn([0, 0, 1])];
+}
+
+/**
+ * If m only turns space (no stretching, no flipping), the axis and angle (0 to 180 degrees) it turns by.
+ * Otherwise null. The identity counts as a turn by 0 about any axis.
+ */
+export function rotationAxisAngle(m: Mat3): { axis: Vec3; degrees: number } | null {
+  const [a, b, c] = m;
+  const isRotation =
+    [a, b, c].every((col) => isClose(length3(col), 1, 1e-9)) &&
+    isClose(dot3(a, b), 0, 1e-9) &&
+    isClose(dot3(a, c), 0, 1e-9) &&
+    isClose(dot3(b, c), 0, 1e-9) &&
+    det3(m) > 0;
+  if (!isRotation) return null;
+
+  // The numbers on the diagonal add up to 1 + 2 cos(angle).
+  const trace = a[0] + b[1] + c[2];
+  const angle = Math.acos(Math.min(1, Math.max(-1, (trace - 1) / 2)));
+  const degrees = (angle * 180) / Math.PI;
+  if (degrees < 1e-9) return { axis: [0, 0, 1], degrees: 0 };
+
+  // The "twist" part of m (row r, column c is m[c][r]) points along the axis, unless the angle is 180°.
+  const twist: Vec3 = [b[2] - c[1], c[0] - a[2], a[1] - b[0]];
+  if (length3(twist) > 1e-6) return { axis: twist, degrees };
+
+  // A half turn has no twist, but then m + I = 2·(axis)(axis)ᵀ, so its biggest column points along the axis.
+  const cols = [0, 1, 2].map((i): Vec3 => {
+    const col = [...m[i]] as Vec3;
+    col[i] += 1;
+    return col;
+  });
+  const longest = cols.reduce((best, col) => (length3(col) > length3(best) ? col : best));
+  return { axis: longest, degrees };
+}
+
+/** Like matrixAt, in 3D: the matrix an animation shows at time t on its way from I to m. Rotations turn. */
+export function matrixAt3(m: Mat3, t: number): Mat3 {
+  const turn = rotationAxisAngle(m);
+  return turn === null ? lerpMatrix3(identity3(), m, t) : rotationAbout(turn.axis, turn.degrees * t);
+}
+
+// ---------- Matrices that aren't square ----------
+
+/**
+ * Apply any matrix (stored as its columns, as many as v has numbers) to v:
+ * v[0] copies of column 1, plus v[1] copies of column 2, and so on.
+ * A 3x2 matrix has two columns of 3 numbers each: it takes a 2D vector to a 3D one.
+ * A 1x2 matrix has two columns of 1 number each: it takes a 2D vector to a single number.
+ */
+export function applyColumns(columns: number[][], v: number[]): number[] {
+  if (columns.length !== v.length) throw new Error(`${columns.length} columns but ${v.length} numbers`);
+  const rows = columns[0].length;
+  const out = new Array<number>(rows).fill(0);
+  columns.forEach((col, j) => col.forEach((n, r) => (out[r] += v[j] * n)));
+  return out.map((n) => n + 0);
+}
+
+/**
+ * A 1x2 matrix [a, b] sends the plane to a number line. To draw that on the plane, use the x-axis as the
+ * number line: the 2x2 matrix that sends i-hat to (a, 0) and j-hat to (b, 0) does the same squashing.
+ */
+export function rowToLine([a, b]: [number, number]): Mat2 {
+  return [[a, 0], [b, 0]];
+}
+
+/**
+ * A 3x2 matrix (two columns of 3 numbers) as a 3x3 matrix that does the same thing to the floor
+ * (the xy-plane, z = 0): i-hat and j-hat go where its columns say, and k-hat is squashed to 0.
+ * Used to draw a 2D plane landing in 3D.
+ */
+export function liftColumns([c1, c2]: [Vec3, Vec3]): Mat3 {
+  return [c1, c2, [0, 0, 0]];
+}

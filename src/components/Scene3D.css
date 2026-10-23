@@ -1,0 +1,44 @@
+/* A square 3D view that fits a phone, the same size as the 2D planes. */
+.scene3d,
+.scene3d-placeholder {
+  width: 100%;
+  max-width: 480px;
+  aspect-ratio: 1;
+  margin: 0 auto;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+.scene3d,
+.scene3d * {
+  touch-action: none; /* dragging turns the view instead of scrolling the page */
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.scene3d-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+}
+
+/* Labels next to arrow tips and axis ends. They must not catch taps meant for orbiting. */
+.scene3d-label,
+.scene3d-axis {
+  pointer-events: none;
+  user-select: none;
+  white-space: nowrap;
+  font-weight: 700;
+}
+
+.scene3d-label {
+  font-size: 1.1rem;
+}
+
+.scene3d-axis {
+  color: var(--muted);
+  font-size: 0.9rem;
+}

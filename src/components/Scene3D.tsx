@@ -1,0 +1,176 @@
+// The 3D drawing for Stage3D and lesson 2.6, made with react-three-fiber (three.js in React).
+// It only draws: the parent works out the matrix (already part way through any animation) and passes it in.
+// Maths z points up, so the camera is told that "up" is z.
+// Kept light for phones: it only redraws when something changes (frameloop="demand"),
+// draws at most 2 screen pixels per CSS pixel, and uses plain 1-pixel lines.
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Canvas } from '@react-three/fiber';
+import { Html, OrbitControls } from '@react-three/drei';
+import * as THREE from 'three';
+import type { Mat3, Vec3 } from '../lib/linalg';
+import './Scene3D.css';
+
+interface Props {
+  /** The matrix to show right now, stored as its columns. Its columns are where î, ĵ, k̂ are drawn. */
+  matrix: Mat3;
+  /** Draw the blue k̂ arrow. Off for a 3x2 matrix, which has no k̂. */
+  showK?: boolean;
+  /** Draw the unit cube, moved by the matrix. */
+  showCube?: boolean;
+  /** Draw the moving floor grid (the xy-plane, moved by the matrix). */
+  showSheet?: boolean;
+  /** A yellow vector, given where it is now (already moved by the matrix). */
+  vector?: Vec3;
+  /** How far away the camera starts: 1 is normal, 2 is twice as far (for long arrows). */
+  zoomOut?: number;
+}
+
+/** The site's colours, read from the CSS variables so light and dark mode both work. */
+function useColours() {
+  const read = () => {
+    const css = getComputedStyle(document.documentElement);
+    const get = (name: string) => css.getPropertyValue(name).trim();
+    return {
+      ihat: get('--ihat'),
+      jhat: get('--jhat'),
+      khat: get('--khat'),
+      vec: get('--vec'),
+      faint: get('--grid-faint'),
+      moving: get('--grid-moving'),
+      muted: get('--muted'),
+    };
+  };
+  const [colours, setColours] = useState(read);
+  useEffect(() => {
+    const query = matchMedia('(prefers-color-scheme: dark)');
+    const update = () => setColours(read());
+    query.addEventListener('change', update);
+    return () => query.removeEventListener('change', update);
+  }, []);
+  return colours;
+}
+
+/** Points for lines in the xy-plane: x = k and y = k for k from -n to n. Each pair of points is one line. */
+function floorLines(n: number): Float32Array {
+  const points: number[] = [];
+  for (let k = -n; k <= n; k++) {
+    points.push(k, -n, 0, k, n, 0, -n, k, 0, n, k, 0);
+  }
+  return new Float32Array(points);
+}
+
+/** Lines given as pairs of points. */
+function Lines({ points, color, opacity = 1 }: { points: Float32Array; color: string; opacity?: number }) {
+  return (
+    <lineSegments>
+      <bufferGeometry>
+        <bufferAttribute attach="attributes-position" args={[points, 3]} />
+      </bufferGeometry>
+      <lineBasicMaterial color={color} transparent={opacity < 1} opacity={opacity} />
+    </lineSegments>
+  );
+}
+
+const UP = new THREE.Vector3(0, 1, 0);
+
+/** An arrow from the origin to `tip`: a thin cylinder and a cone, turned to point the right way. */
+function Arrow({ tip, color, label }: { tip: Vec3; color: string; label?: string }) {
+  const { position, quaternion, length } = useMemo(() => {
+    const dir = new THREE.Vector3(...tip);
+    const len = dir.length();
+    // three.js cylinders point up the y-axis, so turn y towards the arrow's direction.
+    const q = new THREE.Quaternion().setFromUnitVectors(UP, len > 0 ? dir.clone().normalize() : UP);
+    return { position: new THREE.Vector3(0, 0, 0), quaternion: q, length: len };
+  }, [tip[0], tip[1], tip[2]]);
+
+  if (length < 1e-6) return null;
+  const head = Math.min(0.25, length * 0.4);
+  const shaft = length - head;
+  return (
+    <group position={position} quaternion={quaternion}>
+      <mesh position={[0, shaft / 2, 0]}>
+        <cylinderGeometry args={[0.035, 0.035, shaft, 12]} />
+        <meshBasicMaterial color={color} />
+      </mesh>
+      <mesh position={[0, shaft + head / 2, 0]}>
+        <coneGeometry args={[0.09, head, 16]} />
+        <meshBasicMaterial color={color} />
+      </mesh>
+      {label && (
+        <Html position={[0, length + 0.2, 0]} center className="scene3d-label" style={{ color }}>
+          {label}
+        </Html>
+      )}
+    </group>
+  );
+}
+
+/** Turn our columns-storage matrix into a three.js 4x4 matrix (three.js's set() takes the numbers row by row). */
+function toMatrix4([a, b, c]: Mat3): THREE.Matrix4 {
+  return new THREE.Matrix4().set(a[0], b[0], c[0], 0, a[1], b[1], c[1], 0, a[2], b[2], c[2], 0, 0, 0, 0, 1);
+}
+
+const FLOOR = floorLines(3);
+const AXES = new Float32Array([-3.5, 0, 0, 3.5, 0, 0, 0, -3.5, 0, 0, 3.5, 0, 0, 0, -3.5, 0, 0, 3.5]);
+// A box from (0, 0, 0) to (1, 1, 1): three.js boxes are centred, so slide it by half.
+const CUBE = new THREE.BoxGeometry(1, 1, 1).translate(0.5, 0.5, 0.5);
+const CUBE_EDGES = new THREE.EdgesGeometry(CUBE);
+
+export default function Scene3D({ matrix, showK = true, showCube = true, showSheet = false, vector, zoomOut = 1 }: Props) {
+  const colours = useColours();
+  const box = useRef<HTMLDivElement>(null);
+
+  // A finger dragging on the picture should turn the view, not scroll the page.
+  // CSS asks for this (Scene3D.css), but iPhone Safari doesn't always listen, so stop the scroll here too.
+  useEffect(() => {
+    const el = box.current;
+    if (!el) return;
+    const stopScroll = (e: TouchEvent) => e.preventDefault();
+    el.addEventListener('touchmove', stopScroll, { passive: false });
+    return () => el.removeEventListener('touchmove', stopScroll);
+  }, []);
+
+  const moved = useMemo(() => toMatrix4(matrix), [matrix.flat().join()]);
+  const [ihat, jhat, khat] = matrix;
+
+  return (
+    <div className="scene3d" ref={box}>
+      <Canvas
+        frameloop="demand"
+        dpr={[1, 2]}
+        camera={{ position: [3.6 * zoomOut, -4.4 * zoomOut, 2.8 * zoomOut], up: [0, 0, 1], fov: 40, near: 0.1, far: 100 }}
+        gl={{ antialias: true, powerPreference: 'low-power' }}
+      >
+        {/* Faint and still: the floor grid and the three axes. */}
+        <Lines points={FLOOR} color={colours.faint} />
+        <Lines points={AXES} color={colours.muted} opacity={0.6} />
+        <Html position={[3.8, 0, 0]} center className="scene3d-axis">x</Html>
+        <Html position={[0, 3.8, 0]} center className="scene3d-axis">y</Html>
+        <Html position={[0, 0, 3.8]} center className="scene3d-axis">z</Html>
+
+        {/* Everything in this group is moved by the matrix. */}
+        <group matrixAutoUpdate={false} matrix={moved}>
+          {showSheet && <Lines points={FLOOR} color={colours.moving} />}
+          {showCube && (
+            <>
+              <mesh geometry={CUBE}>
+                <meshBasicMaterial color={colours.moving} transparent opacity={0.25} depthWrite={false} side={THREE.DoubleSide} />
+              </mesh>
+              <lineSegments geometry={CUBE_EDGES}>
+                <lineBasicMaterial color={colours.moving} />
+              </lineSegments>
+            </>
+          )}
+        </group>
+
+        <Arrow tip={ihat} color={colours.ihat} label="î" />
+        <Arrow tip={jhat} color={colours.jhat} label="ĵ" />
+        {showK && <Arrow tip={khat} color={colours.khat} label="k̂" />}
+        {vector && <Arrow tip={vector} color={colours.vec} label="v" />}
+
+        {/* Drag with one finger (or the mouse) to orbit; pinch or scroll to zoom. */}
+        <OrbitControls enablePan={false} enableDamping minDistance={3} maxDistance={18} />
+      </Canvas>
+    </div>
+  );
+}

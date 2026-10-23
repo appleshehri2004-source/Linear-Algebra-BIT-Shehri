@@ -1,17 +1,18 @@
-// A 2x2 matrix you can type into. Column 1 (where i-hat lands) is green, column 2 (where j-hat lands) is red.
+// A square matrix (2x2 or 3x3) you can type into. Column 1 (where i-hat lands) is green,
+// column 2 (where j-hat lands) is red, and column 3 (where k-hat lands, in 3D) is blue.
 // The parent keeps the matrix in its state and passes it back in, so dragging arrows elsewhere
 // updates these boxes too.
 import { useEffect, useState } from 'react';
-import { roundTo, type Mat2 } from '../lib/linalg';
+import { roundTo } from '../lib/linalg';
 import { parseNumber } from '../exercises/exercise';
 import './CoordReadout.css';
 import './MatrixEditor.css';
 
-interface Props {
-  /** The matrix, stored as its columns: [[ihatX, ihatY], [jhatX, jhatY]]. */
-  value: Mat2;
+interface Props<M extends number[][]> {
+  /** The matrix, stored as its columns: [[ihatX, ihatY], [jhatX, jhatY]] (and k-hat's column in 3D). */
+  value: M;
   /** Called with the new matrix whenever a box holds a number. */
-  onChange: (m: Mat2) => void;
+  onChange: (m: M) => void;
   /** A name shown before the brackets. Default: A. */
   label?: string;
 }
@@ -44,27 +45,33 @@ function NumberCell({ value, onChange, label }: { value: number; onChange: (n: n
   );
 }
 
-export default function MatrixEditor({ value, onChange, label = 'A' }: Props) {
-  /** A copy of the matrix with one number replaced: column col (0 or 1), row row (0 = x, 1 = y). */
-  function setEntry(col: 0 | 1, row: 0 | 1, n: number) {
-    const columns = value.map((c) => [...c]) as Mat2;
+const hats = ['i-hat', 'j-hat', 'k-hat'];
+const axes = ['x', 'y', 'z'];
+const colours = ['ihat', 'jhat', 'khat'];
+
+export default function MatrixEditor<M extends number[][]>({ value, onChange, label = 'A' }: Props<M>) {
+  const size = value.length;
+
+  /** A copy of the matrix with one number replaced: column col, row row (0 = x, 1 = y, 2 = z). */
+  function setEntry(col: number, row: number, n: number) {
+    const columns = value.map((c) => [...c]) as M;
     columns[col][row] = n;
     onChange(columns);
   }
 
-  const names = ['i-hat', 'j-hat'];
+  const indexes = Array.from({ length: size }, (_, i) => i);
   return (
     <div className="matrix-editor">
       <span className="readout-label">{label} =</span>
-      <div className="readout-column matrix-editor-grid">
-        {/* The boxes go row by row: top row is the x parts, bottom row the y parts. */}
-        {([0, 1] as const).map((row) =>
-          ([0, 1] as const).map((col) => (
-            <span key={`${row}${col}`} className={col === 0 ? 'matrix-cell ihat' : 'matrix-cell jhat'}>
+      <div className="readout-column matrix-editor-grid" style={{ gridTemplateColumns: `repeat(${size}, auto)` }}>
+        {/* The boxes go row by row: top row is the x parts, then the y parts (then z). */}
+        {indexes.map((row) =>
+          indexes.map((col) => (
+            <span key={`${row}${col}`} className={`matrix-cell ${colours[col]}`}>
               <NumberCell
                 value={value[col][row]}
                 onChange={(n) => setEntry(col, row, n)}
-                label={`${names[col]} ${row === 0 ? 'x' : 'y'}`}
+                label={`${hats[col]} ${axes[row]}`}
               />
             </span>
           )),

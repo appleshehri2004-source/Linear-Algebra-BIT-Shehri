@@ -5,6 +5,7 @@
 :root {
   --ihat: #1a9e4b; /* i-hat: green */
   --jhat: #d93a3a; /* j-hat: red */
+  --khat: #1f6fd1; /* k-hat (3D): blue */
   --vec: #c99a00; /* any other vector: yellow (darker so it shows on white) */
   --vec2: #e07000; /* a second vector next to the first: orange */
   --sum: #8a6d00; /* a sum of vectors: deep gold, drawn thicker */
@@ -28,6 +29,7 @@
   :root {
     --ihat: #4cd07d;
     --jhat: #ff6b6b;
+    --khat: #5aa9ff;
     --vec: #ffd43b;
     --vec2: #ff9f43;
     --sum: #fff0a0;
@@ -109,6 +111,9 @@ a {
 }
 .jhat {
   color: var(--jhat);
+}
+.khat {
+  color: var(--khat);
 }
 .vec {
   color: var(--vec);

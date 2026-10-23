@@ -190,3 +190,48 @@ The first three lessons of Module 2.
 - **Astro can't send a function to a React island.** Numbers and lists can travel from a lesson file to a component, but a rule like `bendLines` can't. So lesson 2.1's examples live inside a React component.
 - **Hydration mismatch.** Mafs numbers its arrowheads with a counter that keeps growing while the site is built. The browser starts counting from 0, so the two disagree. The fix: draw Mafs only once the page is in the browser.
 - **Tests check the code agrees with itself, not that the maths is right.** If an exercise's answer is worked out wrongly, the "accepts the right answer" test still passes. Each question still needs a careful read.
+
+## Day 6 (2026-10-23): Module 2 finished
+
+Today's big idea: multiplying matrices means doing one move and then the other, and the same "columns are where the basis arrows land" rule works in 3D and for matrices that aren't square.
+
+### New files
+
+**`src/components/usePlayback.ts`** and **`PlayControls.tsx`**
+The Play / Pause / Rewind / slider code, moved out of TransformPlayer so the 3D stage can use exactly the same controls.
+
+**`src/components/CompositionDemo.tsx`** (Lesson 2.4)
+Plays two matrices one after the other (rotate, then shear). "Swap" plays them in the other order. Under the plane, both products sit side by side, with the numbers that differ boxed in yellow.
+
+**`src/components/PredictReveal.tsx`** (Lesson 2.4)
+Tap where you think v will land, press Reveal, watch the move, then a dashed line shows how far off you were.
+
+**`src/components/MatrixView.tsx`**
+A read-only matrix of any size in square brackets (2x2, 3x3, 3x2, 1x2, or one column for a vector).
+
+**`src/components/Scene3D.tsx`** (and `Scene3D.css`), **`LazyScene3D.tsx`**, **`Stage3D.tsx`** (Lesson 2.5)
+The 3D picture, made with three.js through react-three-fiber and drei (all installed from npm, no CDN). It has î green, ĵ red, k̂ blue, a see-through unit cube, faint axes and floor, and a one-finger drag to orbit. It only redraws when something changes, which saves the phone battery. LazyScene3D downloads the 3D code (about 250 kB zipped) only on pages that use it, once it's on screen. Stage3D adds the Play controls, a 3x3 MatrixEditor and preset buttons.
+
+**`src/components/NonSquareDemo.tsx`** and **`NumberLineDemo.tsx`** (Lesson 2.6)
+A 3x2 matrix: drag v on a flat plane, and press Play to watch the floor lift into a tilted sheet in 3D. A 1x2 matrix: the plane squashes onto the x-axis used as a number line, and (4, 3) lands on -2.
+
+**`src/content/lessons/2-4-composition.mdx`, `2-5-3d.mdx`, `2-6-non-square.mdx`**
+The last three lessons of Module 2, with 3 exercises each.
+
+### Changed files
+
+- **`src/lib/linalg.ts`** and **`linalg.test.ts`**: new `Vec3` and `Mat3` types, plus `matVec3`, `matMul3`, `det3`, `rotY90`, `cross3`, `rotationAbout`, `rotationAxisAngle`, `matrixAt3`, `sequenceAt`, `distance`, `applyColumns`, `rowToLine` and `liftColumns`, all with tests (118 tests now).
+- **`TransformPlayer.tsx`**: new `steps` (several matrices in a row), `controls` (hide the buttons) and `onPlaneClick`.
+- **`Plane.tsx`**: passes clicks and taps on to the parent.
+- **`MatrixEditor.tsx`**: works for 3x3 as well as 2x2.
+- **`exercise.ts`** and **`Exercise.tsx`**: answers can have 3 numbers, and `matTex` writes a matrix of any size.
+- **`global.css`**: new colour `--khat` (blue).
+
+### Things I learned
+
+- **Order matters, brackets don't.** Rotate then shear sends v = (2, 1) to (1, 2), but shear then rotate sends it to (-1, 3). Yet (AB)C = A(BC) is automatic: both mean "C, then B, then A".
+- **Sliding a 3D rotation would shrink it too**, just like in 2D. So `matrixAt3` finds the turning axis and angle and turns by part of the angle.
+- **An animation can stop itself.** When the parent controls t, the player watched for "the parent changed t" to stop playing. Frames can come faster than React redraws, so sometimes it saw its own older value and thought it was the parent. That froze PredictReveal at t = 0. The fix: remember every t we sent, and only stop for a t we never sent.
+- **three.js likes "up" to be y; maths likes it to be z.** Telling the camera `up = (0, 0, 1)` means none of the maths has to change.
+- **A finger on a 3D picture can scroll the page instead of turning it.** CSS `touch-action: none` asks the browser not to scroll, and a `touchmove` listener backs it up for iPhone Safari, like the 2D planes already had.
+- **Checked on the iPhone Simulator** (iPhone 17e): orbit and Play work. The Simulator uses the Mac's graphics chip, so whether it's smooth needs a real iPhone.
