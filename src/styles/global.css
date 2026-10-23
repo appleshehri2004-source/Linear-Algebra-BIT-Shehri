@@ -20,6 +20,7 @@
   --space: #7048e8; /* a column space or row space (where vectors can reach): violet */
   --null: #d6336c; /* a null space or left null space (what gets squashed to 0): pink */
   --cross: #0e8a8a; /* a cross product v × w: teal */
+  --eigen: #0b7285; /* an eigenvector line, lit up because A keeps it on itself: deep cyan */
 
   --bg: #fdfdfb;
   --text: #1c1c1e;
@@ -52,6 +53,7 @@
     --space: #a48bff;
     --null: #f783ac;
     --cross: #3fd0c9;
+    --eigen: #66d9e8;
 
     --bg: #16161a;
     --text: #ececf0;

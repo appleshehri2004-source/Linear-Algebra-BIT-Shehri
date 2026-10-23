@@ -1,6 +1,27 @@
 import { describe, expect, it } from 'vitest';
 import {
   add,
+  charPoly2,
+  charPolyAt,
+  diagonalize,
+  eig2,
+  matPow,
+  meanProduct,
+  nearEigenLine,
+  fitRange,
+  powerTrail,
+  repeatMultiply,
+  shiftByLambda,
+  stretchAlongLine,
+  unitAt,
+  angleOf,
+  snapToEigenLine,
+  spokes,
+  snapNear,
+  charPolyWindow,
+  eigenTrail,
+  powerParts,
+  niceGridStep,
   clampToBox,
   gramSchmidt,
   gramSchmidtAt,
@@ -1504,5 +1525,212 @@ describe('orthogonality (Module 6)', () => {
     }
     expect(length(matVec(shear, [0, 1]))).not.toBeCloseTo(1, 3);
     expect(dot(matVec(shear, [1, 0]), matVec(shear, [0, 1]))).toBe(1); // the right angle at the origin is lost
+  });
+});
+
+describe('eigenvectors and eigenvalues (Module 8)', () => {
+  const rot90: Mat2 = [[0, 1], [-1, 0]];
+  const shear: Mat2 = [[1, 0], [1, 1]];
+  const twoI: Mat2 = [[2, 0], [0, 2]];
+  const rand = seeded(81);
+  const randMat = (): Mat2 => [[rand() * 8 - 4, rand() * 8 - 4], [rand() * 8 - 4, rand() * 8 - 4]];
+
+  /** The pairs from eig2, or fail the test if the kind is not 'lines'. */
+  function pairsOf(a: Mat2) {
+    const e = eig2(a);
+    if (e.kind !== 'lines') throw new Error(`expected lines, got ${e.kind}`);
+    return e.pairs;
+  }
+
+  it('charPoly2: columns (2, 1), (2, 3) give λ² − 5λ + 4, which is det(A − λI) at every λ', () => {
+    expect(charPoly2([[2, 1], [2, 3]])).toEqual({ trace: 5, det: 4 });
+    for (const lambda of [-2, 0, 0.5, 1, 3, 4, 7]) {
+      expect(charPolyAt([[2, 1], [2, 3]], lambda)).toBeCloseTo(det2(shiftByLambda([[2, 1], [2, 3]], lambda)), 9);
+    }
+    expect(charPolyAt([[2, 1], [2, 3]], 1)).toBe(0);
+    expect(charPolyAt([[2, 1], [2, 3]], 4)).toBe(0);
+  });
+
+  it('eig2: columns (3, 0), (1, 2) give λ = 3 along (1, 0) and λ = 2 along (−1, 1)', () => {
+    const [p1, p2] = pairsOf([[3, 0], [1, 2]]);
+    expect(p1).toEqual({ lambda: 3, direction: [1, 0] });
+    expect(p2).toEqual({ lambda: 2, direction: [-1, 1] });
+  });
+
+  it('eig2: columns (2, 1), (2, 3) give λ = 4 and 1', () => {
+    expect(pairsOf([[2, 1], [2, 3]]).map((p) => p.lambda)).toEqual([4, 1]);
+  });
+
+  it('eig2: a 90° turn has no real eigenvalues; its roots are ±i', () => {
+    expect(eig2(rot90)).toEqual({ kind: 'none', re: 0, im: 1 });
+    expect(eig2(rotation(30)).kind).toBe('none');
+  });
+
+  it('eig2: a shear has only λ = 1, with eigenvectors only on the x-axis', () => {
+    const pairs = pairsOf(shear);
+    expect(pairs).toEqual([{ lambda: 1, direction: [1, 0] }]);
+    expect(diagonalize(shear)).toBeNull();
+  });
+
+  it('eig2: for 2I every vector is an eigenvector, with λ = 2', () => {
+    expect(eig2(twoI)).toEqual({ kind: 'every', lambda: 2 });
+  });
+
+  it('eig2: columns (3, 4), (1, 1) give λ = 2 + √5 and 2 − √5', () => {
+    const [p1, p2] = pairsOf([[3, 4], [1, 1]]);
+    expect(p1.lambda).toBeCloseTo(2 + Math.sqrt(5), 12);
+    expect(p2.lambda).toBeCloseTo(2 - Math.sqrt(5), 12);
+  });
+
+  it('eig2: A · direction = λ · direction, for 300 random matrices with real eigenvalues', () => {
+    let checked = 0;
+    for (let i = 0; i < 300; i++) {
+      const a = randMat();
+      const e = eig2(a);
+      if (e.kind !== 'lines') continue;
+      for (const { lambda, direction } of e.pairs) {
+        expectClose(matVec(a, direction), scale(lambda, direction));
+        expect(charPolyAt(a, lambda)).toBeCloseTo(0, 6);
+      }
+      checked++;
+    }
+    expect(checked).toBeGreaterThan(100);
+  });
+
+  it('meanProduct: (8, 2), (4, 6) gives m = 7, p = 40, λ = 10 and 4', () => {
+    expect(meanProduct([[8, 2], [4, 6]])).toEqual({ m: 7, p: 40, gap: 9, root: 3, lambdas: [10, 4] });
+  });
+
+  it('meanProduct: (2, 1), (7, 8) gives λ = 9 and 1; a rotation gives none', () => {
+    expect(meanProduct([[2, 1], [7, 8]]).lambdas).toEqual([9, 1]);
+    expect(meanProduct(rot90).lambdas).toBeNull();
+  });
+
+  it('stretchAlongLine: on an eigen-line it gives λ, off one it gives null', () => {
+    const a: Mat2 = [[3, 0], [1, 2]];
+    expect(stretchAlongLine(a, [1, 0])).toBe(3);
+    expect(stretchAlongLine(a, [-2, 2])).toBe(2);
+    expect(stretchAlongLine(a, [0, 1])).toBeNull();
+    expect(stretchAlongLine([[1, 1], [1, 1]], [1, -1])).toBe(0); // squashed to 0 counts, λ = 0
+    expect(stretchAlongLine(rot90, [1, 2])).toBeNull();
+  });
+
+  it('nearEigenLine lights only the right lines, all the way round the circle, for all five matrices', () => {
+    const lit = (a: Mat2) => {
+      const e = eig2(a);
+      const found = new Set<number>();
+      let litAngles = 0;
+      for (let deg = 0; deg < 360; deg += 0.5) {
+        const i = nearEigenLine(e, unitAt(deg));
+        if (i === null) continue;
+        litAngles++;
+        found.add(i);
+        // Whenever a line lights up, A really does keep the probe (nearly) on its line.
+        expect(stretchAlongLine(a, unitAt(deg), 5)).not.toBeNull();
+      }
+      return { found: found.size, litAngles };
+    };
+    expect(lit([[3, 0], [1, 2]]).found).toBe(2);
+    expect(lit([[2, 1], [2, 3]]).found).toBe(2);
+    expect(lit(rot90)).toEqual({ found: 0, litAngles: 0 });
+    expect(lit(shear).found).toBe(1);
+    expect(lit(twoI).litAngles).toBe(720); // every direction
+  });
+
+  it('diagonalize: A = P D P⁻¹ for columns (3, 0), (1, 2)', () => {
+    const a: Mat2 = [[3, 0], [1, 2]];
+    const { P, D } = diagonalize(a)!;
+    expect(D).toEqual([[3, 0], [0, 2]]);
+    expectClose(matMul(P, matMul(D, inverse2(P)!)), a);
+  });
+
+  it('matPow: P D¹⁰ P⁻¹ equals multiplying by A ten times', () => {
+    const a: Mat2 = [[3, 0], [1, 2]];
+    expectClose(matPow(a, 10), repeatMultiply(a, 10));
+    expect(repeatMultiply(a, 0)).toEqual(identity());
+    expectClose(matPow(shear, 5), [[1, 0], [5, 1]]); // no eigenbasis: falls back to multiplying
+  });
+
+  it('Fibonacci: the 10th power of columns (1, 1), (1, 0) holds F(10) = 55', () => {
+    const fib = matPow([[1, 1], [1, 0]], 10);
+    expect(fib[1][0]).toBeCloseTo(55, 9);
+    expectClose(matVec(fib, [1, 0]), [89, 55]); // (F(11), F(10))
+  });
+
+  it('Markov: columns (0.9, 0.1), (0.2, 0.8) settle to (2/3, 1/3)', () => {
+    const a: Mat2 = [[0.9, 0.1], [0.2, 0.8]];
+    const end = matVec(matPow(a, 100), [1, 0]);
+    expect(end[0]).toBeCloseTo(2 / 3, 9);
+    expect(end[1]).toBeCloseTo(1 / 3, 9);
+    expect(pairsOf(a).map((p) => p.lambda).map((n) => roundTo(n, 9))).toEqual([1, 0.7]);
+  });
+
+  it('powerTrail and fitRange', () => {
+    expect(powerTrail([[2, 0], [0, 3]], [1, 1], 2)).toEqual([[1, 1], [2, 3], [4, 9]]);
+    expect(fitRange([[1, 1], [4, 9]])).toBe(12);
+    expect(fitRange([[0.5, 0.2]])).toBe(3);
+  });
+});
+
+describe('EigenProbe helpers (Module 8)', () => {
+  it('angleOf goes round from 0 to 360', () => {
+    expect(angleOf([1, 0])).toBe(0);
+    expect(angleOf([0, 1])).toBeCloseTo(90, 9);
+    expect(angleOf([-1, -1])).toBeCloseTo(225, 9);
+    expect(angleOf(unitAt(300))).toBeCloseTo(300, 9);
+  });
+
+  it('snapToEigenLine pulls a nearby probe exactly onto the line, on its own side', () => {
+    const e = eig2([[3, 0], [1, 2]]);
+    expectClose(snapToEigenLine(e, unitAt(2))!, [1, 0]);
+    expectClose(snapToEigenLine(e, unitAt(181))!, [-1, 0]);
+    expectClose(snapToEigenLine(e, unitAt(136))!, [-Math.SQRT1_2, Math.SQRT1_2]);
+    expect(snapToEigenLine(e, unitAt(60))).toBeNull();
+    expect(snapToEigenLine(eig2([[0, 1], [-1, 0]]), [1, 0])).toBeNull();
+  });
+
+  it('spokes: evenly spaced arrows plus two along each extra direction', () => {
+    const s = spokes(4, 2, [[1, 1]]);
+    expect(s).toHaveLength(6);
+    expectClose(s[1][1], [0, 2]);
+    expectClose(s[4][1], [Math.SQRT2, Math.SQRT2]);
+  });
+});
+
+describe('LambdaKnob helpers (Module 8)', () => {
+  it('snapNear clicks onto a root only when close', () => {
+    expect(snapNear(1.04, [1, 4], 0.08)).toBe(1);
+    expect(snapNear(3.95, [1, 4], 0.08)).toBe(4);
+    expect(snapNear(2.5, [1, 4], 0.08)).toBe(2.5);
+  });
+
+  it('charPolyWindow: λ² − 5λ + 4 from −1 to 6 goes from −2.25 (at λ = 2.5) up to 10', () => {
+    const [lo, hi] = charPolyWindow([[2, 1], [2, 3]], [-1, 6]);
+    expect(lo).toBeCloseTo(-2.25, 9);
+    expect(hi).toBeCloseTo(10, 9);
+  });
+});
+
+describe('PowerView helpers (Module 8)', () => {
+  it('eigenTrail: in the eigenbasis each step only scales each number by its λ', () => {
+    const a: Mat2 = [[3, 0], [1, 2]];
+    // (0, 1) = 1·(1, 0) + 1·(−1, 1), so its eigen-numbers are (1, 1), then (3, 2), (9, 4).
+    expect(eigenTrail(a, [0, 1], 2)).toEqual([[1, 1], [3, 2], [9, 4]]);
+    // Going back to our numbers gives the same trail as applying A again and again.
+    const P = diagonalize(a)!.P;
+    eigenTrail(a, [2, -1], 5)!.forEach((c, k) => expectClose(matVec(P, c), powerTrail(a, [2, -1], 5)[k]));
+    expect(eigenTrail([[1, 0], [1, 1]], [1, 1], 3)).toBeNull();
+  });
+
+  it('powerParts: P Dⁿ P⁻¹ with Dⁿ holding λⁿ', () => {
+    const { Dn } = powerParts([[3, 0], [1, 2]], 3)!;
+    expect(Dn).toEqual([[27, 0], [0, 8]]);
+  });
+
+  it('niceGridStep keeps about 5 lines a side', () => {
+    expect(niceGridStep(4)).toBe(1);
+    expect(niceGridStep(10)).toBe(2);
+    expect(niceGridStep(98)).toBe(20);
+    expect(niceGridStep(300)).toBe(50);
   });
 });

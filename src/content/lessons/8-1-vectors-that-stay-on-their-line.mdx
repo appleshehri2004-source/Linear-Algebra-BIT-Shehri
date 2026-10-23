@@ -1,0 +1,86 @@
+---
+title: Vectors that stay on their line
+module: 8
+order: 1
+threeBlueOneBrown: https://www.3blue1brown.com/lessons/eigenvalues
+mit: https://ocw.mit.edu/courses/18-06-linear-algebra-spring-2010/resources/lecture-21-eigenvalues-and-eigenvectors/
+tongji: 第五章 §2 方阵的特征值与特征向量
+---
+
+import Formula from '../../components/Formula.astro';
+import EigenProbe from '../../components/EigenProbe.tsx';
+import Exercise from '../../components/Exercise.tsx';
+
+## Question
+
+A matrix moves almost every arrow **off** the line it started on: the arrow turns as well as stretches. Are there any arrows that only get stretched, and stay on their own line?
+
+## Play
+
+The yellow probe <Formula tex="\vec{v}" /> sweeps around the circle. The orange arrow is <Formula tex="A\vec{v}" />. Press **Sweep round**, or drag the probe yourself (it clicks onto a line when you get close).
+
+Whenever <Formula tex="A\vec{v}" /> lands back on <Formula tex="\vec{v}" />'s dashed line, that line lights up in cyan and stays drawn, with its stretch factor λ.
+
+Start with <Formula tex="A = \begin{bmatrix} 3 & 1 \\ 0 & 2 \end{bmatrix}" />, then try the other three matrices. Last, press **Watch the whole plane move**.
+
+<EigenProbe
+  client:visible
+  matrices={[
+    { name: '[3 1; 0 2]', matrix: [[3, 0], [1, 2]] },
+    { name: 'Rotation', matrix: [[0, 1], [-1, 0]] },
+    { name: 'Shear', matrix: [[1, 0], [1, 1]] },
+    { name: '2I', matrix: [[2, 0], [0, 2]] },
+  ]}
+/>
+
+## Numbers
+
+Two lines light up for <Formula tex="A = \begin{bmatrix} 3 & 1 \\ 0 & 2 \end{bmatrix}" />. Check them by multiplying:
+
+<Formula display tex="\begin{bmatrix} 3 & 1 \\ 0 & 2 \end{bmatrix} \begin{bmatrix} 1 \\ 0 \end{bmatrix} = \begin{bmatrix} 3 \\ 0 \end{bmatrix} = 3 \begin{bmatrix} 1 \\ 0 \end{bmatrix}, \qquad \begin{bmatrix} 3 & 1 \\ 0 & 2 \end{bmatrix} \begin{bmatrix} -1 \\ 1 \end{bmatrix} = \begin{bmatrix} -2 \\ 2 \end{bmatrix} = 2 \begin{bmatrix} -1 \\ 1 \end{bmatrix}" />
+
+Any other arrow gets knocked off its line. For example <Formula tex="(0, 1)" /> goes to <Formula tex="(1, 2)" />, which points somewhere else.
+
+## Explain
+
+**Eigenvector and eigenvalue.** A non-zero arrow <Formula tex="\vec{v}" /> with
+
+<Formula display tex="A\vec{v} = \lambda \vec{v}" />
+
+is an **eigenvector** of <Formula tex="A" />, and the number λ is its **eigenvalue**: how much the arrow is stretched along its own line. λ = 3 triples it; λ = ½ halves it; a negative λ flips it to the other side of the origin (still on the same line).
+
+**It's the line that counts.** If <Formula tex="\vec{v}" /> is an eigenvector, so is <Formula tex="2\vec{v}" />, <Formula tex="-\vec{v}" />, or any other multiple. That is why a whole line lights up, not just one arrow.
+
+**The four matrices tell four stories:**
+
+- **[3 1; 0 2]**: two lines, with λ = 3 and λ = 2.
+- **Rotation by 90°**: no line ever lights up. A turn knocks **every** arrow off its line, so there are no (real) eigenvectors.
+- **Shear**: just one line, the x-axis, with λ = 1. Every other arrow leans over.
+- **2I**: every line lights up. Doubling everything keeps every arrow on its line, so every vector is an eigenvector with λ = 2.
+
+**Watch the whole plane move.** In that view, the arrows sitting on cyan lines slide along them as the grid moves. Every other arrow swings to a new direction. The eigenvectors are the **axes** of the transformation: the directions where it is just a stretch.
+
+## Predict
+
+<Formula tex="A = \begin{bmatrix} 2 & 0 \\ 0 & -1 \end{bmatrix}" /> stretches x by 2 and flips y. Which lines light up, and with which λ?
+
+<details>
+  <summary>Reveal</summary>
+  The x-axis, with λ = 2: <Formula tex="(1, 0) \mapsto (2, 0)" />. And the y-axis, with λ = −1: <Formula tex="(0, 1) \mapsto (0, -1)" />. That arrow is flipped to the other side of the origin, but it stays on its line, so it counts. For a diagonal matrix, the axes are the eigenvectors and the diagonal numbers are the eigenvalues.
+</details>
+
+## Practice
+
+<Exercise id="8.1-lambda" client:visible />
+
+<Exercise id="8.1-av" client:visible />
+
+<Exercise id="8.1-shear" client:visible />
+
+## Go deeper
+
+**Why care?** An eigenvector turns a matrix problem into a number problem. Along that line, <Formula tex="A" /> is just "times λ". Apply <Formula tex="A" /> ten times, and an eigenvector is just multiplied by <Formula tex="\lambda^{10}" /> (Lesson 8.4).
+
+**3D rotations have one.** A rotation in 3D always has an axis it spins around. That axis is an eigenvector with λ = 1: it doesn't move at all (Lesson 2.5).
+
+**Rotation's eigenvalues aren't gone, they're complex.** For the 90° turn, the maths of the next lesson gives λ = i and λ = −i. No real arrow stays on its line, but complex numbers are, in a sense, "rotation numbers". That story continues in Module 8 part 2.

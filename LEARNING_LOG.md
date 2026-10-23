@@ -459,3 +459,40 @@ The x/y/z sliders that used to live inside CrossView, now in their own file so P
 - **Random tests found a real edge case.** When v is almost on the line, the error is almost 0 and no right-angle square fits, so the picture hides it. The test first failed on exactly those cases, and now it checks that the mark is only missing when the error is under 0.01.
 - **Choose starting numbers that don't overlap.** With a = (2, 1), the shadow of (1, 3) is exactly (2, 1), so the gold arrow sat right on a's drag handle and hid the right-angle mark. Starting with a = (4, 2) gives the same line with the handle out of the way.
 - **The browser check needs real scrolling.** Islands with client:visible start when they come on screen. Jumping there with JavaScript sometimes didn't count as "on screen" in the preview pane, so the demos looked broken when they weren't.
+
+## Day 12 (2026-10-23): Module 8 part 1, eigenvectors and eigenvalues
+
+Lessons 8.1 to 8.4: vectors that stay on their line, det(A − λI) = 0, the mean-product trick, and diagonalization and powers. 3 practice questions per lesson.
+
+### New files
+
+**`src/components/EigenProbe.tsx`** (Lessons 8.1, 8.2)
+A yellow probe sweeps round the circle (or you drag it), with A·v drawn in orange next to it. When A·v lands back on v's line, that line lights up in cyan, stays drawn, and gets its λ. After a full turn it says how many lines it found. "Watch the whole plane move" plays A on a fan of arrows: the ones on the cyan lines slide along them, and every other arrow is knocked off its line. It also exports `EigenLines`, the lit lines on their own, which LambdaKnob and PowerView reuse.
+
+**`src/components/LambdaKnob.tsx`** (Lesson 8.2)
+A λ slider. The plane shows A − λI, with the live det(A − λI) under it and a small graph of λ² − trace·λ + det with its roots marked. The slider clicks onto each root. There, det is exactly 0, the plane squishes onto a line, and the cyan eigen-line appears.
+
+**`src/components/MeanProductCalc.tsx`** (Lesson 8.3)
+Type a 2×2 matrix and it shows four steps: m (the mean of the diagonal), p (the det), m² − p, then λ = m ± √(m² − p). Buttons load the lesson's examples, including a rotation (no real eigenvalues).
+
+**`src/components/PowerView.tsx`** (Lesson 8.4)
+"Step" applies A once more; the n slider jumps to any power. Examples: [3 1; 0 2], Fibonacci and Markov. "Eigenbasis view" draws the same dots in the eigenvectors' own numbers, where each step just multiplies each number by its λ. It also shows P and Dⁿ.
+
+**`src/content/lessons/8-1-…` to `8-4-…`** and **`src/exercises/module8.ts`** (12 questions).
+
+### Changed files
+
+- **`linalg.ts`** and **`linalg.test.ts`**: `charPoly2`, `charPolyAt`, `shiftByLambda`, `meanProduct`, `eig2`, `stretchAlongLine`, `lineAngle`, `nearEigenLine`, `unitAt`, `angleOf`, `snapToEigenLine`, `spokes`, `diagonalize`, `repeatMultiply`, `matPow`, `powerParts`, `powerTrail`, `eigenTrail`, `fitRange`, `niceGridStep`, `snapNear` and `charPolyWindow` (332 tests now).
+- **`Plane.tsx`**: a new `gridStep` option, so a zoomed-out plane (Fibonacci reaches 89) draws a line every 20 instead of every 1.
+- **`Plane.css`**, **`Demo.css`**, **`global.css`**: a cyan `--eigen` colour for eigen-lines, and styles for the polynomial graph and the mean-product steps.
+- **`modules.ts`** and **`exercises/index.ts`**: Module 8 is named and its questions are registered.
+
+### Things I learned
+
+- **An eigenvector is a line, not an arrow.** If v stays on its line, so does 2v or −v. That's why the probe lights up a whole line.
+- **det(A − λI) = 0 is just "squishes flat".** Av = λv means (A − λI)v = 0 for a non-zero v, and only a squishing matrix sends something non-zero to 0. On the knob you can watch the plane collapse at exactly λ = 1 and λ = 4.
+- **Four kinds of answer, not two.** Two lines, one line (shear), every line (2I) or none (rotation). `eig2` returns which kind it is, so the components can say the right thing for each.
+- **A smooth sweep never lands exactly on a line.** So "on the line" means "within 1.5°", and the sweep turns at most 1° per frame, so a slow frame can't jump over a line. A test sweeps all five matrices in half-degree steps and checks only the right lines light up.
+- **Powers in the eigenbasis are just stretching.** Aⁿ = P Dⁿ P⁻¹, and Dⁿ is only each λ to the power n. The biggest λ wins, which is why Fibonacci grows like 1.618ⁿ and Markov settles at (2/3, 1/3).
+- **A hidden browser pane doesn't animate.** The sweep did nothing until the pane was on screen. The animation waits for the browser to draw frames, and a hidden page doesn't draw any.
+- **Labels can land right where the action is.** In Markov, the "λ = 1" label sat exactly where the dots settle, so EigenLines got a `labelAt` option to move labels further out.

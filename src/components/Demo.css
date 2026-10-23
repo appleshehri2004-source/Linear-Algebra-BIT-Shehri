@@ -159,3 +159,23 @@
 .demo-toggle .demo-button:last-child {
   border-radius: 0 0.4rem 0.4rem 0;
 }
+
+/* LambdaKnob (Module 8): the small graph of the characteristic polynomial under the plane. */
+.poly-graph {
+  max-width: 480px;
+  margin: 0.5rem auto;
+}
+
+.poly-graph figcaption {
+  text-align: center;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+/* MeanProductCalc (Module 8): the four steps from the matrix to its eigenvalues. */
+.mean-product-steps {
+  max-width: 480px;
+  margin: 0.5rem auto;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.8;
+}

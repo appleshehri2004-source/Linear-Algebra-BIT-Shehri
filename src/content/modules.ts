@@ -9,6 +9,7 @@ export const moduleNames: Record<number, string> = {
   5: 'Duality and the cross product',
   6: 'Orthogonality',
   7: 'Change of basis',
+  8: 'Eigenvectors and eigenvalues',
 };
 
 /** A module's name, or "Untitled" if it isn't named above yet. */

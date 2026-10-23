@@ -1265,3 +1265,243 @@ export function isOrthogonalMatrix(m: Mat2, tolerance = 1e-9): boolean {
     Math.abs(dot(c1, c1) - 1) < tolerance && Math.abs(dot(c2, c2) - 1) < tolerance && Math.abs(dot(c1, c2)) < tolerance
   );
 }
+
+// ---- Module 8: eigenvectors and eigenvalues ----
+
+/**
+ * The characteristic polynomial of A: det(A − λI) = λ² − trace·λ + det.
+ * trace is the diagonal added up (top-left + bottom-right). For columns (2, 1), (2, 3): λ² − 5λ + 4.
+ */
+export function charPoly2(m: Mat2): { trace: number; det: number } {
+  return { trace: m[0][0] + m[1][1], det: det2(m) };
+}
+
+/** The characteristic polynomial worked out at one λ. It is 0 exactly at the eigenvalues. */
+export function charPolyAt(m: Mat2, lambda: number): number {
+  const { trace, det } = charPoly2(m);
+  return lambda * lambda - trace * lambda + det;
+}
+
+/** A − λI: A with λ taken off both diagonal numbers. */
+export function shiftByLambda(m: Mat2, lambda: number): Mat2 {
+  return [[m[0][0] - lambda, m[0][1]], [m[1][0], m[1][1] - lambda]];
+}
+
+/**
+ * The mean-product trick: m = trace / 2 (the mean of the two eigenvalues) and p = det (their product),
+ * so λ = m ± √(m² − p). `gap` is m² − p and `root` is √gap: below 0 there are no real eigenvalues (lambdas is null).
+ * The bigger λ comes first. Columns (8, 2), (4, 6): m = 7, p = 40, λ = 10 and 4.
+ */
+export function meanProduct(a: Mat2): { m: number; p: number; gap: number; root: number; lambdas: [number, number] | null } {
+  const { trace, det } = charPoly2(a);
+  const m = trace / 2;
+  const gap = m * m - det;
+  // A gap that is 0 up to rounding (like 1e-16) is a repeated eigenvalue, not "no real ones".
+  const g = Math.abs(gap) < TINY ? 0 : gap;
+  if (g < 0) return { m, p: det, gap, root: NaN, lambdas: null };
+  const r = Math.sqrt(g);
+  return { m, p: det, gap: g, root: r, lambdas: [m + r + 0, m - r + 0] };
+}
+
+/** One eigenvalue with its eigenvector direction: A · direction = lambda · direction. */
+export interface EigenPair {
+  lambda: number;
+  direction: Vec2;
+}
+
+/**
+ * What the eigenvalues of a 2x2 matrix look like. Three kinds:
+ * - 'lines': one or two eigenvalues, each with the one line of vectors that stays put (biggest λ first).
+ *   A shear has only one.
+ * - 'every': A = λI, so every vector is an eigenvector (with that one λ).
+ * - 'none': no real eigenvalues; the roots are re ± im·i (a rotation, for example).
+ */
+export type Eigen =
+  | { kind: 'lines'; pairs: EigenPair[] }
+  | { kind: 'every'; lambda: number }
+  | { kind: 'none'; re: number; im: number };
+
+/**
+ * A tidy arrow along the line that (A − λI) squashes to 0. It points up (or right, if flat),
+ * and its smallest non-zero number is 1 long, so whole-number answers look like (−1, 1), not (−0.71, 0.71).
+ */
+function nullDirection(b: Mat2): Vec2 {
+  // The rows of A − λI. Any arrow at right angles to a non-zero row is squashed to 0.
+  const rows: Vec2[] = [[b[0][0], b[1][0]], [b[0][1], b[1][1]]];
+  const [x, y] = length(rows[0]) >= length(rows[1]) ? rows[0] : rows[1];
+  let d: Vec2 = [-y, x];
+  d = d.map((n) => (Math.abs(n) < TINY * 1e3 ? 0 : n)) as Vec2;
+  if (d[1] < 0 || (d[1] === 0 && d[0] < 0)) d = [-d[0], -d[1]];
+  const sizes = d.filter((n) => n !== 0).map(Math.abs);
+  // Make the smallest number 1, unless that would make the other one huge (then make the biggest 1).
+  const k = Math.max(...sizes) / Math.min(...sizes) > 10 ? Math.max(...sizes) : Math.min(...sizes);
+  return [d[0] / k + 0, d[1] / k + 0];
+}
+
+export function eig2(a: Mat2): Eigen {
+  const { m, gap, lambdas } = meanProduct(a);
+  if (!lambdas) return { kind: 'none', re: m, im: Math.sqrt(-gap) };
+  if (lambdas[0] === lambdas[1]) {
+    const b = shiftByLambda(a, m);
+    if (b.flat().every((n) => Math.abs(n) < TINY)) return { kind: 'every', lambda: m };
+    return { kind: 'lines', pairs: [{ lambda: m, direction: nullDirection(b) }] };
+  }
+  return { kind: 'lines', pairs: lambdas.map((lambda) => ({ lambda, direction: nullDirection(shiftByLambda(a, lambda)) })) };
+}
+
+/**
+ * Is A·v still on v's line, to within `degrees`? Then v is (nearly) an eigenvector: give back how much A
+ * stretched it along the line (λ; negative means flipped). null when A knocks v off its line, or v = 0.
+ * A·v = 0 counts as staying on the line, with λ = 0.
+ */
+export function stretchAlongLine(a: Mat2, v: Vec2, degrees = 1): number | null {
+  const vv = dot(v, v);
+  if (vv < TINY) return null;
+  const av = matVec(a, v);
+  const along = dot(av, v) / vv;
+  if (length(av) < TINY) return 0;
+  return lineAngle(v, av) <= degrees ? along + 0 : null;
+}
+
+/** The angle between the lines through v and w, in degrees: 0 (same line) to 90 (at right angles). */
+export function lineAngle(v: Vec2, w: Vec2): number {
+  const a = angleBetween(v, w);
+  if (a === null) return 0;
+  return Math.min(a, 180 - a);
+}
+
+/**
+ * Which eigen-line (an index into eigen.pairs) the arrow v is within `degrees` of, or null.
+ * With kind 'every', every arrow is on an eigen-line, so the answer is always 0.
+ */
+export function nearEigenLine(eigen: Eigen, v: Vec2, degrees = 1.5): number | null {
+  if (length(v) < TINY) return null;
+  if (eigen.kind === 'every') return 0;
+  if (eigen.kind === 'none') return null;
+  const i = eigen.pairs.findIndex((p) => lineAngle(v, p.direction) <= degrees);
+  return i === -1 ? null : i;
+}
+
+/** A point on the unit circle, `degrees` anticlockwise from the x-axis. The probe in EigenProbe sweeps this. */
+export function unitAt(degrees: number): Vec2 {
+  const r = (degrees * Math.PI) / 180;
+  return [Math.cos(r) + 0, Math.sin(r) + 0];
+}
+
+/**
+ * A = P D P⁻¹, with A's eigenvectors as the columns of P and the eigenvalues down the diagonal of D.
+ * In the eigenbasis, A just stretches each axis. null when there aren't two independent eigenvectors
+ * (a shear, or no real eigenvalues). For A = λI, P = I and D = A.
+ */
+export function diagonalize(a: Mat2): { P: Mat2; D: Mat2 } | null {
+  const eigen = eig2(a);
+  if (eigen.kind === 'every') return { P: identity(), D: a };
+  if (eigen.kind === 'none' || eigen.pairs.length < 2) return null;
+  const [e1, e2] = eigen.pairs;
+  return { P: [e1.direction, e2.direction], D: [[e1.lambda, 0], [0, e2.lambda]] };
+}
+
+/** Aⁿ the slow way: A times A times A …, n times. A⁰ = I. */
+export function repeatMultiply(a: Mat2, n: number): Mat2 {
+  let result = identity();
+  for (let i = 0; i < n; i++) result = matMul(a, result);
+  return result;
+}
+
+/**
+ * Aⁿ the fast way: P Dⁿ P⁻¹. Dⁿ is easy, it is just each λ to the power n.
+ * Falls back to repeatMultiply when A can't be diagonalized. n is a whole number, 0 or more.
+ */
+export function matPow(a: Mat2, n: number): Mat2 {
+  const parts = powerParts(a, n);
+  return parts ? matMul(parts.P, matMul(parts.Dn, parts.Pinv)) : repeatMultiply(a, n);
+}
+
+/** The three pieces of Aⁿ = P Dⁿ P⁻¹, for showing them. null when A can't be diagonalized. */
+export function powerParts(a: Mat2, n: number): { P: Mat2; Dn: Mat2; Pinv: Mat2 } | null {
+  const parts = diagonalize(a);
+  const Pinv = parts && inverse2(parts.P);
+  if (!parts || !Pinv) return null;
+  return { P: parts.P, Dn: [[parts.D[0][0] ** n + 0, 0], [0, parts.D[1][1] ** n + 0]], Pinv };
+}
+
+/** v, Av, A²v, …, Aⁿv: where v goes when A is applied again and again (n + 1 points). */
+export function powerTrail(a: Mat2, v: Vec2, n: number): Vec2[] {
+  const trail: Vec2[] = [v];
+  for (let i = 0; i < n; i++) trail.push(matVec(a, trail[i]));
+  return trail;
+}
+
+/** The smallest range (a whole number, at least `min`) that fits every point on a square plane. */
+export function fitRange(points: Vec2[], min = 3): number {
+  const biggest = Math.max(0, ...points.flatMap(([x, y]) => [Math.abs(x), Math.abs(y)]));
+  // A quarter extra, so the label at the arrow tip stays inside the picture.
+  return Math.max(min, Math.ceil(biggest * 1.25));
+}
+
+/** The direction of v, in degrees anticlockwise from the x-axis: 0 up to (not including) 360. */
+export function angleOf(v: Vec2): number {
+  const deg = (Math.atan2(v[1], v[0]) * 180) / Math.PI;
+  return deg < 0 ? deg + 360 : deg + 0;
+}
+
+/**
+ * If v is within `degrees` of an eigen-line, the arrow 1 long along that line, on v's side of the origin
+ * (for snapping a dragged probe exactly onto the line). Otherwise null. Never snaps for kind 'every' or 'none'.
+ */
+export function snapToEigenLine(eigen: Eigen, v: Vec2, degrees = 3): Vec2 | null {
+  if (eigen.kind !== 'lines') return null;
+  const i = nearEigenLine(eigen, v, degrees);
+  if (i === null) return null;
+  const d = normalize(eigen.pairs[i].direction);
+  return dot(d, v) >= 0 ? d : [-d[0] + 0, -d[1] + 0];
+}
+
+/**
+ * Arrows from the origin for the "whole plane moves" picture: `count` of them evenly round the circle,
+ * plus one along each of `extra` (both ways), all `size` long. Each is a two-point line [origin, tip].
+ */
+export function spokes(count: number, size: number, extra: Vec2[] = []): Vec2[][] {
+  const tips = Array.from({ length: count }, (_, k) => scale(size, unitAt((360 * k) / count)));
+  for (const d of extra) {
+    const u = normalize(d);
+    tips.push(scale(size, u), scale(-size, u));
+  }
+  return tips.map((tip) => [[0, 0], tip]);
+}
+
+/** x, moved exactly onto the nearest of `targets` when it is within `within` of it (for a slider that "clicks" into place). */
+export function snapNear(x: number, targets: number[], within: number): number {
+  const near = targets.filter((t) => Math.abs(t - x) <= within).sort((p, q) => Math.abs(p - x) - Math.abs(q - x));
+  return near.length ? near[0] : x;
+}
+
+/** The lowest and highest value of the characteristic polynomial for λ from lo to hi (sampled), for sizing its graph. */
+export function charPolyWindow(m: Mat2, [lo, hi]: [number, number]): [number, number] {
+  const values = Array.from({ length: 101 }, (_, k) => charPolyAt(m, lo + ((hi - lo) * k) / 100));
+  // The vertex (λ = trace / 2) is the lowest point, so include it if it is in range.
+  const mid = charPoly2(m).trace / 2;
+  if (mid >= lo && mid <= hi) values.push(charPolyAt(m, mid));
+  return [Math.min(...values), Math.max(...values)];
+}
+
+/**
+ * The same trail as powerTrail, written in the eigenbasis (the eigenvectors are the axes).
+ * There each step just multiplies the first number by λ₁ and the second by λ₂.
+ * null when A can't be diagonalized.
+ */
+export function eigenTrail(a: Mat2, v: Vec2, n: number): Vec2[] | null {
+  const parts = diagonalize(a);
+  if (!parts) return null;
+  const start = toHerCoords(parts.P, v);
+  if (!start) return null;
+  const [l1, l2] = [parts.D[0][0], parts.D[1][1]];
+  return Array.from({ length: n + 1 }, (_, k) => [start[0] * l1 ** k + 0, start[1] * l2 ** k + 0] as Vec2);
+}
+
+/** A tidy gap between grid lines for a plane that shows −range to range: 1, 2, 5, 10, 20, 50 … (about 5 lines a side). */
+export function niceGridStep(range: number): number {
+  for (let size = 1; ; size *= 10) {
+    for (const k of [1, 2, 5]) if (range / (k * size) <= 6) return k * size;
+  }
+}

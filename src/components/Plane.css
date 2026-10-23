@@ -5,7 +5,8 @@
   margin: 1rem auto;
 }
 
-.plane .MafsView {
+.plane .MafsView,
+.poly-graph .MafsView {
   --mafs-bg: var(--bg);
   --mafs-fg: var(--muted);
   --mafs-origin-color: var(--muted); /* the x and y axes */

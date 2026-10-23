@@ -13,12 +13,14 @@ interface Props {
   /** Show only this stretch of the x-axis and y-axis instead, e.g. x={[-1, 5]} for a picture in one corner. */
   x?: [number, number];
   y?: [number, number];
+  /** The gap between grid lines. Default: 1. Use a bigger one (from niceGridStep) for a zoomed-out plane. */
+  gridStep?: number;
   /** Called with the point (in maths coordinates) when the plane is clicked or tapped. */
   onClick?: (p: [number, number]) => void;
   children?: ReactNode;
 }
 
-export default function Plane({ range = 5, x, y, onClick, children }: Props) {
+export default function Plane({ range = 5, x, y, gridStep = 1, onClick, children }: Props) {
   const box = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState(320);
   // Mafs numbers its arrowheads and grids with a counter that keeps growing while the site is built,
@@ -64,7 +66,7 @@ export default function Plane({ range = 5, x, y, onClick, children }: Props) {
   }, []);
 
   // On a big plane, label every second tick so the numbers don't crowd.
-  const labelEvery = range > 5 ? 2 : 1;
+  const labelEvery = (range / gridStep > 5 ? 2 : 1) * gridStep;
   const label = (n: number) => (n % labelEvery === 0 ? String(n) : '');
 
   return (
@@ -81,8 +83,8 @@ export default function Plane({ range = 5, x, y, onClick, children }: Props) {
           onClick={onClick && ((point) => onClick([point[0], point[1]]))}
         >
           <Coordinates.Cartesian
-            xAxis={{ lines: 1, labels: label }}
-            yAxis={{ lines: 1, labels: label }}
+            xAxis={{ lines: gridStep, labels: label }}
+            yAxis={{ lines: gridStep, labels: label }}
           />
           {children}
         </Mafs>
