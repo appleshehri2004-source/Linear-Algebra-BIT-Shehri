@@ -20,6 +20,7 @@ const modules: ModuleLinks[] = [...new Set(lessons.map((l) => l.data.module))].m
       number: `${l.data.module}.${l.data.order}`,
       title: l.data.title,
       exerciseIds: exerciseIds(l),
+      optional: l.data.optional ?? false,
     })),
 }));
 ---

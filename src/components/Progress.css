@@ -41,6 +41,12 @@
   min-width: 0; /* lets a long title wrap instead of pushing the badges off screen */
 }
 
+.optional-badge {
+  border: 1px solid var(--border);
+  border-radius: 0.3rem;
+  padding: 0 0.35rem;
+}
+
 .lessons .badges {
   display: flex;
   gap: 0.5rem;

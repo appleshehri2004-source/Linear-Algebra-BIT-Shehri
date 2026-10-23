@@ -358,3 +358,35 @@ The parallelogram made by î and x (area y) next to the one made by column 1 and
 - **Dragging onto an exact line is nearly impossible by hand.** b only snapped within 0.25 of a square and I missed twice with a mouse, so it's 0.4 now, and it lands on tidy points like (2, 4) so the answers are clean.
 - **The site lives under /Linear-Algebra-BIT-Shehri/.** Serving `dist` on its own gave 404s for every script; it has to be served under that folder name. Another chat's dev server was also running, so I previewed the built site on my own port.
 - **A demo with client:visible only starts once it's on screen.** My first angle readings in 4.7 came from the page before the demo had started, so I redid them on the live demo.
+
+## Day 10 (2026-10-23): Module 5, duality and the cross product
+
+Lessons 5.1 to 5.3: duality (number lines are vectors); the cross product in 2D and 3D; and, marked optional, why the cross product formula works.
+
+### New files
+
+**`src/components/DualityView.tsx`** (Lesson 5.1)
+A tilted orange number line along û, with whole numbers marked. Drag v: a dashed line drops it onto the line, and the number where it lands sits next to u · v. They always match. The orange dot at −3 turns the line. The k slider makes u = k·û and multiplies both numbers by k. î and ĵ drop onto the line too, landing at u's x and y, and the 1×2 matrix [u_x u_y] is shown next to u.
+
+**`src/components/CrossView.tsx`** (Lessons 5.2 and 5.3)
+2D mode: drag v and w. The parallelogram shows its signed area, blue when positive and purple and negative when v is left of w. 3D mode: x, y, z sliders for v and w, the parallelogram, and a teal arrow for v × w. "Swap v and w" slides the arrow through 0 to the other side. With `box`, a violet (x, y, z) builds a slanted box, and "base × height" sits next to "(x, y, z) · (v × w)".
+
+**`src/content/lessons/5-1-…` to `5-3-…`** and **8 new questions** in `module5.ts`.
+
+### Changed files
+
+- **`linalg.ts`** and **`linalg.test.ts`**: new `projectToLine`, `dualityNumbers`, `numberLineTicks`, `cross2`, `add3`, `scale3`, `parallelogram3`, `parallelepipedEdges` and `boxVolume`. `cross3` and `dot3` now give 0 instead of −0. 251 tests now.
+- **`Scene3D.tsx`**: new optional extras: `arrows` (any arrows, e.g. v, w and v × w), `patch` (a see-through flat shape), `edges` (lines, e.g. a box) and `showBasis` (turn off î, ĵ, k̂). Stage3D works as before.
+- **`content.config.ts`**, **`LessonList.tsx`**, **`LessonLayout.astro`**, **`index.astro`**: a lesson can say `optional: true`. It then gets an "Optional" badge in the list and "Optional (advanced)" at the top.
+- **`global.css`**: a new colour, `--cross` (teal), for v × w. **`Demo.css`**: the small x/y/z slider boxes.
+
+### Things I learned
+
+- **Duality: a 1×2 matrix is a vector lying on its side.** Dropping vectors onto a tilted number line is a linear transformation, so it's a 1×2 matrix. By symmetry, î lands at u's x and ĵ at u's y, so the matrix is [u_x u_y], and using it is the dot product.
+- **I made the test honest.** If `projectToLine` just called `dot`, the test "it always equals the dot product" would prove nothing. So it turns the picture until the line lies along the x-axis and reads v's x, and the test checks 200 random lines against the dot product.
+- **The 2D cross product is a determinant.** v × w = det[v w]. Its sign says which side v is on: (−3, 1) × (2, 1) = −5 because v is to the left of w.
+- **In 3D the cross product is an arrow**: as long as the parallelogram's area, at right angles to it, pointing the way the right-hand rule says. Swapping v and w flips it.
+- **Why the formula works (5.3).** "Volume of the box made by (x, y, z), v and w" is linear in (x, y, z), so by duality it is a dot product with some vector, and expanding the determinant shows that vector is exactly the cross product formula. Base × height says the same vector must be at right angles to v and w, with length = area.
+- **−0 is not 0 to the tests.** A dot product came out as −0 and `toBe(0)` failed. Adding `+ 0` turns −0 into 0, the same trick the file already uses.
+- **A handle at the busy origin is hard to grab.** î, ĵ and û all sit within 1 square of the origin, so the dot that turns the line now sits at −3 on the line instead of on û's tip.
+- **Two dev servers don't fit in one folder.** Another chat's `astro dev` was running, so I checked the built site from my own folder and port instead.

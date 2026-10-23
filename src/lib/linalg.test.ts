@@ -84,6 +84,15 @@ import {
   snapToLine,
   pointOnSolution,
   solve2,
+  projectToLine,
+  dualityNumbers,
+  cross2,
+  add3,
+  scale3,
+  parallelogram3,
+  parallelepipedEdges,
+  boxVolume,
+  numberLineTicks,
 } from './linalg';
 
 describe('add', () => {
@@ -1126,3 +1135,115 @@ describe('helpers for dragging b (Lesson 4.6)', () => {
     for (const t of [-1.5, 0, 2]) expect(applyColumns(A, pointOnSolution(all, t))).toEqual([3, 6]);
   });
 });
+
+describe('duality (Lesson 5.1)', () => {
+  it('projectToLine reads where v lands on the number line', () => {
+    expect(projectToLine([4, 3], [0.6, 0.8])).toBeCloseTo(4.8, 9);
+    expect(projectToLine([4, 3], [0.6, 0.8])).toBeCloseTo(dot([0.6, 0.8], [4, 3]), 9);
+    expect(projectToLine([-2, 0], [1, 0])).toBeCloseTo(-2, 9); // behind the origin: a negative number
+  });
+
+  it('i-hat and j-hat land exactly at u-hat\'s x and y', () => {
+    const u = normalize([-1, 2]);
+    expect(projectToLine([1, 0], u)).toBeCloseTo(u[0], 9);
+    expect(projectToLine([0, 1], u)).toBeCloseTo(u[1], 9);
+  });
+
+  it('the landing number always equals the dot product, for 200 random lines and vectors', () => {
+    const rand = seeded(51);
+    for (let i = 0; i < 200; i++) {
+      const angle = rand() * 2 * Math.PI;
+      const u: Vec2 = [Math.cos(angle), Math.sin(angle)];
+      const v: Vec2 = [rand() * 10 - 5, rand() * 10 - 5];
+      const k = rand() * 6 - 3;
+      const n = dualityNumbers(v, u, k);
+      expect(n.position).toBeCloseTo(dot(u, v), 9);
+      expect(n.value).toBeCloseTo(n.dot, 9);
+      // The dashed line from v to where it lands is at right angles to the number line.
+      expect(dot(sub(v, n.landing), u)).toBeCloseTo(0, 9);
+    }
+  });
+
+  it('scaling u by 3 triples the number', () => {
+    const n = dualityNumbers([4, 3], [0.6, 0.8], 3);
+    expect(n.value).toBeCloseTo(14.4, 9);
+    expect(n.dot).toBeCloseTo(14.4, 9);
+    expect(n.landing[0]).toBeCloseTo(2.88, 9);
+    expect(n.landing[1]).toBeCloseTo(3.84, 9);
+  });
+});
+
+describe('numberLineTicks', () => {
+  it('puts a tick at each whole number along the line, with a short mark across it', () => {
+    const ticks = numberLineTicks([0.6, 0.8], 2, 0.1);
+    expect(ticks.map((t) => t.value)).toEqual([-2, -1, 0, 1, 2]);
+    expect(ticks[4].point[0]).toBeCloseTo(1.2, 9);
+    expect(ticks[4].point[1]).toBeCloseTo(1.6, 9);
+    const [a, b] = ticks[4].ends;
+    expect(distance(a, b)).toBeCloseTo(0.2, 9);
+    expect(dot(sub(b, a), [0.6, 0.8])).toBeCloseTo(0, 9); // across the line
+  });
+});
+
+describe('cross products (Lessons 5.2-5.3)', () => {
+  it('cross2 is the signed area of the parallelogram', () => {
+    expect(cross2([-3, 1], [2, 1])).toBe(-5); // v is left of w: negative
+    expect(cross2([2, 1], [-3, 1])).toBe(5);
+    expect(cross2([1, 0], [0, 1])).toBe(1);
+    expect(cross2([1, 2], [2, 4])).toBe(0); // on one line: no area
+  });
+
+  it('cross3 examples', () => {
+    expect(cross3([0, 0, 2], [0, 2, 0])).toEqual([-4, 0, 0]);
+    expect(cross3([1, 0, 0], [0, 1, 0])).toEqual([0, 0, 1]); // i-hat × j-hat = k-hat
+    expect(cross3([0, 1, 0], [0, 0, 1])).toEqual([1, 0, 0]);
+  });
+
+  it('w × v = -(v × w), and v × w is at right angles to both with length = area, for 200 random pairs', () => {
+    const rand = seeded(52);
+    const r = () => Math.round(rand() * 8 - 4);
+    for (let i = 0; i < 200; i++) {
+      const v: Vec3 = [r(), r(), r()];
+      const w: Vec3 = [r(), r(), r()];
+      const c = cross3(v, w);
+      expect(cross3(w, v)).toEqual(scale3(-1, c));
+      expect(dot3(c, v)).toBe(0);
+      expect(dot3(c, w)).toBe(0);
+      // Area = |v| |w| sin(angle); sin² = 1 - cos².
+      const lv = length3(v);
+      const lw = length3(w);
+      const area2 = lv * lv * lw * lw - dot3(v, w) ** 2;
+      expect(length3(c) ** 2).toBeCloseTo(area2, 6);
+    }
+  });
+
+  it('add3, scale3 and parallelogram3', () => {
+    expect(add3([1, 2, 3], [1, -2, 0])).toEqual([2, 0, 3]);
+    expect(scale3(-2, [1, 0, 3])).toEqual([-2, 0, -6]);
+    expect(parallelogram3([1, 0, 0], [0, 2, 0])).toEqual([[0, 0, 0], [1, 0, 0], [1, 2, 0], [0, 2, 0]]);
+  });
+
+  it('parallelepipedEdges gives the 12 edges of the unit cube', () => {
+    const edges = parallelepipedEdges([1, 0, 0], [0, 1, 0], [0, 0, 1]);
+    expect(edges).toHaveLength(12);
+    for (const [a, b] of edges) expect(length3(sub3(b, a))).toBe(1);
+  });
+
+  it('boxVolume: base × height = dot(p, v × w) = det of the three columns', () => {
+    expect(boxVolume([0, 0, 3], [2, 0, 0], [0, 1, 0])).toEqual({ base: 2, height: 3, volume: 6 });
+    const rand = seeded(53);
+    const r = () => Math.round(rand() * 8 - 4);
+    for (let i = 0; i < 200; i++) {
+      const p: Vec3 = [r(), r(), r()];
+      const v: Vec3 = [r(), r(), r()];
+      const w: Vec3 = [r(), r(), r()];
+      const box = boxVolume(p, v, w);
+      expect(box.volume).toBe(det3([p, v, w]));
+      expect(box.base * box.height).toBeCloseTo(box.volume, 9);
+    }
+  });
+});
+
+function sub3(a: Vec3, b: Vec3): Vec3 {
+  return [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
+}

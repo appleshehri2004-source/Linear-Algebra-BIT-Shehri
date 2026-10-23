@@ -29,29 +29,52 @@ interface Props {
   nullSpace?: Vec3[];
   /** Pink arrows, given where they are now (already moved). One squashed to (almost) 0 is drawn as a dot. */
   nullVectors?: Vec3[];
+  /** Draw the î, ĵ, k̂ arrows (the matrix's columns). Off for pictures that only show their own arrows. */
+  showBasis?: boolean;
+  /** Extra arrows from the origin, e.g. v, w and v × w (Module 5). They don't move with the matrix. */
+  arrows?: SceneArrow[];
+  /** A see-through flat shape given by its corners in order, e.g. the parallelogram of v and w. */
+  patch?: { corners: Vec3[]; colour: Colour };
+  /** Plain lines given as pairs of points, e.g. the 12 edges of a slanted box. */
+  edges?: { pairs: [Vec3, Vec3][]; colour: Colour };
 }
 
+/** One extra arrow: where its tip is, which site colour, and an optional label at the tip. */
+export interface SceneArrow {
+  tip: Vec3;
+  colour: Colour;
+  label?: string;
+}
+
+/** The names of the site colours the 3D picture can use (each is a CSS variable, e.g. vec2 is --vec2). */
+export type Colour = keyof ReturnType<typeof readColours>;
+
 /** The site's colours, read from the CSS variables so light and dark mode both work. */
-function useColours() {
-  const read = () => {
-    const css = getComputedStyle(document.documentElement);
-    const get = (name: string) => css.getPropertyValue(name).trim();
-    return {
-      ihat: get('--ihat'),
-      jhat: get('--jhat'),
-      khat: get('--khat'),
-      vec: get('--vec'),
-      faint: get('--grid-faint'),
-      moving: get('--grid-moving'),
-      muted: get('--muted'),
-      space: get('--space'),
-      null: get('--null'),
-    };
+function readColours() {
+  const css = getComputedStyle(document.documentElement);
+  const get = (name: string) => css.getPropertyValue(name).trim();
+  return {
+    ihat: get('--ihat'),
+    jhat: get('--jhat'),
+    khat: get('--khat'),
+    vec: get('--vec'),
+    vec2: get('--vec2'),
+    cross: get('--cross'),
+    areaKept: get('--area-kept'),
+    faint: get('--grid-faint'),
+    moving: get('--grid-moving'),
+    muted: get('--muted'),
+    space: get('--space'),
+    null: get('--null'),
   };
-  const [colours, setColours] = useState(read);
+}
+
+/** readColours, read again when the phone or computer switches between light and dark mode. */
+function useColours() {
+  const [colours, setColours] = useState(readColours);
   useEffect(() => {
     const query = matchMedia('(prefers-color-scheme: dark)');
-    const update = () => setColours(read());
+    const update = () => setColours(readColours());
     query.addEventListener('change', update);
     return () => query.removeEventListener('change', update);
   }, []);
@@ -147,6 +170,30 @@ function Subspace({ basis, color }: { basis: Vec3[]; color: string }) {
   );
 }
 
+/** A flat shape from its corners (fanned into triangles from the first corner), see-through, with its outline. */
+function Patch({ corners, color }: { corners: Vec3[]; color: string }) {
+  const shape = useMemo(() => {
+    const triangles: number[] = [];
+    for (let i = 1; i + 1 < corners.length; i++) triangles.push(...corners[0], ...corners[i], ...corners[i + 1]);
+    const outline: number[] = [];
+    corners.forEach((c, i) => outline.push(...c, ...corners[(i + 1) % corners.length]));
+    return { triangles: new Float32Array(triangles), outline: new Float32Array(outline) };
+  }, [corners.flat().join()]);
+
+  return (
+    <>
+      {/* key: a new size of buffer needs a new geometry (three.js can't grow one in place). */}
+      <mesh key={shape.triangles.length}>
+        <bufferGeometry>
+          <bufferAttribute attach="attributes-position" args={[shape.triangles, 3]} />
+        </bufferGeometry>
+        <meshBasicMaterial color={color} transparent opacity={0.3} depthWrite={false} side={THREE.DoubleSide} />
+      </mesh>
+      <Lines key={`o${shape.outline.length}`} points={shape.outline} color={color} />
+    </>
+  );
+}
+
 /** Turn our columns-storage matrix into a three.js 4x4 matrix (three.js's set() takes the numbers row by row). */
 function toMatrix4([a, b, c]: Mat3): THREE.Matrix4 {
   return new THREE.Matrix4().set(a[0], b[0], c[0], 0, a[1], b[1], c[1], 0, a[2], b[2], c[2], 0, 0, 0, 0, 1);
@@ -168,6 +215,10 @@ export default function Scene3D({
   columnSpace,
   nullSpace,
   nullVectors,
+  showBasis = true,
+  arrows,
+  patch,
+  edges,
 }: Props) {
   const colours = useColours();
   const box = useRef<HTMLDivElement>(null);
@@ -184,6 +235,7 @@ export default function Scene3D({
 
   const moved = useMemo(() => toMatrix4(matrix), [matrix.flat().join()]);
   const [ihat, jhat, khat] = matrix;
+  const edgePoints = useMemo(() => edges && new Float32Array(edges.pairs.flat(2)), [edges?.pairs.flat(2).join()]);
 
   return (
     <div className="scene3d" ref={box}>
@@ -216,9 +268,16 @@ export default function Scene3D({
           )}
         </group>
 
-        <Arrow tip={ihat} color={colours.ihat} label="î" />
-        <Arrow tip={jhat} color={colours.jhat} label="ĵ" />
-        {showK && <Arrow tip={khat} color={colours.khat} label="k̂" />}
+        {showBasis && (
+          <>
+            <Arrow tip={ihat} color={colours.ihat} label="î" />
+            <Arrow tip={jhat} color={colours.jhat} label="ĵ" />
+            {showK && <Arrow tip={khat} color={colours.khat} label="k̂" />}
+          </>
+        )}
+        {patch && <Patch corners={patch.corners} color={colours[patch.colour]} />}
+        {edges && edgePoints && <Lines points={edgePoints} color={colours[edges.colour]} />}
+        {arrows?.map((a, i) => <Arrow key={i} tip={a.tip} color={colours[a.colour]} label={a.label} />)}
         {vector && <Arrow tip={vector} color={colours.vec} label="v" />}
         {columnSpace && <Subspace basis={columnSpace} color={colours.space} />}
         {nullVectors?.map((tip, i) =>

@@ -11,6 +11,8 @@ export interface LessonLink {
   number: string;
   title: string;
   exerciseIds: string[];
+  /** An advanced lesson the reader can skip: shown with an "Optional" badge. */
+  optional?: boolean;
 }
 
 export interface ModuleLinks {
@@ -56,6 +58,7 @@ export default function LessonList({ modules }: Props) {
                     <span className="number">{lesson.number}</span>
                     <span className="title">{lesson.title}</span>
                     <span className="badges">
+                      {lesson.optional && <span className="optional-badge">Optional</span>}
                       {lesson.exerciseIds.length > 0 && (
                         <span
                           className="exercise-count"

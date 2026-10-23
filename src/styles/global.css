@@ -19,6 +19,7 @@
   --row3: #0e8a8a; /* equation 3: teal */
   --space: #7048e8; /* a column space or row space (where vectors can reach): violet */
   --null: #d6336c; /* a null space or left null space (what gets squashed to 0): pink */
+  --cross: #0e8a8a; /* a cross product v × w: teal */
 
   --bg: #fdfdfb;
   --text: #1c1c1e;
@@ -50,6 +51,7 @@
     --row3: #3fd0c9;
     --space: #a48bff;
     --null: #f783ac;
+    --cross: #3fd0c9;
 
     --bg: #16161a;
     --text: #ececf0;
@@ -143,4 +145,7 @@ a {
 }
 .null {
   color: var(--null);
+}
+.cross {
+  color: var(--cross);
 }

@@ -16,6 +16,8 @@ const lessons = defineCollection({
     threeBlueOneBrown: z.string().url().optional(),
     mit: z.string().url().optional(),
     tongji: z.string().optional(), // a textbook section, e.g. "第四章 §1"
+    // true for an advanced lesson the reader can skip. It gets an "Optional" badge.
+    optional: z.boolean().optional(),
   }),
 });
 

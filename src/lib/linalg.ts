@@ -308,12 +308,12 @@ export function matMul3(a: Mat3, b: Mat3): Mat3 {
 }
 
 export function dot3(v: Vec3, w: Vec3): number {
-  return v[0] * w[0] + v[1] * w[1] + v[2] * w[2];
+  return v[0] * w[0] + v[1] * w[1] + v[2] * w[2] + 0; // + 0 turns -0 into 0
 }
 
 /** The cross product: an arrow at right angles to both v and w (right-hand rule). */
 export function cross3(v: Vec3, w: Vec3): Vec3 {
-  return [v[1] * w[2] - v[2] * w[1], v[2] * w[0] - v[0] * w[2], v[0] * w[1] - v[1] * w[0]];
+  return [v[1] * w[2] - v[2] * w[1] + 0, v[2] * w[0] - v[0] * w[2] + 0, v[0] * w[1] - v[1] * w[0] + 0]; // + 0 turns -0 into 0
 }
 
 export function length3(v: Vec3): number {
@@ -939,4 +939,106 @@ export function snapToLine(p: Vec2, direction: Vec2, tolerance: number, step?: n
 /** One solution from a complete solution: particular + t copies of the first direction (or just particular if there are none). */
 export function pointOnSolution({ particular, directions }: CompleteSolution, t: number): number[] {
   return particular.map((p, i) => p + t * (directions[0]?.[i] ?? 0) + 0);
+}
+
+// ---- Module 5: duality and the cross product ----
+
+/**
+ * Where v lands on a number line through the origin along the unit vector u: drop v straight onto the line
+ * and read the number there. Worked out by turning the whole picture until the line lies along the x-axis,
+ * then reading v's x. No dot product is used, so "it always equals dot(u, v)" is something the tests check,
+ * not something built in. That equality is duality.
+ */
+export function projectToLine(v: Vec2, u: Vec2): number {
+  const lineAngle = (Math.atan2(u[1], u[0]) * 180) / Math.PI;
+  return matVec(rotation(-lineAngle), v)[0] + 0;
+}
+
+/** Everything DualityView shows: the number line runs along uHat (1 long), and u = k · uHat. */
+export interface DualityNumbers {
+  /** The number where v lands on the line. */
+  position: number;
+  /** The point on the line where v lands (the foot of the dashed line). */
+  landing: Vec2;
+  /** The landing number times k: what the 1x2 matrix [u_x u_y] gives for v. */
+  value: number;
+  /** dot(k · uHat, v), worked out the usual way. Always equal to value. */
+  dot: number;
+}
+
+export function dualityNumbers(v: Vec2, uHat: Vec2, k = 1): DualityNumbers {
+  const position = projectToLine(v, uHat);
+  return {
+    position,
+    landing: scale(position, uHat),
+    value: k * position + 0,
+    dot: dot(scale(k, uHat), v) + 0,
+  };
+}
+
+/** One tick mark on a tilted number line: its number, where it sits, and the two ends of the little mark across the line. */
+export interface Tick {
+  value: number;
+  point: Vec2;
+  ends: [Vec2, Vec2];
+}
+
+/** Tick marks at the whole numbers -n to n along the number line through the origin in the direction uHat (1 long). */
+export function numberLineTicks(uHat: Vec2, n: number, size = 0.15): Tick[] {
+  const across: Vec2 = [-uHat[1] * size, uHat[0] * size]; // uHat turned a quarter turn: at right angles to the line
+  const ticks: Tick[] = [];
+  for (let value = -n; value <= n; value++) {
+    const point = scale(value, uHat);
+    ticks.push({ value, point, ends: [sub(point, across), add(point, across)] });
+  }
+  return ticks;
+}
+
+/**
+ * The 2D cross product: the signed area of the parallelogram made by v and w.
+ * It is the determinant with v and w as columns. Negative when v is to the left of w (w is clockwise from v).
+ */
+export function cross2(v: Vec2, w: Vec2): number {
+  return det2([v, w]);
+}
+
+export function add3(u: Vec3, v: Vec3): Vec3 {
+  return [u[0] + v[0], u[1] + v[1], u[2] + v[2]];
+}
+
+export function scale3(k: number, v: Vec3): Vec3 {
+  return [k * v[0] + 0, k * v[1] + 0, k * v[2] + 0];
+}
+
+/** The parallelogram made by v and w in 3D: its corners 0, v, v + w, w. */
+export function parallelogram3(v: Vec3, w: Vec3): Vec3[] {
+  return [[0, 0, 0], v, add3(v, w), w];
+}
+
+/** The 12 edges of the slanted box (parallelepiped) made by a, b and c, as pairs of points. */
+export function parallelepipedEdges(a: Vec3, b: Vec3, c: Vec3): [Vec3, Vec3][] {
+  const o: Vec3 = [0, 0, 0];
+  const edges: [Vec3, Vec3][] = [];
+  // For each side (a, b or c), the 4 edges running along it start at the 4 corners made from the other two.
+  for (const [side, p, q] of [[a, b, c], [b, c, a], [c, a, b]]) {
+    for (const start of [o, p, q, add3(p, q)]) edges.push([start, add3(start, side)]);
+  }
+  return edges;
+}
+
+/** The box made by p, v and w, measured as base × height. Its base is the parallelogram of v and w. */
+export interface BoxVolume {
+  /** Area of the base: the length of v × w. */
+  base: number;
+  /** How far p reaches above the base, straight up along v × w (negative: below it). 0 if the base is flat. */
+  height: number;
+  /** base × height = dot(p, v × w). Signed, like a determinant. */
+  volume: number;
+}
+
+export function boxVolume(p: Vec3, v: Vec3, w: Vec3): BoxVolume {
+  const n = cross3(v, w);
+  const base = length3(n);
+  const height = base === 0 ? 0 : dot3(p, n) / base + 0;
+  return { base, height, volume: dot3(p, n) + 0 };
 }
