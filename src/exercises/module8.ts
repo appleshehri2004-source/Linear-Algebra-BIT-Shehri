@@ -1,4 +1,4 @@
-// Practice questions for Module 8 part 1 (Eigenvectors and eigenvalues). Same idea as the other module files:
+// Practice questions for Module 8 (Eigenvectors and eigenvalues): part 1 (8.1–8.4) and part 2 (8.5–8.6). Same idea as the other module files:
 // each generator picks random numbers, then asks linalg.ts for the correct answer.
 import {
   charPoly2,
@@ -10,7 +10,9 @@ import {
   matPow,
   matVec,
   meanProduct,
+  quadForm,
   scale,
+  svd2,
   type Mat2,
   type Vec2,
 } from '../lib/linalg';
@@ -175,6 +177,79 @@ export const module8: Record<string, Generator> = {
     return {
       text: `$F = ${matTex([[1, 1], [1, 0]])}$ turns $(F_{k+1}, F_k)$ into $(F_{k+2}, F_{k+1})$, starting from $(F_1, F_0) = (1, 0)$. Use it (or the PowerView above) to find $F_{${n}}$.`,
       answer: Math.round(matPow([[1, 1], [1, 0]], n)[1][0]),
+    };
+  },
+
+  // ---------- 8.5 Symmetric matrices and quadratic forms ----------
+  '8.5-quadform': (rand) => {
+    const b = randInt(rand, -3, 3);
+    const A: Mat2 = [[randInt(rand, -3, 4), b], [b, randInt(rand, -3, 4)]];
+    const x: Vec2 = [randInt(rand, -2, 2, true), randInt(rand, -2, 2, true)];
+    return {
+      text: `$A = ${matTex(A)}$ and $\\vec{x} = ${vecTex(x)}$. Work out $\\vec{x}^{T} A \\vec{x}$ (first $A\\vec{x}$, then its dot product with $\\vec{x}$).`,
+      answer: quadForm(A, x),
+    };
+  },
+
+  '8.5-eigen-axes': (rand) => {
+    // Columns (a, b), (b, a): the axes are (1, 1) with λ = a + b and (1, −1) with λ = a − b.
+    const a = randInt(rand, -2, 5);
+    const b = randInt(rand, 1, 4) * pick(rand, [1, -1]);
+    const A: Mat2 = [[a, b], [b, a]];
+    return {
+      text: `The level curves of $\\vec{x}^{T} A \\vec{x}$ for $A = ${matTex(A)}$ have their axes along $(1, 1)$ and $(1, -1)$, its eigenvectors. What is the eigenvalue along each?`,
+      // For an eigenvector q, xᵀAx at q is λ·|q|², and |(1, ±1)|² = 2.
+      answer: [quadForm(A, [1, 1]) / 2, quadForm(A, [1, -1]) / 2],
+      labels: ['along (1, 1)', 'along (1, −1)'],
+    };
+  },
+
+  '8.5-trough': (rand) => {
+    // Columns (1, b), (b, d): det = d − b². A bowl needs det > 0, so at d = b² it just becomes a trough.
+    const b = randInt(rand, -4, 4, true);
+    return {
+      text: `$A = \\begin{bmatrix} 1 & ${b} \\\\ ${b} & d \\end{bmatrix}$. For $d$ bigger than some number, $\\vec{x}^{T} A \\vec{x}$ is a bowl (positive definite); below it, a saddle. At exactly that number it is a trough (one eigenvalue is 0). What is it?`,
+      answer: b * b,
+      note: 'Hint: an eigenvalue is 0 exactly when det A = 0.',
+    };
+  },
+
+  // ---------- 8.6 SVD: every matrix turns a circle into an ellipse ----------
+  '8.6-diagonal': (rand) => {
+    const p = randInt(rand, -6, 6, true);
+    const q = randInt(rand, -6, 6, true);
+    if (Math.abs(p) === Math.abs(q)) return module8['8.6-diagonal'](rand);
+    const A: Mat2 = [[p, 0], [0, q]];
+    return {
+      text: `$A = ${matTex(A)}$ turns the unit circle into an ellipse. How long are its two half-axes, $\\sigma_1$ (the longer) and $\\sigma_2$?`,
+      answer: svd2(A).sigma,
+      labels: ['σ₁', 'σ₂'],
+      note: 'A minus sign flips, but lengths are never negative.',
+    };
+  },
+
+  '8.6-scaled-rotation': (rand) => {
+    // Columns (a, b), (−b, a) = √(a² + b²) times a rotation: the circle stays a circle.
+    const [a, b] = pick(rand, [[3, 4], [4, 3], [6, 8], [5, 12], [8, 6], [0, 2], [2, 0]] as Vec2[]).map(
+      (n) => n * pick(rand, [1, -1]),
+    );
+    const A: Mat2 = [[a + 0, b + 0], [-b + 0, a + 0]];
+    return {
+      text: `What are $\\sigma_1$ and $\\sigma_2$ for $A = ${matTex(A)}$? (Hint: the columns have the same length and are at right angles.)`,
+      answer: svd2(A).sigma,
+      labels: ['σ₁', 'σ₂'],
+    };
+  },
+
+  '8.6-rank-one': (rand) => {
+    // Columns c·u and k·u, both on u's line: the ellipse flattens to a segment of half-length |u|·|(c, k)|.
+    const u = pick(rand, [[3, 4], [4, 3], [1, 0], [0, 1], [-3, 4]] as Vec2[]);
+    const [c, k] = pick(rand, [[3, 4], [4, -3], [1, 0], [0, 2], [2, 0], [-1, 0]] as Vec2[]);
+    const A: Mat2 = [scale(c, u), scale(k, u)].map((col) => col.map((n) => n + 0)) as Mat2;
+    return {
+      text: `Both columns of $A = ${matTex(A)}$ lie on one line, so the unit circle is squashed flat. What are $\\sigma_1$ and $\\sigma_2$?`,
+      answer: svd2(A).sigma,
+      labels: ['σ₁', 'σ₂'],
     };
   },
 };

@@ -199,6 +199,8 @@ export function easeInOut(t: number): number {
  * For a rotation it turns the angle instead, so the grid doesn't shrink half way.
  */
 export function matrixAt(m: Mat2, t: number): Mat2 {
+  // At the end, m itself: turning by the angle again would be off in the last decimal place.
+  if (t >= 1) return m;
   const angle = rotationAngle(m);
   return angle === null ? lerpMatrix(identity(), m, t) : rotation(angle * t);
 }
@@ -1504,4 +1506,229 @@ export function niceGridStep(range: number): number {
   for (let size = 1; ; size *= 10) {
     for (const k of [1, 2, 5]) if (range / (k * size) <= 6) return k * size;
   }
+}
+
+// ---- Module 8 part 2: symmetric matrices, quadratic forms and the SVD ----
+
+/** The arrow v turned a quarter turn anticlockwise: (x, y) becomes (−y, x). Same length, at right angles to v. */
+export function perp([x, y]: Vec2): Vec2 {
+  return [-y + 0, x + 0];
+}
+
+/**
+ * The eigenvalues and eigenvectors of a symmetric matrix (top-right = bottom-left).
+ * A symmetric matrix always has real eigenvalues, and its two eigenvectors are at right angles.
+ * values: biggest first. vectors: 1 long, the second a quarter turn anticlockwise from the first.
+ * Columns (2, 1), (1, 2): λ = 3 along (1, 1) and λ = 1 along (1, −1).
+ * (If the two corners differ a little, their average is used.)
+ */
+export function eigSym2(a: Mat2): { values: [number, number]; vectors: [Vec2, Vec2] } {
+  const p = a[0][0];
+  const d = a[1][1];
+  const b = (a[0][1] + a[1][0]) / 2;
+  const m = (p + d) / 2;
+  const r = Math.hypot((p - d) / 2, b);
+  // The first eigenvector is at angle θ, where tan 2θ = 2b / (p − d). For A = cI any angle works; atan2 gives 0.
+  const theta = Math.atan2(2 * b, p - d) / 2;
+  const q1: Vec2 = [Math.cos(theta) + 0, Math.sin(theta) + 0];
+  return { values: [m + r + 0, m - r + 0], vectors: [q1, perp(q1)] };
+}
+
+/** The quadratic form xᵀAx: one number for each point x. Columns (2, 1), (1, 2): (1, 0) gives 2 and (1, 1) gives 6. */
+export function quadForm(a: Mat2, x: Vec2): number {
+  return dot(x, matVec(a, x)) + 0;
+}
+
+export type Definiteness =
+  | 'positive definite'
+  | 'negative definite'
+  | 'indefinite'
+  | 'positive semidefinite'
+  | 'negative semidefinite'
+  | 'zero';
+
+/**
+ * What shape xᵀAx makes, from the signs of the eigenvalues of the symmetric matrix A:
+ * both above 0 is a bowl (positive definite), both below 0 an upside-down bowl (negative definite),
+ * one of each a saddle (indefinite). A 0 eigenvalue makes a trough (semidefinite).
+ */
+export function definiteness(a: Mat2): Definiteness {
+  const [l1, l2] = eigSym2(a).values.map((l) => (Math.abs(l) < TINY ? 0 : l));
+  if (l2 > 0) return 'positive definite';
+  if (l1 < 0) return 'negative definite';
+  if (l1 > 0 && l2 < 0) return 'indefinite';
+  if (l1 > 0) return 'positive semidefinite';
+  if (l2 < 0) return 'negative semidefinite';
+  return 'zero';
+}
+
+/**
+ * The level curve xᵀAx = c of a symmetric matrix A, as lines of points, reaching at least `reach` from the origin.
+ * In the eigenvectors' own numbers (p along the first, q along the second) the curve is λ₁p² + λ₂q² = c:
+ * - both terms can reach c: an ellipse, with its axes along the eigenvectors;
+ * - λ's of opposite signs: a hyperbola (2 branches), or its 2 crossing asymptotes when c = 0;
+ * - one λ is 0: 2 parallel lines (1 line when c = 0).
+ * Empty when no point has that value (c < 0 for a bowl, for example).
+ */
+export function levelCurves(a: Mat2, c: number, reach: number, samples = 96): Vec2[][] {
+  const { values, vectors } = eigSym2(a);
+  const [l1, l2] = values.map((l) => (Math.abs(l) < TINY ? 0 : l));
+  const point = (p: number, q: number): Vec2 => add(scale(p, vectors[0]), scale(q, vectors[1]));
+  const steps = Array.from({ length: samples + 1 }, (_, k) => k / samples);
+  // A straight line in eigen-numbers from (p0, q0) to (p1, q1).
+  const line = (p0: number, q0: number, p1: number, q1: number) => [point(p0, q0), point(p1, q1)];
+
+  if (l1 !== 0 && l2 !== 0) {
+    if (c / l1 > 0 && c / l2 > 0) {
+      const [hp, hq] = [Math.sqrt(c / l1), Math.sqrt(c / l2)];
+      return [steps.map((s) => point(hp * Math.cos(2 * Math.PI * s), hq * Math.sin(2 * Math.PI * s)))];
+    }
+    if (l1 * l2 > 0) return [];
+    // A saddle (l1 > 0 > l2). c = 0 is where the two terms cancel: the lines q = ±√(λ₁ / −λ₂)·p.
+    if (c === 0) {
+      const dir = normalize([Math.sqrt(-l2), Math.sqrt(l1)]);
+      return [line(-reach * dir[0], -reach * dir[1], reach * dir[0], reach * dir[1]),
+        line(-reach * dir[0], reach * dir[1], reach * dir[0], -reach * dir[1])];
+    }
+    // c > 0: the branches open along the first eigenvector, c < 0: along the second.
+    const [major, minor] = c > 0 ? [Math.sqrt(c / l1), Math.sqrt(-c / l2)] : [Math.sqrt(c / l2), Math.sqrt(-c / l1)];
+    const end = Math.asinh(reach / Math.min(major, minor));
+    return [1, -1].map((side) =>
+      steps.map((s) => {
+        const u = -end + 2 * end * s;
+        const along = side * major * Math.cosh(u);
+        const across = minor * Math.sinh(u);
+        return c > 0 ? point(along, across) : point(across, along);
+      }),
+    );
+  }
+
+  // One eigenvalue is 0: λp² = c along the other eigenvector, so p = ±√(c / λ) for every q.
+  const lambda = l1 !== 0 ? l1 : l2;
+  if (lambda === 0 || c / lambda < 0) return [];
+  const h = Math.sqrt(c / lambda);
+  const at = (k: number) => (l1 !== 0 ? line(k, -reach, k, reach) : line(-reach, k, reach, k));
+  return h === 0 ? [at(0)] : [at(h), at(-h)];
+}
+
+/** Cut a line of points down to the parts within `radius` of the origin (it may split into several pieces). */
+export function clipToDisc(curve: Vec2[], radius: number): Vec2[][] {
+  const pieces: Vec2[][] = [];
+  let current: Vec2[] = [];
+  for (const p of curve) {
+    if (length(p) <= radius) current.push(p);
+    else if (current.length) {
+      pieces.push(current);
+      current = [];
+    }
+  }
+  if (current.length) pieces.push(current);
+  return pieces.filter((piece) => piece.length > 1);
+}
+
+/** How much to squash heights so the surface z = xᵀAx is at most `height` tall over a disc of this radius. */
+export function surfaceScale(a: Mat2, radius: number, height: number): number {
+  const biggest = Math.max(...eigSym2(a).values.map(Math.abs));
+  return biggest < TINY ? 1 : height / (biggest * radius * radius);
+}
+
+/**
+ * The surface z = xᵀAx over a disc, for the 3D bowl / saddle: rings of points (ring 0 is the centre),
+ * each going once round (the last point repeats the first). Heights are squashed by surfaceScale.
+ */
+export function quadSurface(a: Mat2, radius: number, height: number, rings = 16, slices = 48): Vec3[][] {
+  const k = surfaceScale(a, radius, height);
+  return Array.from({ length: rings + 1 }, (_, i) =>
+    Array.from({ length: slices + 1 }, (_, j) => {
+      const p = scale((radius * i) / rings, unitAt((360 * j) / slices));
+      return [p[0], p[1], k * quadForm(a, p) + 0] as Vec3;
+    }),
+  );
+}
+
+/** The level curves xᵀAx = c for each c, lifted up to their height on quadSurface (and cut to its disc). */
+export function surfaceContours(a: Mat2, levels: number[], radius: number, height: number): Vec3[][] {
+  const k = surfaceScale(a, radius, height);
+  return levels.flatMap((c) =>
+    levelCurves(a, c, radius * 1.5, 192)
+      .flatMap((curve) => clipToDisc(curve, radius))
+      .map((piece) => piece.map(([x, y]) => [x, y, k * c + 0] as Vec3)),
+  );
+}
+
+/** n + 1 points round the unit circle (the last one repeats the first). */
+export function unitCircle(n = 96): Vec2[] {
+  return Array.from({ length: n + 1 }, (_, k) => unitAt((360 * k) / n));
+}
+
+/** The singular value decomposition A = U·Σ·Vᵀ of a 2x2 matrix. */
+export interface SVD2 {
+  /** The output directions u₁, u₂ (1 long, at right angles): the ellipse's axes. */
+  U: Mat2;
+  /** The stretches σ₁ ≥ σ₂ ≥ 0: how long the ellipse's half-axes are. */
+  sigma: [number, number];
+  /** The input directions v₁, v₂ (1 long, at right angles): A sends vᵢ to σᵢ·uᵢ. V is always a rotation. */
+  V: Mat2;
+}
+
+/**
+ * The SVD of A. The v's are the eigenvectors of AᵀA (a symmetric matrix), and the σ's are the square roots
+ * of its eigenvalues. Then u₁ = A·v₁ / σ₁. σ₂ comes from |det A| = σ₁·σ₂ (more exact than a square root),
+ * and u₂ is at right angles to u₁, on the side that A sends v₂ to (flipped when det A < 0).
+ * Columns (3, 4), (0, 5): σ = 3√5 and √5.
+ */
+export function svd2(a: Mat2): SVD2 {
+  const [c1, c2] = a;
+  const ata: Mat2 = [[dot(c1, c1), dot(c1, c2)], [dot(c1, c2), dot(c2, c2)]];
+  const { values, vectors } = eigSym2(ata);
+  // Point v₁ to the right, so V's turn is between −90° and 90°. v₂ is a quarter turn on, so V is a rotation.
+  const v1: Vec2 = vectors[0][0] < 0 ? [-vectors[0][0] + 0, -vectors[0][1] + 0] : vectors[0];
+  const v2 = perp(v1);
+  const s1 = Math.sqrt(Math.max(0, values[0]));
+  if (s1 < TINY) return { U: identity(), sigma: [0, 0], V: [v1, v2] };
+  const u1 = scale(1 / s1, matVec(a, v1));
+  const det = det2(a);
+  const s2 = Math.abs(det) / s1 < TINY ? 0 : Math.abs(det) / s1;
+  const u2 = det < 0 && s2 > 0 ? scale(-1, perp(u1)) : perp(u1);
+  return { U: [u1, [u2[0] + 0, u2[1] + 0]], sigma: [s1, s2], V: [v1, v2] };
+}
+
+/**
+ * A as three moves, for "Three steps": first Vᵀ (a rotation), then S (stretch along the x- and y-axes), then R (a rotation).
+ * R·S·Vᵀ = A. Usually S = Σ and R = U. When det A < 0, U has a flip in it; the flip is moved into S
+ * (S = diag(σ₁, −σ₂)), so both turns are real rotations and the flip happens during the stretch.
+ */
+export function svdSteps(a: Mat2): { Vt: Mat2; S: Mat2; R: Mat2 } {
+  const { U, sigma, V } = svd2(a);
+  const Vt = transpose(V) as Mat2;
+  const flipped = det2(U) < 0;
+  return {
+    Vt,
+    S: [[sigma[0], 0], [0, flipped ? -sigma[1] : sigma[1]]],
+    R: [U[0], flipped ? perp(U[0]) : U[1]],
+  };
+}
+
+/**
+ * The matrix at time t (0 to 1) of "Three steps": Vᵀ, then S, then R, each taking a third of the time.
+ * R·S·Vᵀ equals A up to rounding (about 1e-15), so at t = 1 it gives A itself, just like matrixAt:
+ * "Direct" and "Three steps" end on exactly the same numbers.
+ */
+export function svdStepsAt(a: Mat2, t: number): Mat2 {
+  if (t >= 1) return a;
+  const { Vt, S, R } = svdSteps(a);
+  return sequenceAt([Vt, S, R], t);
+}
+
+/**
+ * The cut through quadSurface straight above the line through `direction`: the curve z = λt² when direction
+ * is an eigenvector with eigenvalue λ (the steepest and the gentlest way up a bowl; up and down on a saddle).
+ */
+export function surfaceAlong(a: Mat2, direction: Vec2, radius: number, height: number, samples = 48): Vec3[] {
+  const k = surfaceScale(a, radius, height);
+  const u = normalize(direction);
+  return Array.from({ length: samples + 1 }, (_, i) => {
+    const p = scale(-radius + (2 * radius * i) / samples, u);
+    return [p[0], p[1], k * quadForm(a, p) + 0] as Vec3;
+  });
 }

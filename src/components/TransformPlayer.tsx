@@ -23,10 +23,12 @@ import './Demo.css';
 import './TransformPlayer.css';
 
 interface Props {
-  /** The matrix to show, stored as its columns. Give this, `steps` or `map`. */
+  /** The matrix to show, stored as its columns. Give this, `steps`, `path` or `map`. */
   matrix?: Mat2;
   /** Several matrices that play one after another (first one first). Each gets its own share of t. */
   steps?: Mat2[];
+  /** A custom animation: the matrix at each time t (0 to 1), and how many steps it has (for how long it plays). */
+  path?: { at: (t: number) => Mat2; steps: number };
   /** A rule that may not be linear (for counter-examples). Used when there's no `matrix`. */
   map?: PointMap;
   /** A vector that moves with the grid, drawn in yellow. */
@@ -72,6 +74,7 @@ export function MathPath({ d, className }: { d: string; className: string }) {
 export default function TransformPlayer({
   matrix,
   steps,
+  path,
   map,
   tracked,
   trackedLabel = 'v',
@@ -86,18 +89,18 @@ export default function TransformPlayer({
   children,
 }: Props) {
   // A sequence of matrices takes longer to play: the usual time for each step.
-  const playback = usePlayback({ t: controlledT, onTChange, playKey, duration: DURATION * (steps?.length ?? 1) });
+  const playback = usePlayback({ t: controlledT, onTChange, playKey, duration: DURATION * (path?.steps ?? steps?.length ?? 1) });
   const { t } = playback;
 
   // A matrix keeps lines straight, so each grid line only needs its two ends; it reaches far past the
   // edge so stretched lines still cover the plane. A non-linear map can curve lines, so cut each into
   // short pieces (4 per square).
-  const linear = matrix !== undefined || steps !== undefined;
+  const linear = matrix !== undefined || steps !== undefined || path !== undefined;
   const extent = linear ? range * 2 : range + 1;
   const source = useMemo(() => gridLines(extent, linear ? 1 : extent * 8), [extent, linear]);
 
   // Where a point is at time t.
-  const m: Mat2 = steps ? sequenceAt(steps, t) : matrix ? matrixAt(matrix, t) : identity();
+  const m: Mat2 = path ? path.at(t) : steps ? sequenceAt(steps, t) : matrix ? matrixAt(matrix, t) : identity();
   const place = (p: Vec2): Vec2 => (linear ? matVec(m, p) : mapAt(map ?? ((q) => q), p, t));
 
   const moved = source.map((line) => line.map(place));

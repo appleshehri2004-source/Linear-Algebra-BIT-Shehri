@@ -131,6 +131,21 @@ import {
   basisGridLines,
   snapToBasis,
   currentStep,
+  eigSym2,
+  lineAngle,
+  quadForm,
+  definiteness,
+  levelCurves,
+  clipToDisc,
+  quadSurface,
+  surfaceContours,
+  surfaceScale,
+  surfaceAlong,
+  svd2,
+  svdSteps,
+  svdStepsAt,
+  perp,
+  unitCircle,
 } from './linalg';
 
 describe('add', () => {
@@ -1732,5 +1747,212 @@ describe('PowerView helpers (Module 8)', () => {
     expect(niceGridStep(10)).toBe(2);
     expect(niceGridStep(98)).toBe(20);
     expect(niceGridStep(300)).toBe(50);
+  });
+});
+
+describe('symmetric matrices and quadratic forms (Module 8)', () => {
+  const A: Mat2 = [[2, 1], [1, 2]];
+
+  it('eigSym2: λ = 3 along (1, 1) and λ = 1 along (1, −1), at right angles', () => {
+    const { values, vectors } = eigSym2(A);
+    expectClose(values, [3, 1]);
+    // On the same line: the parallelogram they make has no area.
+    expect(cross2(vectors[0], [1, 1])).toBeCloseTo(0, 12);
+    expect(cross2(vectors[1], [1, -1])).toBeCloseTo(0, 12);
+    expect(dot(vectors[0], vectors[1])).toBeCloseTo(0, 12);
+    vectors.forEach((q, i) => expectClose(matVec(A, q), scale(values[i], q)));
+  });
+
+  it('eigSym2 works for many symmetric matrices: A·q = λq, 1 long, perpendicular, biggest first', () => {
+    for (const [p, b, d] of [[1, 0, 3], [0, 2, 0], [5, -2, 1], [-1, 0.5, -4], [3, 0, 3]]) {
+      const S: Mat2 = [[p, b], [b, d]];
+      const { values, vectors } = eigSym2(S);
+      expect(values[0]).toBeGreaterThanOrEqual(values[1]);
+      vectors.forEach((q, i) => {
+        expect(length(q)).toBeCloseTo(1, 12);
+        expectClose(matVec(S, q), scale(values[i], q));
+      });
+      expect(dot(vectors[0], vectors[1])).toBeCloseTo(0, 12);
+    }
+  });
+
+  it('quadForm: xᵀAx', () => {
+    expect(quadForm(A, [1, 0])).toBe(2);
+    expect(quadForm(A, [1, 1])).toBe(6);
+    expect(quadForm(A, [1, -1])).toBe(2);
+  });
+
+  it('definiteness from the signs of the eigenvalues', () => {
+    expect(definiteness(A)).toBe('positive definite');
+    expect(definiteness([[1, 2], [2, 1]])).toBe('indefinite'); // eigenvalues 3 and −1
+    expect(definiteness([[-2, 0], [0, -1]])).toBe('negative definite');
+    expect(definiteness([[1, 1], [1, 1]])).toBe('positive semidefinite'); // eigenvalues 2 and 0
+    expect(definiteness([[-1, 0], [0, 0]])).toBe('negative semidefinite');
+    expect(definiteness([[0, 0], [0, 0]])).toBe('zero');
+  });
+
+  it('levelCurves: every point really has xᵀAx = c', () => {
+    const cases: [Mat2, number, number][] = [
+      [A, 1, 1], // an ellipse
+      [A, 4, 1],
+      [[[1, 2], [2, 1]], 2, 2], // a hyperbola, both ways
+      [[[1, 2], [2, 1]], -2, 2],
+      [[[1, 2], [2, 1]], 0, 2], // the asymptotes
+      [[[1, 1], [1, 1]], 2, 2], // two parallel lines
+    ];
+    for (const [S, c, count] of cases) {
+      const curves = levelCurves(S, c, 4);
+      expect(curves).toHaveLength(count);
+      curves.flat().forEach((x) => expect(quadForm(S, x)).toBeCloseTo(c, 9));
+    }
+  });
+
+  it('levelCurves: the ellipse’s half-axes lie along the eigenvectors, 1/√λ long for c = 1', () => {
+    const [ellipse] = levelCurves(A, 1, 4);
+    const far = Math.max(...ellipse.map(length));
+    const near = Math.min(...ellipse.map(length));
+    expect(far).toBeCloseTo(1, 3); // 1/√1, along (1, −1)
+    expect(near).toBeCloseTo(1 / Math.sqrt(3), 3); // 1/√3, along (1, 1)
+    const farthest = ellipse.reduce((m, p) => (length(p) > length(m) ? p : m));
+    expect(lineAngle(farthest, [1, -1])).toBeLessThan(2);
+  });
+
+  it('levelCurves: empty when nothing has that value; the hyperbola reaches far enough', () => {
+    expect(levelCurves(A, -1, 4)).toEqual([]);
+    const branches = levelCurves([[1, 2], [2, 1]], 1, 4);
+    branches.forEach((b) => expect(Math.max(...b.map(length))).toBeGreaterThanOrEqual(4));
+  });
+
+  it('clipToDisc keeps only the parts inside, split into pieces', () => {
+    const pieces = clipToDisc([[-3, 0], [-1, 0], [0, 0], [1, 0], [3, 0], [0.5, 0.5], [0.2, 0.2]], 2);
+    expect(pieces).toEqual([[[-1, 0], [0, 0], [1, 0]], [[0.5, 0.5], [0.2, 0.2]]]);
+  });
+
+  it('quadSurface: a bowl stays above 0, a saddle goes both ways, and nothing is taller than height', () => {
+    const bowl = quadSurface(A, 2, 1.5).flat();
+    expect(Math.min(...bowl.map((p) => p[2]))).toBeGreaterThanOrEqual(0);
+    expect(Math.max(...bowl.map((p) => Math.abs(p[2])))).toBeLessThanOrEqual(1.5 + 1e-9);
+    const saddle = quadSurface([[1, 2], [2, 1]], 2, 1.5).flat();
+    expect(Math.min(...saddle.map((p) => p[2]))).toBeLessThan(0);
+    expect(Math.max(...saddle.map((p) => p[2]))).toBeGreaterThan(0);
+    const k = surfaceScale(A, 2, 1.5);
+    bowl.forEach(([x, y, z]) => expect(z).toBeCloseTo(k * quadForm(A, [x, y]), 9));
+  });
+
+  it('surfaceAlong an eigenvector is the parabola z = λt² (squashed by surfaceScale)', () => {
+    const k = surfaceScale([[1, 2], [2, 1]], 2, 1.5);
+    const down = eigSym2([[1, 2], [2, 1]]).vectors[1]; // λ = −1
+    surfaceAlong([[1, 2], [2, 1]], down, 2, 1.5).forEach(([x, y, z]) => expect(z).toBeCloseTo(k * -1 * (x * x + y * y), 9));
+  });
+
+  it('surfaceContours sit on the surface, inside its disc', () => {
+    const k = surfaceScale(A, 2, 1.5);
+    surfaceContours(A, [1, 2, 4], 2, 1.5).flat().forEach(([x, y, z]) => {
+      expect(length([x, y])).toBeLessThanOrEqual(2);
+      expect(z).toBeCloseTo(k * quadForm(A, [x, y]), 9);
+    });
+  });
+});
+
+describe('SVD (Module 8)', () => {
+  /** U·Σ·Vᵀ multiplied back together. */
+  function rebuild({ U, sigma, V }: ReturnType<typeof svd2>): Mat2 {
+    return matMul(U, matMul([[sigma[0], 0], [0, sigma[1]]], transpose(V) as Mat2));
+  }
+
+  function expectWithin(actual: Mat2, expected: Mat2, tolerance = 1e-9) {
+    actual.flat().forEach((n, i) => expect(Math.abs(n - expected.flat()[i])).toBeLessThan(tolerance));
+  }
+
+  /** U and V have columns 1 long and at right angles. */
+  function expectOrthonormal(m: Mat2) {
+    expect(length(m[0])).toBeCloseTo(1, 12);
+    expect(length(m[1])).toBeCloseTo(1, 12);
+    expect(dot(m[0], m[1])).toBeCloseTo(0, 12);
+  }
+
+  const examples: Mat2[] = [
+    [[3, 4], [0, 5]],
+    rotation(30),
+    rotation(-135),
+    [[1, 2], [2, 4]], // rank 1
+    [[2, 0], [0, -1]], // a flip
+    [[1, 0], [1, 1]], // a shear
+    [[0, 1], [1, 0]], // swap x and y (det −1)
+    [[-2, 1], [3, 0.5]],
+    [[0, 0], [0, 0]],
+    [[2, 0], [0, 2]],
+  ];
+
+  it('columns (3, 4), (0, 5): σ = 3√5 and √5, and σ₁σ₂ = |det| = 15', () => {
+    const { sigma } = svd2([[3, 4], [0, 5]]);
+    expect(Math.abs(sigma[0] - 3 * Math.sqrt(5))).toBeLessThan(1e-9);
+    expect(Math.abs(sigma[1] - Math.sqrt(5))).toBeLessThan(1e-9);
+    expect(sigma[0] * sigma[1]).toBeCloseTo(15, 9);
+  });
+
+  it('any rotation has σ = 1 and 1', () => {
+    for (const deg of [0, 17, 90, 150, -60, 180]) {
+      const { sigma } = svd2(rotation(deg));
+      expect(Math.abs(sigma[0] - 1)).toBeLessThan(1e-9);
+      expect(Math.abs(sigma[1] - 1)).toBeLessThan(1e-9);
+    }
+  });
+
+  it('a rank-1 matrix has σ₂ = 0', () => {
+    const { sigma } = svd2([[1, 2], [2, 4]]);
+    expect(sigma[1]).toBe(0);
+    expect(sigma[0]).toBeCloseTo(5, 9); // the column (1, 2) times (1, 2)ᵀ…: √(5·5)
+  });
+
+  it('A = U·Σ·Vᵀ within 1e-9, σ₁ ≥ σ₂ ≥ 0, U and V orthonormal, V a rotation', () => {
+    for (const a of examples) {
+      const s = svd2(a);
+      expectWithin(rebuild(s), a);
+      expect(s.sigma[0]).toBeGreaterThanOrEqual(s.sigma[1]);
+      expect(s.sigma[1]).toBeGreaterThanOrEqual(0);
+      expectOrthonormal(s.U);
+      expectOrthonormal(s.V);
+      expect(det2(s.V)).toBeCloseTo(1, 12);
+    }
+  });
+
+  it('A sends vᵢ to σᵢ·uᵢ: the circle’s perpendicular arrows land on the ellipse’s half-axes', () => {
+    for (const a of examples) {
+      const { U, sigma, V } = svd2(a);
+      [0, 1].forEach((i) => expect(distance(matVec(a, V[i]), scale(sigma[i], U[i]))).toBeLessThan(1e-9));
+    }
+  });
+
+  it('svdSteps: two real rotations around a stretch, multiplying back to A', () => {
+    for (const a of examples) {
+      const { Vt, S, R } = svdSteps(a);
+      expectWithin(matMul(R, matMul(S, Vt)), a);
+      expect(det2(Vt)).toBeCloseTo(1, 12);
+      expect(det2(R)).toBeCloseTo(1, 12);
+      expect(S[0][1]).toBe(0);
+      expect(S[1][0]).toBe(0);
+    }
+  });
+
+  it('"Three steps" ends exactly where "Direct" ends, and passes through Vᵀ and S·Vᵀ on the way', () => {
+    for (const a of examples) {
+      expect(svdStepsAt(a, 1)).toEqual(matrixAt(a, 1));
+      const { Vt, S } = svdSteps(a);
+      expectWithin(svdStepsAt(a, 1 / 3), Vt);
+      expectWithin(svdStepsAt(a, 2 / 3), matMul(S, Vt));
+      // Just before the end it is already within a hair of A, so the last frame doesn't jump.
+      expectWithin(svdStepsAt(a, 1 - 1e-12), a, 1e-6);
+    }
+  });
+
+  it('the rotation steps turn the circle without squashing it', () => {
+    const a: Mat2 = [[3, 4], [0, 5]];
+    for (const t of [0.1, 0.2, 0.3]) unitCircle(24).forEach((p) => expect(length(matVec(svdStepsAt(a, t), p))).toBeCloseTo(1, 9));
+  });
+
+  it('perp turns a quarter turn anticlockwise', () => {
+    expect(perp([1, 0])).toEqual([0, 1]);
+    expect(perp([2, 3])).toEqual([-3, 2]);
   });
 });

@@ -1,0 +1,90 @@
+---
+title: 'SVD: every matrix turns a circle into an ellipse'
+module: 8
+order: 6
+mit: https://ocw.mit.edu/courses/18-06-linear-algebra-spring-2010/resources/lecture-29-singular-value-decomposition/
+---
+
+import Formula from '../../components/Formula.astro';
+import SVDView from '../../components/SVDView.tsx';
+import Exercise from '../../components/Exercise.tsx';
+
+## Question
+
+Most matrices have no eigenvectors at right angles, and some (rotations) have none at all. Is there *anything* simple that every matrix does?
+
+## Play
+
+Press **Play**. The yellow circle is every arrow 1 long. Watch what <Formula tex="A" /> turns it into, and where the two arrows <Formula tex="\vec{v}_1" /> and <Formula tex="\vec{v}_2" />, which start at right angles, end up.
+
+Then press **Three steps** and watch again: the same matrix, in three moves. Does it end in the same place as **Direct**? Try **Rotation** and **Rank 1** too, or type your own.
+
+<SVDView
+  client:visible
+  examples={[
+    { name: '(3, 4), (0, 5)', matrix: [[3, 4], [0, 5]], note: 'σ₁ = 3√5 ≈ 6.71 and σ₂ = √5 ≈ 2.24. Their product is 15 = det A.' },
+    { name: 'Rotation', matrix: [[0.8660254037844387, 0.5], [-0.5, 0.8660254037844387]], note: 'A rotation keeps every length, so σ₁ = σ₂ = 1: the circle just turns. Step 2 does nothing.' },
+    { name: 'Rank 1', matrix: [[1, 1], [2, 2]], note: 'Both columns are on one line, so σ₂ = 0: v₂ is squashed to a dot and the ellipse is a segment.' },
+  ]}
+/>
+
+## Numbers
+
+For <Formula tex="A = \begin{bmatrix} 3 & 0 \\ 4 & 5 \end{bmatrix}" /> (columns (3, 4) and (0, 5)), start with the symmetric matrix from the last lesson:
+
+<Formula display tex="A^T A = \begin{bmatrix} 25 & 20 \\ 20 & 25 \end{bmatrix}, \qquad \lambda = 45 \text{ along } (1, 1), \quad \lambda = 5 \text{ along } (1, -1)" />
+
+The **singular values** are the square roots: <Formula tex="\sigma_1 = \sqrt{45} = 3\sqrt{5}" /> and <Formula tex="\sigma_2 = \sqrt{5}" />. The right singular vectors <Formula tex="\vec{v}_1, \vec{v}_2" /> are those eigenvectors made 1 long. Then <Formula tex="\vec{u}_1 = A\vec{v}_1 / \sigma_1" />:
+
+<Formula display tex="A\vec{v}_1 = \tfrac{1}{\sqrt 2}\begin{bmatrix} 3 \\ 9 \end{bmatrix}, \quad |A\vec{v}_1| = \tfrac{\sqrt{90}}{\sqrt 2} = 3\sqrt5 = \sigma_1 \;\checkmark" />
+
+Check: <Formula tex="\sigma_1 \sigma_2 = 3\sqrt5 \cdot \sqrt5 = 15 = |\det A|" />.
+
+## Explain
+
+**The SVD.** Every matrix, with no exceptions, can be written as
+
+<Formula display tex="A = U \Sigma V^T" />
+
+where <Formula tex="U" /> and <Formula tex="V" /> are orthogonal (rotations, maybe with a flip) and <Formula tex="\Sigma" /> is diagonal with <Formula tex="\sigma_1 \geq \sigma_2 \geq 0" />. Read it right to left, like Lesson 8.4:
+
+1. <Formula tex="V^T" /> turns the plane so that <Formula tex="\vec{v}_1, \vec{v}_2" /> lie on the axes. Lengths don't change.
+2. <Formula tex="\Sigma" /> stretches along the axes, by <Formula tex="\sigma_1" /> and <Formula tex="\sigma_2" />. The circle becomes an ellipse.
+3. <Formula tex="U" /> turns the ellipse into place, with its half-axes along <Formula tex="\vec{u}_1, \vec{u}_2" />.
+
+That's why **Three steps** lands on exactly the same ellipse as **Direct**: they are the same matrix. The site's tests check that <Formula tex="U\Sigma V^T" /> matches A to 9 decimal places.
+
+**Why it always works.** <Formula tex="A^T A" /> is symmetric, so it has perpendicular eigenvectors <Formula tex="\vec{v}_1, \vec{v}_2" />. Then <Formula tex="A\vec{v}_1" /> and <Formula tex="A\vec{v}_2" /> are perpendicular too: <Formula tex="(A\vec{v}_1)\cdot(A\vec{v}_2) = \vec{v}_1^T A^T A \vec{v}_2 = \lambda_2\, \vec{v}_1 \cdot \vec{v}_2 = 0" />. So two arrows at right angles go in, and two arrows at right angles come out. Those are the ellipse's axes.
+
+**Compared with eigenvectors.** An eigenvector stays on its own line: <Formula tex="A\vec{v} = \lambda\vec{v}" />. A singular vector may move to a different line, but its right angle with the other one survives: <Formula tex="A\vec{v}_i = \sigma_i \vec{u}_i" />. For a symmetric matrix with λs above 0 the two ideas agree.
+
+**What the σs tell you.**
+
+- <Formula tex="\sigma_1" /> is the biggest stretch of any arrow 1 long, and <Formula tex="\sigma_2" /> the smallest.
+- <Formula tex="\sigma_1\sigma_2 = |\det A|" />, since the circle's area <Formula tex="\pi" /> becomes the ellipse's area <Formula tex="\pi\sigma_1\sigma_2" />.
+- A rotation has <Formula tex="\sigma_1 = \sigma_2 = 1" />. A rank-1 matrix has <Formula tex="\sigma_2 = 0" />: the ellipse is flattened to a segment. The rank is the number of σs that aren't 0.
+
+## Predict
+
+<Formula tex="A = \begin{bmatrix} 2 & 0 \\ 0 & -3 \end{bmatrix}" />. What are <Formula tex="\sigma_1" /> and <Formula tex="\sigma_2" />? Type it into the view to check.
+
+<details>
+  <summary>Reveal</summary>
+  <Formula tex="\sigma_1 = 3" /> and <Formula tex="\sigma_2 = 2" />. The circle is stretched 3 along y and 2 along x, and the minus sign only flips it. Lengths are never negative, so the flip goes into <Formula tex="U" />. In Three steps you can see it happen during the stretch, where the circle passes through a flat line.
+</details>
+
+## Practice
+
+<Exercise id="8.6-diagonal" client:visible />
+
+<Exercise id="8.6-scaled-rotation" client:visible />
+
+<Exercise id="8.6-rank-one" client:visible />
+
+## Go deeper
+
+**Compressing images.** A photo is a big matrix of brightness numbers. Its SVD writes it as a sum <Formula tex="\sigma_1\vec{u}_1\vec{v}_1^T + \sigma_2\vec{u}_2\vec{v}_2^T + \cdots" />, biggest pieces first. Keep only the first 50 pieces of a 1000×1000 photo and it still looks almost the same, from a tenth of the numbers.
+
+**Data science.** Principal component analysis (PCA) is the SVD of a table of data. <Formula tex="\vec{v}_1" /> is the direction in which the data spreads the most.
+
+**Any shape, any size.** The SVD works for non-square matrices too (Lesson 2.6). A 3×2 matrix turns the unit circle into a flat ellipse inside 3D space. <Formula tex="U" /> is then 3×3 and <Formula tex="\Sigma" /> is 3×2.

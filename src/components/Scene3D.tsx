@@ -37,6 +37,10 @@ interface Props {
   patch?: { corners: Vec3[]; colour: Colour };
   /** Plain lines given as pairs of points, e.g. the 12 edges of a slanted box. */
   edges?: { pairs: [Vec3, Vec3][]; colour: Colour };
+  /** A curved surface given as rows of points (each row next to the one before), e.g. the bowl z = xᵀAx. See-through, with its grid. */
+  surface?: Vec3[][];
+  /** Curves (lists of points) drawn on top, each group in one colour, e.g. level curves lifted onto the surface. */
+  curves?: { lines: Vec3[][]; colour: Colour }[];
 }
 
 /** One extra arrow: where its tip is, which site colour, and an optional label at the tip. */
@@ -69,6 +73,7 @@ function readColours() {
     muted: get('--muted'),
     space: get('--space'),
     null: get('--null'),
+    eigen: get('--eigen'),
   };
 }
 
@@ -197,6 +202,45 @@ function Patch({ corners, color }: { corners: Vec3[]; color: string }) {
   );
 }
 
+/** Curves (lists of points) as pairs of points, the way Lines wants them. */
+function curvePairs(curves: Vec3[][]): Float32Array {
+  const points: number[] = [];
+  for (const curve of curves) for (let i = 0; i + 1 < curve.length; i++) points.push(...curve[i], ...curve[i + 1]);
+  return new Float32Array(points);
+}
+
+/**
+ * A curved surface from rows of points: each little four-sided piece between two rows is two triangles.
+ * Drawn see-through, with its grid lines (along the rows and across them) so its shape shows without lighting.
+ */
+function Surface({ grid, color }: { grid: Vec3[][]; color: string }) {
+  const shape = useMemo(() => {
+    const triangles: number[] = [];
+    for (let i = 0; i + 1 < grid.length; i++) {
+      for (let j = 0; j + 1 < grid[i].length; j++) {
+        const [a, b, c, d] = [grid[i][j], grid[i][j + 1], grid[i + 1][j + 1], grid[i + 1][j]];
+        triangles.push(...a, ...b, ...c, ...a, ...c, ...d);
+      }
+    }
+    // Every second row, and every fourth point across: enough lines to see the shape, not so many it's a blur.
+    const rows = grid.filter((_, i) => i % 2 === 0 || i === grid.length - 1);
+    const across = grid[0].map((_, j) => grid.map((row) => row[j])).filter((_, j) => j % 4 === 0);
+    return { triangles: new Float32Array(triangles), wire: curvePairs([...rows, ...across]) };
+  }, [grid.flat(2).join()]);
+
+  return (
+    <>
+      <mesh key={shape.triangles.length}>
+        <bufferGeometry>
+          <bufferAttribute attach="attributes-position" args={[shape.triangles, 3]} />
+        </bufferGeometry>
+        <meshBasicMaterial color={color} transparent opacity={0.18} depthWrite={false} side={THREE.DoubleSide} />
+      </mesh>
+      <Lines key={`w${shape.wire.length}`} points={shape.wire} color={color} opacity={0.7} />
+    </>
+  );
+}
+
 /** Turn our columns-storage matrix into a three.js 4x4 matrix (three.js's set() takes the numbers row by row). */
 function toMatrix4([a, b, c]: Mat3): THREE.Matrix4 {
   return new THREE.Matrix4().set(a[0], b[0], c[0], 0, a[1], b[1], c[1], 0, a[2], b[2], c[2], 0, 0, 0, 0, 1);
@@ -222,6 +266,8 @@ export default function Scene3D({
   arrows,
   patch,
   edges,
+  surface,
+  curves,
 }: Props) {
   const colours = useColours();
   const box = useRef<HTMLDivElement>(null);
@@ -239,6 +285,10 @@ export default function Scene3D({
   const moved = useMemo(() => toMatrix4(matrix), [matrix.flat().join()]);
   const [ihat, jhat, khat] = matrix;
   const edgePoints = useMemo(() => edges && new Float32Array(edges.pairs.flat(2)), [edges?.pairs.flat(2).join()]);
+  const curvePoints = useMemo(
+    () => curves?.map((group) => curvePairs(group.lines)),
+    [curves?.map((group) => group.lines.flat(2).join()).join('|')],
+  );
 
   return (
     <div className="scene3d" ref={box}>
@@ -280,6 +330,10 @@ export default function Scene3D({
         )}
         {patch && <Patch corners={patch.corners} color={colours[patch.colour]} />}
         {edges && edgePoints && <Lines points={edgePoints} color={colours[edges.colour]} />}
+        {surface && <Surface grid={surface} color={colours.moving} />}
+        {curves?.map((group, i) => (
+          <Lines key={`${i}-${curvePoints![i].length}`} points={curvePoints![i]} color={colours[group.colour]} />
+        ))}
         {arrows?.map((a, i) => <Arrow key={i} tip={a.tip} tail={a.tail} color={colours[a.colour]} label={a.label} />)}
         {vector && <Arrow tip={vector} color={colours.vec} label="v" />}
         {columnSpace && <Subspace basis={columnSpace} color={colours.space} />}

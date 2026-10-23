@@ -1,0 +1,26 @@
+/* Level curves of xᵀAx: orange above 0, violet below 0, grey at 0. */
+.quadform .quadform-up {
+  stroke: var(--vec2);
+  stroke-width: 2px;
+}
+
+.quadform .quadform-down {
+  stroke: var(--space);
+  stroke-width: 2px;
+}
+
+.quadform .quadform-zero {
+  stroke: var(--muted);
+  stroke-width: 2px;
+  stroke-dasharray: 6 4;
+}
+
+.quadform-key-up {
+  color: var(--vec2);
+  font-weight: 700;
+}
+
+.quadform-key-down {
+  color: var(--space);
+  font-weight: 700;
+}

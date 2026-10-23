@@ -496,3 +496,34 @@ Type a 2×2 matrix and it shows four steps: m (the mean of the diagonal), p (the
 - **Powers in the eigenbasis are just stretching.** Aⁿ = P Dⁿ P⁻¹, and Dⁿ is only each λ to the power n. The biggest λ wins, which is why Fibonacci grows like 1.618ⁿ and Markov settles at (2/3, 1/3).
 - **A hidden browser pane doesn't animate.** The sweep did nothing until the pane was on screen. The animation waits for the browser to draw frames, and a hidden page doesn't draw any.
 - **Labels can land right where the action is.** In Markov, the "λ = 1" label sat exactly where the dots settle, so EigenLines got a `labelAt` option to move labels further out.
+
+## Day 12 (continued): Module 8 part 2, symmetric matrices and the SVD
+
+### New files
+
+**`src/components/QuadraticFormView.tsx`** and **`QuadraticFormView.css`** (Lesson 8.5)
+A symmetric matrix gives every point x one number, xᵀAx. The plane shows the curves where that number is 1, 2, 4, 8 (orange) or −1, −2, −4, −8 (violet), plus 0 (grey, dashed). The cyan lines are the eigenvectors, and they are always the curves' axes. Drag the yellow x to read xᵀAx anywhere. "Show in 3D" draws the surface z = xᵀAx, a bowl or a saddle, with the same curves lifted to their heights. Typing in one corner of the matrix copies the number to the other corner, so it stays symmetric.
+
+**`src/components/SVDView.tsx`** (Lesson 8.6)
+The unit circle and two arrows at right angles, v₁ and v₂, turn into an ellipse whose half-axes are σ₁u₁ and σ₂u₂. The dashed ellipse shows where it will end. "Direct" plays A in one go. "Three steps" plays Vᵀ (turn), Σ (stretch), U (turn) and says which step is playing. Examples: (3, 4), (0, 5), a rotation, and a rank-1 matrix (it flattens to a segment).
+
+**`src/content/lessons/8-5-…` and `8-6-…`**, and 6 new questions in **`src/exercises/module8.ts`**.
+
+### Changed files
+
+- **`linalg.ts`** and **`linalg.test.ts`**:
+  - New functions: `eigSym2`, `quadForm`, `definiteness`, `levelCurves`, `clipToDisc`, `surfaceScale`, `quadSurface`, `surfaceContours`, `surfaceAlong`, `unitCircle`, `perp`, `svd2`, `svdSteps` and `svdStepsAt`.
+  - `matrixAt` now gives back the matrix itself at t = 1.
+  - 358 tests now.
+- **`Scene3D.tsx`**: it can draw a see-through curved surface with its grid lines (`surface`) and coloured curves (`curves`).
+- **`TransformPlayer.tsx`**: a `path` option. You give it "the matrix at time t" yourself, which is how "Three steps" plays.
+
+### Things I learned
+
+- **Symmetric matrices are the friendly ones.** Their eigenvalues are always real and their eigenvectors are always at right angles. In the eigenvectors' own numbers, xᵀAx is just λ₁p² + λ₂q², with no cross term. That's why the eigenvectors are the ellipse's axes.
+- **The signs of the λs give the shape.** Both above 0 gives a bowl (ellipses). Opposite signs give a saddle (hyperbolas). A 0 gives a trough (straight lines).
+- **The SVD works for every matrix.** AᵀA is always symmetric, so it has perpendicular eigenvectors v₁, v₂, and A sends them to perpendicular arrows σ₁u₁, σ₂u₂. σ₁σ₂ = |det A|.
+- **A flip can't be turned into a rotation.** When det A < 0, U has a flip in it. So in "Three steps" the flip happens during the stretch (Σ with a −σ₂), and both turning steps are real rotations.
+- **"Exactly the same" needs care with rounding.** U·Σ·Vᵀ equals A only to about 15 decimal places. And `matrixAt` used to rebuild a rotation from its angle at t = 1, which was off in the last digit. Now both modes end on A itself. The tests check that U·Σ·Vᵀ is within 1e-9 of A for 10 matrices.
+- **Test angles with cross products, not acos.** acos near 0° loses about half the digits (1e-7 instead of 1e-15). The area of the parallelogram (cross2) shows "same line" to 12 decimal places.
+- **A hidden browser pane doesn't load lessons.** The demos only start once they scroll into view, and a hidden pane never reports that. The SVD demo looked broken until the pane was on screen.
