@@ -16,8 +16,11 @@ export interface StationPose {
   elevation: number;
   /** How far the camera is from the point it looks at. */
   distance: number;
-  /** The point it looks at is this high above the origin (the plane is at 0). */
+  /** The point it looks at is this high above the plane (the plane is at 0). */
   lookHeight: number;
+  /** The maths point (x, y) on the plane that the camera looks at, e.g. the middle of the station's picture.
+   *  Leave it out to look at the origin. */
+  look?: Vec2;
   /** Extra turn, in degrees, while you scroll through the station (0: the camera stays put). */
   sweep: number;
 }
@@ -79,13 +82,21 @@ export interface CameraPose {
 
 /** One station's pose as numbers, with its sweep already turned by `hold`. */
 function poseNumbers(p: StationPose, hold: number) {
-  return { azimuth: p.azimuth + p.sweep * hold, elevation: p.elevation, distance: p.distance, lookHeight: p.lookHeight };
+  const [lookX, lookY] = p.look ?? [0, 0];
+  return {
+    azimuth: p.azimuth + p.sweep * hold,
+    elevation: p.elevation,
+    distance: p.distance,
+    lookHeight: p.lookHeight,
+    lookX,
+    lookY,
+  };
 }
 
 /**
  * Where the camera should be for scroll position s (and `hold` inside a station).
- * Between two stations it slides from one pose to the next along a sphere around the origin (so it swings
- * round instead of cutting through the middle), eased so it starts and stops gently.
+ * Between two stations it slides from one pose to the next along a sphere around the point it looks at (so it
+ * swings round instead of cutting through the middle), eased so it starts and stops gently.
  * `aspect` is the screen's width ÷ height: on a tall phone screen the camera steps back so the middle still fits.
  */
 export function cameraPose(s: number, hold: number, stations: StationPose[], aspect = 16 / 9): CameraPose {
@@ -100,18 +111,21 @@ export function cameraPose(s: number, hold: number, stations: StationPose[], asp
       elevation: lerp(n.elevation, next.elevation, e),
       distance: lerp(n.distance, next.distance, e),
       lookHeight: lerp(n.lookHeight, next.lookHeight, e),
+      lookX: lerp(n.lookX, next.lookX, e),
+      lookY: lerp(n.lookY, next.lookY, e),
     };
   }
   const distance = n.distance * portraitStepBack(aspect);
   const az = (n.azimuth * Math.PI) / 180;
   const el = (n.elevation * Math.PI) / 180;
+  const [tx, , tz] = toWorld([n.lookX, n.lookY]);
   return {
     position: [
-      distance * Math.cos(el) * Math.sin(az),
+      tx + distance * Math.cos(el) * Math.sin(az),
       n.lookHeight + distance * Math.sin(el),
-      distance * Math.cos(el) * Math.cos(az),
+      tz + distance * Math.cos(el) * Math.cos(az),
     ],
-    target: [0, n.lookHeight, 0],
+    target: [tx, n.lookHeight, tz],
   };
 }
 
@@ -123,6 +137,31 @@ export function portraitStepBack(aspect: number): number {
 /** The maths point (x, y) in three.js coordinates, on the floor. */
 export function toWorld([x, y]: Vec2): Vec3 {
   return [x, 0, -y + 0];
+}
+
+/**
+ * How much station k is "there" at scroll position s: 1 near the station (within 0.15), 0 from halfway to its
+ * neighbours (0.55 away), easing smoothly in between. Stations use it to fade in and out, and station 2 uses it
+ * to slide its matrix in from the identity.
+ */
+export function stationPresence(s: number, k: number): number {
+  const t = Math.min(1, Math.max(0, (Math.abs(s - k) - 0.15) / 0.4));
+  return 1 - t * t * (3 - 2 * t); // smoothstep, so it eases instead of starting and stopping sharply
+}
+
+/**
+ * The 2×2 matrix A as a three.js transform of the floor, as 16 numbers row by row (for Matrix4.set).
+ * The maths point (x, y) is drawn at (x, 0, −y), so A's entries move into the x and z places, with signs flipped
+ * where y turns into −z. Heights (three.js y) are left alone.
+ */
+export function worldMatrix4([[a, c], [b, d]]: Mat2): number[] {
+  // prettier-ignore
+  return [
+    a, 0, -b, 0,
+    0, 1, 0, 0,
+    -c, 0, d, 0,
+    0, 0, 0, 1,
+  ].map((n) => n + 0); // + 0 turns −0 into 0
 }
 
 /** The opposite of toWorld: the three.js floor point (x, 0, z) as the maths point (x, −z). */

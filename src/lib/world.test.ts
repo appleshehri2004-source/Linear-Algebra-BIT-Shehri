@@ -8,6 +8,8 @@ import {
   portraitStepBack,
   rayToFloor,
   snapTip,
+  stationPresence,
+  worldMatrix4,
   stationAt,
   toWorld,
   type SectionBox,
@@ -60,6 +62,11 @@ describe('cameraPose', () => {
 
   it('looks at the point above the origin', () => {
     expect(cameraPose(0, 0, poses).target).toEqual([0, poses[0].lookHeight, 0]);
+  });
+
+  it("looks at the station's chosen point when it has one", () => {
+    const [x, , z] = cameraPose(1, 0, poses).target;
+    expect([x, z]).toEqual(toWorld(poses[1].look ?? [0, 0]).filter((_, i) => i !== 1));
   });
 
   it("is at the station's distance from the point it looks at", () => {
@@ -152,5 +159,32 @@ describe('snapTip', () => {
 
   it("doesn't click onto a dot without the magnet (arrow keys)", () => {
     expect(snapTip([1.1, 2], false)).toEqual([1.1, 2]);
+  });
+});
+
+describe('stationPresence', () => {
+  it('is 1 at the station and 0 halfway to the next', () => {
+    expect(stationPresence(1, 1)).toBe(1);
+    expect(stationPresence(1.1, 1)).toBe(1);
+    expect(stationPresence(0.45, 1)).toBe(0);
+    expect(stationPresence(1.6, 1)).toBe(0);
+  });
+
+  it('eases in between, the same on both sides', () => {
+    const p = stationPresence(0.65, 1);
+    expect(p).toBeGreaterThan(0);
+    expect(p).toBeLessThan(1);
+    expect(stationPresence(1.35, 1)).toBeCloseTo(p);
+  });
+});
+
+describe('worldMatrix4', () => {
+  it('moves the floor point of p to the floor point of A·p', () => {
+    const A: [[number, number], [number, number]] = [[1.5, 0.5], [0.5, 1]];
+    const m = worldMatrix4(A);
+    const [X, Y, Z] = toWorld([2, 1]);
+    const moved = [0, 1, 2].map((row) => m[4 * row] * X + m[4 * row + 1] * Y + m[4 * row + 2] * Z);
+    // A·(2, 1) = 2·(1.5, 0.5) + 1·(0.5, 1) = (3.5, 2).
+    expect(moved).toEqual(toWorld([3.5, 2]));
   });
 });

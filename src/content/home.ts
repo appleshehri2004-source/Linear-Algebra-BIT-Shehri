@@ -344,11 +344,22 @@ export interface Station {
 /** Station 1's two arrows when the page opens: v and w, and so v + w = (1, 3). */
 export const VECTORS_START: { v: Vec2; w: Vec2 } = { v: [2, 1], w: [-1, 2] };
 
+/** Station 2's matrix when the page opens: a gentle stretch and shear, î → (1.5, 0.5) and ĵ → (0.5, 1),
+ *  so the world visibly bends the moment you arrive. Stored as columns, like every matrix on the site. */
+export const MATRIX_START: Mat2 = [[1.5, 0.5], [0.5, 1]];
+/** The x in station 2's A·x = b: b's arrow ends on the lattice dot that started at (2, 1). */
+export const MATRIX_X: Vec2 = [2, 1];
+
 export const STATIONS: Station[] = [
   // A three-quarter view from above, close: you see depth, and dragging "away from you" still feels natural.
   { id: 'station-vectors', name: 'Vectors', pose: { azimuth: -24, elevation: 30, distance: 8.5, lookHeight: 0.3, sweep: 0 } },
-  // Almost straight down: dragging î and ĵ feels like the 2D lessons.
-  { id: 'station-matrix', name: 'Matrices', pose: { azimuth: 0, elevation: 76, distance: 11, lookHeight: 0, sweep: 0 } },
+  // Almost straight down: dragging î and ĵ feels like the 2D lessons. It looks at the middle of the picture
+  // (the logo, î, ĵ and b's tip at A·(2, 1)), not the origin, so a phone held upright fits it all in.
+  {
+    id: 'station-matrix',
+    name: 'Matrices',
+    pose: { azimuth: 0, elevation: 76, distance: 8, lookHeight: 0, look: [1.5, 0.8], sweep: 0 },
+  },
   // Straight down and closer, turned a little: the area fills the screen.
   { id: 'station-determinant', name: 'Determinant', pose: { azimuth: 14, elevation: 84, distance: 8, lookHeight: 0, sweep: 0 } },
   // Far back and low: the eigen-lines run off to the horizon.

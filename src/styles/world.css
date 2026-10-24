@@ -152,6 +152,30 @@
   }
 }
 
+/* Station 2's ↺ button: puts the matrix back to its start. 44px tall for a thumb, quiet until hovered. */
+.home .readout-reset {
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  margin: -0.45rem -0.6rem -0.45rem 0;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 1.15rem;
+  cursor: pointer;
+}
+
+.home .readout-reset:hover {
+  color: var(--text);
+}
+
+.home .readout-reset:focus-visible {
+  outline: 3px solid var(--link);
+}
+
 /* The way out at the end of the last station. */
 .home .station-actions {
   display: flex;

@@ -1,33 +1,34 @@
-// The grab handles for station 1's arrow tips: two real HTML buttons laid over the 3D tips
-// (VectorsStation.tsx moves them there every frame). Why buttons and not 3D objects:
+// The grab handles for a station's arrow tips (station 1: v and w; station 2: î and ĵ): real HTML buttons laid
+// over the 3D tips (HandleAnchors.tsx moves them there every frame). Why buttons and not 3D objects:
 // - A phone decides "scroll or not" from what's under the finger when the touch starts. These buttons say
 //   touch-action: none, so dragging a tip never scrolls the page, and swiping anywhere else always does.
 // - A keyboard can Tab to them and move a tip with the arrow keys; a screen reader can say their names.
 import { useEffect, useRef, useState, type MutableRefObject, type PointerEvent, type KeyboardEvent } from 'react';
 import * as THREE from 'three';
 import { roundTo, type Vec2 } from '../../lib/linalg';
-import { fromWorld, rayToFloor, snapTip, type Vec3 } from '../../lib/world';
+import { fromWorld, rayToFloor, snapTip, stationPresence, type Vec3 } from '../../lib/world';
 import { onWorldChange, world } from '../../lib/worldScroll';
 import { ARROW_LIFT } from './Arrow3D';
-import { vectorsShown } from './VectorsStation';
 
 /** A number as a screen reader should say it: at most 1 decimal place, with a real minus sign. */
 const say = (n: number) => String(roundTo(n, 1) + 0).replace('-', '−');
 
 interface Tip {
-  /** "v" or "w". */
+  /** What it's called: "v", "w", "î", "ĵ". */
   name: string;
   value: Vec2;
   set: (p: Vec2) => void;
-  /** The CSS class of its colour (vec, vec2), for the ring. */
+  /** The CSS class of its colour (vec, vec2, ihat, jhat), for the ring. */
   colourClass: string;
 }
 
 interface Props {
+  /** The station these handles belong to (0 = station 1): they're only awake there. */
+  station: number;
   tips: Tip[];
-  /** Filled in here with the buttons, so VectorsStation can move them over the tips. */
+  /** Filled in here with the buttons, so HandleAnchors can move them over the tips. */
   buttons: MutableRefObject<(HTMLElement | null)[]>;
-  /** The 3D camera (VectorsStation fills it in), to turn a finger's spot into a point on the plane. */
+  /** The 3D camera (HandleAnchors fills it in), to turn a finger's spot into a point on the plane. */
   camera: MutableRefObject<THREE.Camera | null>;
 }
 
@@ -42,18 +43,18 @@ function planePointAt(x: number, y: number, camera: THREE.Camera): Vec2 | null {
   return hit && fromWorld(hit);
 }
 
-export default function TipHandles({ tips, buttons, camera }: Props) {
-  // Only usable while you're at station 1 (the arrows are packed away elsewhere).
+export default function TipHandles({ station, tips, buttons, camera }: Props) {
+  // Only usable while you're at this station (its arrows are packed away elsewhere).
   const [active, setActive] = useState(true);
   // The soft pulsing ring invites a first drag; it stops once you've moved a tip.
   const [touched, setTouched] = useState(false);
   const dragging = useRef<number | null>(null);
 
   useEffect(() => {
-    const update = () => setActive(vectorsShown(world.s) > 0.6);
+    const update = () => setActive(stationPresence(world.s, station) > 0.6);
     update();
     return onWorldChange(update);
-  }, []);
+  }, [station]);
 
   function onPointerDown(k: number, e: PointerEvent<HTMLButtonElement>) {
     e.preventDefault(); // no text selection, no focus jump
@@ -98,7 +99,7 @@ export default function TipHandles({ tips, buttons, camera }: Props) {
             buttons.current[k] = el;
           }}
           className={`tip-handle ${tip.colourClass}${touched ? '' : ' invite'}${active ? '' : ' asleep'}`}
-          // Asleep (away from station 1): not tappable, and skipped by Tab and screen readers.
+          // Asleep (away from its station): not tappable, and skipped by Tab and screen readers.
           tabIndex={active ? 0 : -1}
           aria-hidden={!active}
           aria-label={`Arrow ${tip.name} tip, at (${say(tip.value[0])}, ${say(tip.value[1])}). Move it with the arrow keys.`}
