@@ -55,24 +55,35 @@ export function useThemeGlow(): number {
 }
 
 /**
- * three.js ignores the see-through part of a colour like "rgba(140, 160, 200, 0.12)".
- * This splits it into the colour and how see-through it is, so a material can use both.
- * A solid colour ("#4d6aa8") comes back unchanged with opacity 1.
+ * A colour as red, green, blue (0 to 255) and how solid it is (0 to 1). It understands every way the browser
+ * may hand back a theme colour: "#rgb", "#rgba", "#rrggbb", "#rrggbbaa", "rgb(…)" and "rgba(…)".
+ * (The built site writes "rgba(140, 160, 200, 0.12)" from theme.css as "#8ca0c81f", so both must work.)
  */
-export function splitAlpha(colour: string): { color: string; opacity: number } {
-  const match = colour.match(/^rgba\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)\s*\)$/);
-  if (!match) return { color: colour, opacity: 1 };
-  const [, r, g, b, a] = match;
-  return { color: `rgb(${r}, ${g}, ${b})`, opacity: Number(a) };
+function parse(colour: string): { rgb: [number, number, number]; alpha: number } {
+  const c = colour.trim();
+  if (c.startsWith('#')) {
+    // Short forms (#rgb, #rgba) double each digit: #abc is #aabbcc.
+    const digits = c.length <= 5 ? [...c.slice(1)].map((d) => d + d).join('') : c.slice(1);
+    const byte = (i: number) => parseInt(digits.slice(i, i + 2), 16);
+    return { rgb: [byte(0), byte(2), byte(4)], alpha: digits.length === 8 ? byte(6) / 255 : 1 };
+  }
+  const numbers = (c.match(/[\d.]+/g) ?? []).map(Number);
+  return { rgb: [numbers[0], numbers[1], numbers[2]], alpha: numbers[3] ?? 1 };
 }
 
-/** A "#rrggbb" or "rgb(…)" colour as three numbers from 0 to 255. */
+/**
+ * three.js ignores the see-through part of a colour like "rgba(140, 160, 200, 0.12)".
+ * This splits it into the solid colour and how see-through it is, so a material can use both.
+ * A solid colour comes back with opacity 1.
+ */
+export function splitAlpha(colour: string): { color: string; opacity: number } {
+  const { rgb, alpha } = parse(colour);
+  return { color: `rgb(${rgb.join(', ')})`, opacity: alpha };
+}
+
+/** A colour as three numbers from 0 to 255 (any see-through part is left out). */
 function channels(colour: string): [number, number, number] {
-  if (colour.startsWith('#')) {
-    const hex = colour.length === 4 ? colour.replace(/\w/g, (c) => c + c) : colour;
-    return [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)) as [number, number, number];
-  }
-  return (colour.match(/[\d.]+/g) ?? []).slice(0, 3).map(Number) as [number, number, number];
+  return parse(colour).rgb;
 }
 
 /**
