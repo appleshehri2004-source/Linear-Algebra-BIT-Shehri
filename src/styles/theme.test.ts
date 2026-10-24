@@ -3,7 +3,7 @@
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { splitAlpha } from '../lib/useThemeColors';
+import { blendOver, splitAlpha } from '../lib/useThemeColors';
 
 const theme = readFileSync('src/styles/theme.css', 'utf8');
 
@@ -52,5 +52,17 @@ describe('splitAlpha', () => {
 
   it('leaves a solid colour alone', () => {
     expect(splitAlpha('#4d6aa8')).toEqual({ color: '#4d6aa8', opacity: 1 });
+  });
+});
+
+describe('blendOver', () => {
+  it('mixes a see-through colour into the background', () => {
+    // Half white on black is middle grey.
+    expect(blendOver('rgba(255, 255, 255, 0.5)', '#000000')).toBe('rgb(128, 128, 128)');
+  });
+
+  it('leaves a solid colour as it is, and boost never goes past solid', () => {
+    expect(blendOver('#ff0000', '#000')).toBe('rgb(255, 0, 0)');
+    expect(blendOver('rgba(0, 0, 255, 0.5)', '#ffffff', 4)).toBe('rgb(0, 0, 255)');
   });
 });

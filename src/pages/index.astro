@@ -1,7 +1,7 @@
 ---
-// The homepage. Sections follow docs/homepage-brief.md, top to bottom. This is the static version (session 2):
-// the boxes marked "picture" are empty placeholders, the same shape as the interactive pictures that will fill them,
-// so the page doesn't jump when they arrive.
+// The homepage (docs/homepage-brief.md). At the top: the 3D world behind the page and its 5 stations
+// (Phase 2: the camera flies through them; they're still empty). Below them, the rest of the first homepage,
+// which later phases trim (Phase 8).
 // The serif heading font, installed from npm and bundled with the site (no Google Fonts). Only the homepage loads it.
 import '@fontsource-variable/source-serif-4';
 import '../styles/home.css';
@@ -10,13 +10,23 @@ import BigIdeas from '../components/BigIdeas.tsx';
 import ChapterCardPicture from '../components/ChapterCardPicture.astro';
 import Load3D from '../components/Load3D.tsx';
 import Still3D from '../components/Still3D.astro';
-import HeroPlayground from '../components/HeroPlayground.tsx';
 import { HaloFilter } from '../components/HomeHalo.tsx';
 import { TestShapeSymbols } from '../components/TestShape.tsx';
 import LessonList, { type ChapterLinks } from '../components/LessonList.tsx';
 import SvdShowcase from '../components/SvdShowcase.tsx';
+import StationRail from '../components/world/StationRail.astro';
+import World from '../components/world/World.tsx';
 import { book, lessonNumber } from '../content/book';
-import { CARD_3D_MATRIX, CARD_3D_PRESETS, cardStories, chapterIdeas, chapterSummaries, lessonCountText } from '../content/home';
+import {
+  CARD_3D_MATRIX,
+  CARD_3D_PRESETS,
+  STATIONS,
+  cardStories,
+  chapterIdeas,
+  chapterSummaries,
+  lessonCountText,
+} from '../content/home';
+import '../styles/world.css';
 import { exerciseIds, getSortedLessons } from '../content/modules';
 
 const lessons = await getSortedLessons();
@@ -89,28 +99,41 @@ const firstLesson = lessons[0];
     <defs><HaloFilter /></defs>
   </svg>
 
-  <!-- 1. Hero -->
-  <header class="band hero">
-    <div class="wrap hero-grid">
-      <div class="hero-text">
-        <p class="eyebrow">Visual Linear Algebra · BIT</p>
-        <h1>See linear algebra move</h1>
-        <!-- Tags sit on the same line as the words around them: Astro drops a line break next to a tag, which would eat the space. -->
-        <p class="lead">
-          Drag, stretch and flip the plane, and watch every number change with it. The course follows Lay's <cite>Linear Algebra and Its Applications</cite>, chapters 1–7, built on ideas from 3Blue1Brown and MIT 18.06.
-        </p>
-        <p class="actions">
-          <a class="button" href={lessonHref(firstLesson.id)}>Start chapter 1</a>
-          <a class="text-link" href="#chapters">Browse chapters</a>
-        </p>
-      </div>
-      <div class="hero-picture">
-        <!-- client:load: the hero is the first thing on the page, so it starts straight away. Until then the
-             built page holds an empty square of the same size, so nothing below it moves. -->
-        <HeroPlayground client:load />
-      </div>
+  <!-- 1. The world and its 5 stations. #home-root holds them, and the 3D canvas listens for the mouse on it. -->
+  <div id="home-root" class="world-root">
+    <!-- Fixed behind everything: the poster (a still of station 1, shown at once) and the live canvas over it.
+         aria-hidden: it's decoration for screen readers; the stations below carry the words. -->
+    <div class="world-layer" aria-hidden="true">
+      <div class="world-poster"></div>
+      <World client:only="react" />
     </div>
-  </header>
+
+    <p class="site-name">Visual Linear Algebra · BIT</p>
+    <h1 class="visually-hidden">Visual Linear Algebra: see linear algebra move</h1>
+    <StationRail />
+
+    {
+      STATIONS.map((station, k) => (
+        <section class="station" id={station.id} aria-label={station.name}>
+          {k === 0 && (
+            <p class="scroll-hint" aria-hidden="true">
+              Scroll
+            </p>
+          )}
+          {k === STATIONS.length - 1 && (
+            <p class="station-actions">
+              <a class="button" href={lessonHref(firstLesson.id)}>Start chapter 1</a>
+              <a class="text-link" href="#chapters">Browse chapters</a>
+            </p>
+          )}
+          <!-- Where the live readout goes in Phases 3–7. For now: the station's number and name. -->
+          <p class="station-label">
+            <span class="station-number">{String(k + 1).padStart(2, '0')}</span> {station.name}
+          </p>
+        </section>
+      ))
+    }
+  </div>
 
   <main>
     <!-- 2. Chapter map -->
@@ -243,6 +266,39 @@ const firstLesson = lessons[0];
 </BaseLayout>
 
 <script>
+  import { STATIONS } from '../content/home';
+  import { onWorldChange, scrollToStation, startWorldScroll, world } from '../lib/worldScroll';
+
+  // Start the scroll store for the 5 station sections (the 3D world reads it), and Lenis on computers.
+  startWorldScroll(STATIONS.map((s) => document.getElementById(s.id)!));
+
+  // The station rail: light the dot of the nearest station, and glide to a station on click.
+  const railLinks = [...document.querySelectorAll<HTMLAnchorElement>('.station-rail a')];
+  const rail = document.querySelector<HTMLElement>('.station-rail')!;
+  const hint = document.querySelector<HTMLElement>('.scroll-hint');
+  let current = -1;
+  const updateRail = () => {
+    const nearest = Math.round(world.s);
+    if (nearest !== current) {
+      current = nearest;
+      railLinks.forEach((a, k) => (k === nearest ? a.setAttribute('aria-current', 'step') : a.removeAttribute('aria-current')));
+    }
+    // The rail goes once the world fades out; hidden (not just see-through) so Tab skips it too.
+    rail.classList.toggle('gone', world.out > 0.5);
+    hint?.classList.toggle('gone', world.s > 0.05);
+  };
+  updateRail();
+  onWorldChange(updateRail);
+  railLinks.forEach((a, k) =>
+    a.addEventListener('click', (e) => {
+      // Our own glide goes to the station's middle (where the camera holds still). Stop the click here, or
+      // Lenis's link handling (on the whole window) would also glide, to the section's top.
+      e.preventDefault();
+      e.stopPropagation();
+      scrollToStation(k);
+    }),
+  );
+
   // On a touch screen a tap opens the chapter straight away, so the card's little animation would never be seen.
   // There, each card plays once when it is mostly on screen instead (the "in-view" class; the CSS is in home.ts).
   if (window.matchMedia('(hover: none)').matches && 'IntersectionObserver' in window) {

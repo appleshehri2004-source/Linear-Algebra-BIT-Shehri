@@ -1,0 +1,21 @@
+---
+// The station rail: 5 small dots on the right edge of the homepage, one per station, the current one lit.
+// Each dot is a real link to its station, so it works with a keyboard and without JavaScript too.
+// The script in index.astro lights the right dot and makes a click glide (scrollToStation).
+import { STATIONS } from '../../content/home';
+---
+
+<nav class="station-rail" aria-label="Stations">
+  <ol>
+    {
+      STATIONS.map((station, k) => (
+        <li>
+          <a href={`#${station.id}`} data-station={k} aria-current={k === 0 ? 'step' : undefined}>
+            <span class="rail-dot" aria-hidden="true" />
+            <span class="rail-name">{station.name}</span>
+          </a>
+        </li>
+      ))
+    }
+  </ol>
+</nav>

@@ -21,6 +21,7 @@ import {
   type Mat3,
   type Vec2,
 } from '../lib/linalg';
+import type { StationPose } from '../lib/world';
 
 /** What one chapter card shows. */
 export interface ChapterSummary {
@@ -326,4 +327,29 @@ export const CARD_3D_PRESETS: { name: string; matrix: Mat3 }[] = [
   { name: 'Shear', matrix: CARD_3D_MATRIX },
   { name: 'Turn about y', matrix: [[0, 0, -1], [0, 1, 0], [1, 0, 0]] },
   { name: 'Scale', matrix: [[2, 0, 0], [0, 1, 0], [0, 0, 0.5]] },
+];
+
+// ---------- The world's 5 stations (docs/homepage-brief.md §5) ----------
+// All five look at the origin, where the logo will live; only the angle changes, each chosen for what the station shows.
+// Poses are explained in src/lib/world.ts (StationPose). Phase 2 has the camera only: the stations are still empty.
+
+export interface Station {
+  /** The section's id on the page (for the rail links), e.g. "station-vectors". */
+  id: string;
+  /** Its short name, shown under the station and on the rail. */
+  name: string;
+  pose: StationPose;
+}
+
+export const STATIONS: Station[] = [
+  // Low three-quarter view, close: the arrows float in space, so you see depth.
+  { id: 'station-vectors', name: 'Vectors', pose: { azimuth: -28, elevation: 17, distance: 8, lookHeight: 0.6, sweep: 0 } },
+  // Almost straight down: dragging î and ĵ feels like the 2D lessons.
+  { id: 'station-matrix', name: 'Matrices', pose: { azimuth: 0, elevation: 76, distance: 11, lookHeight: 0, sweep: 0 } },
+  // Straight down and closer, turned a little: the area fills the screen.
+  { id: 'station-determinant', name: 'Determinant', pose: { azimuth: 14, elevation: 84, distance: 8, lookHeight: 0, sweep: 0 } },
+  // Far back and low: the eigen-lines run off to the horizon.
+  { id: 'station-eigen', name: 'Eigenvectors', pose: { azimuth: -40, elevation: 24, distance: 15, lookHeight: 0, sweep: 0 } },
+  // Very low, lifted, and circling as you scroll: the logo rises off the plane.
+  { id: 'station-3d', name: 'Into 3D', pose: { azimuth: 40, elevation: 14, distance: 9, lookHeight: 1, sweep: 100 } },
 ];
