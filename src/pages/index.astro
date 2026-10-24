@@ -8,8 +8,10 @@ import '../styles/home.css';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import ChapterCardPicture from '../components/ChapterCardPicture.astro';
 import HeroPlayground from '../components/HeroPlayground.tsx';
+import { HaloFilter } from '../components/HomeHalo.tsx';
 import { TestShapeSymbols } from '../components/TestShape.tsx';
 import LessonList, { type ChapterLinks } from '../components/LessonList.tsx';
+import SvdShowcase from '../components/SvdShowcase.tsx';
 import { book, lessonNumber } from '../content/book';
 import { cardStories, chapterIdeas, chapterSummaries, lessonCountText } from '../content/home';
 import { exerciseIds, getSortedLessons } from '../content/modules';
@@ -97,10 +99,11 @@ const firstLesson = lessons[0];
   title="Visual Linear Algebra"
   description={`Learn linear algebra by moving things: drag vectors, stretch grids and watch matrices act, in ${lessons.length} interactive lessons that follow Lay's textbook.`}
 >
-  <!-- The BIT logo (and the plain F), defined once. The hero and the chapter cards point at it with <use>,
-       so its 66 paths are in the page only once. -->
+  <!-- The BIT logo (and the plain F), defined once. The hero, the chapter cards and the SVD showcase point at it
+       with <use>, so its 66 paths are in the page only once. The arrows' paper halo filter is defined here too. -->
   <svg class="shape-symbols" width="0" height="0" aria-hidden="true" focusable="false">
     <TestShapeSymbols />
+    <defs><HaloFilter /></defs>
   </svg>
 
   <!-- 1. Hero -->
@@ -167,14 +170,9 @@ const firstLesson = lessons[0];
           The singular value decomposition, A = UΣVᵀ, splits any matrix into three simple moves. Step through them and
           watch the shape turn, stretch along the axes, and turn again.
         </p>
-        <!-- Session 6: the SVD showcase goes in this box, with the three matrices beside it. -->
-        <div class="picture-box wide-picture" aria-hidden="true"></div>
-        <p class="step-buttons">
-          <button type="button" disabled>1 rotate</button>
-          <button type="button" disabled>2 stretch</button>
-          <button type="button" disabled>3 rotate</button>
-          <button type="button" disabled>Play all</button>
-        </p>
+        <!-- client:visible with a 200px margin: it starts loading just before it scrolls into view. Until then
+             the built page holds an empty square of the same size, so nothing below it moves. -->
+        <SvdShowcase client:visible={{ rootMargin: '200px' }} />
       </div>
     </section>
 

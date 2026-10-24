@@ -2108,3 +2108,14 @@ export function presetAt(from: Mat2, to: Mat2, t: number): Mat2 {
 export function samplePath(path: (t: number) => Mat2, count = 21): Mat2[] {
   return Array.from({ length: count }, (_, i) => path(easeInOut(i / (count - 1))));
 }
+
+/**
+ * Which of n equal steps (0 to n − 1) to show at time t (0 to 1): the one playing, or the last one that finished.
+ * null before anything has played (t = 0). Step k plays from k/n to (k + 1)/n, so at exactly 1/3 of three steps,
+ * step 0 has just finished and is still the one shown.
+ */
+export function stepShown(n: number, t: number): number | null {
+  if (t <= 0) return null;
+  // The tiny margin keeps 1/3 in step 0 despite rounding; max(0, …) keeps a tiny t in step 0 too.
+  return Math.min(n - 1, Math.max(0, Math.ceil(t * n - 1e-9) - 1));
+}

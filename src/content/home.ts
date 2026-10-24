@@ -185,3 +185,11 @@ export function cardCss(story: CardStory): string {
   );
   return rules.join('\n');
 }
+
+// ---- The SVD showcase ----
+
+/**
+ * The SVD showcase's matrix: î lands on (1.2, 0.4) and ĵ on (0.6, 1). det = 0.96 > 0, so its three steps are a
+ * real rotate (about −42°), stretch (about ×1.61 and ×0.60) and rotate (about 37°). The tests check all of that.
+ */
+export const SVD_SHOWCASE_MATRIX: Mat2 = [[1.2, 0.4], [0.6, 1]];

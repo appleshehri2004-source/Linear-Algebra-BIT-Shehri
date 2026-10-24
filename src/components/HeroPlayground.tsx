@@ -27,6 +27,7 @@ import {
 } from '../lib/linalg';
 import { parseNumber } from '../exercises/exercise';
 import Plane from './Plane';
+import { HALO } from './HomeHalo';
 import TestShape from './TestShape';
 import Tex from './Tex';
 import { MathPath, toPath } from './TransformPlayer';
@@ -64,35 +65,13 @@ function same(a: Mat2, b: Mat2): boolean {
   return a.flat().every((n, i) => roundTo(n, 2) === roundTo(b.flat()[i], 2));
 }
 
-/**
- * The 3px paper-coloured outline (halo) around the arrows and handles, so they stay visible over the logo.
- * It's an SVG filter: it grows the drawing's shape by 3px, fills that with --paper, and puts the drawing on top.
- * (A thicker paper-coloured arrow underneath doesn't work: Mafs's arrowheads grow with the line, so its head
- * would be a big paper triangle hiding the logo.)
- */
-function HaloFilter() {
-  return (
-    <defs>
-      <filter id="hero-halo" x="-50%" y="-50%" width="200%" height="200%">
-        <feMorphology in="SourceAlpha" operator="dilate" radius="3" result="grown" />
-        <feFlood style={{ floodColor: 'var(--paper)' }} result="paper" />
-        <feComposite in="paper" in2="grown" operator="in" result="halo" />
-        <feMerge>
-          <feMergeNode in="halo" />
-          <feMergeNode in="SourceGraphic" />
-        </feMerge>
-      </filter>
-    </defs>
-  );
-}
-
 /** An arrow from the origin with a draggable tip and a label, outlined by the halo so it shows over the logo. */
 function Handle({ tip, color, label, onMove }: { tip: Vec2; color: string; label: string; onMove: (p: Vec2) => void }) {
   // An arrow squashed to (almost) nothing would still show its arrowhead, so only the handle is drawn then.
   const visible = length(tip) > 0.05;
   return (
     <>
-      <g filter="url(#hero-halo)">
+      <g filter={HALO}>
         {visible && <Vector tip={tip} color={color} weight={3} />}
         <MovablePoint point={tip} onMove={(p) => onMove([p[0], p[1]])} constrain={(p) => snapHandle([p[0], p[1]])} color={color} />
       </g>
@@ -218,7 +197,6 @@ export default function HeroPlayground() {
             <TestShape shape="bit-logo" matrix={matrix} flipY={false} useSymbol />
           </g>
           <Polygon points={square} color="var(--gold)" fillOpacity={0} weight={1.5} />
-          <HaloFilter />
           {/* î first, then ĵ: HandleNames names them in this order, and Tab reaches them in this order. */}
           <Handle tip={ihat} color="var(--i-hat)" label="î" onMove={(p) => setColumn(0, p)} />
           <Handle tip={jhat} color="var(--j-hat)" label="ĵ" onMove={(p) => setColumn(1, p)} />

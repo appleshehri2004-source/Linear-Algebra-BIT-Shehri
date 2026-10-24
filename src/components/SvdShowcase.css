@@ -1,0 +1,135 @@
+/* The homepage's SVD showcase. Colours come from the html.home block in global.css.
+   Every rule starts with .home, because Astro puts all CSS in one shared file (see home.css). */
+
+.home .svd-showcase {
+  display: grid;
+  gap: 1.5rem;
+  align-items: center;
+}
+
+@media (min-width: 56rem) {
+  .home .svd-showcase {
+    grid-template-columns: minmax(0, 30rem) minmax(0, 1fr);
+    gap: 3rem;
+  }
+}
+
+.home .svd-figure {
+  margin: 0;
+}
+
+.home .svd-figure .plane {
+  margin: 0 auto;
+}
+
+/* The grid that moves: darker than the faint fixed grid, lighter than the text. */
+.home .svd-moving-grid {
+  stroke: var(--ink-2);
+  stroke-opacity: 0.3;
+  stroke-width: 1px;
+}
+
+.home .svd-moving-axes {
+  stroke: var(--ink-2);
+  stroke-opacity: 0.6;
+  stroke-width: 2px;
+}
+
+/* ---------- The matrices ---------- */
+.home .svd-equation {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 1.1rem;
+}
+
+.home .svd-factors {
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  font-size: 1.05rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* One factor: its matrix, and which step it is. The one playing now gets a brand-coloured frame. */
+.home .svd-factor {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.5rem 0.75rem;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  background: var(--paper);
+}
+
+.home .svd-factor.active {
+  border-color: var(--brand);
+}
+
+.home .svd-factor-name {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.home .svd-factor.active .svd-factor-name {
+  color: var(--brand);
+}
+
+.home .svd-note {
+  margin: 0.75rem 0 0;
+  font-size: 0.9rem;
+  color: var(--ink-2);
+}
+
+/* ---------- Buttons ---------- */
+.home .svd-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.home .svd-buttons button {
+  min-height: 2.75rem;
+  padding: 0.4rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.home .svd-buttons button:hover {
+  border-color: var(--brand);
+}
+
+/* The step being shown. */
+.home .svd-buttons button.active {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: var(--paper);
+}
+
+.home .svd-sentence {
+  margin: 0.75rem 0 1.25rem;
+  min-height: 3em; /* the sentences differ in length: keep the space, so nothing below jumps */
+  font-weight: 600;
+  color: var(--ink);
+}
+
+/* On a phone, the three factors are smaller so they fit side by side. */
+@media (max-width: 40rem) {
+  .home .svd-factors {
+    font-size: 0.8rem;
+    gap: 0.35rem;
+  }
+  .home .svd-factor {
+    padding: 0.4rem 0.4rem;
+  }
+}

@@ -170,6 +170,7 @@ import {
   snapHandle,
   HERO_LIMIT,
   samplePath,
+  stepShown,
   perp,
   unitCircle,
   addFn,
@@ -2348,5 +2349,33 @@ describe('samplePath', () => {
     expect(step(0)).toBeLessThan(step(9));
     expect(step(19)).toBeLessThan(step(9));
     expect(frames[10][1][0]).toBeCloseTo(0.5, 12); // half way in time is half way along
+  });
+});
+
+describe('stepShown', () => {
+  it('shows no step before anything has played', () => {
+    expect(stepShown(3, 0)).toBeNull();
+  });
+
+  it('shows step 0 from the very first moment it starts, even for a tiny t', () => {
+    expect(stepShown(3, 1e-12)).toBe(0);
+    expect(stepShown(3, 0.2)).toBe(0);
+  });
+
+  it('keeps showing a step once it has finished, until the next one starts', () => {
+    expect(stepShown(3, 1 / 3)).toBe(0);
+    expect(stepShown(3, 1 / 3 + 1e-6)).toBe(1);
+    expect(stepShown(3, 2 / 3)).toBe(1);
+    expect(stepShown(3, 1)).toBe(2);
+  });
+
+  it('never gives a step outside 0 to n − 1', () => {
+    for (let i = 0; i <= 1000; i++) {
+      const k = stepShown(3, i / 1000);
+      if (k !== null) {
+        expect(k).toBeGreaterThanOrEqual(0);
+        expect(k).toBeLessThanOrEqual(2);
+      }
+    }
   });
 });

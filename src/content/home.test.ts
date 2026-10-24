@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { book } from './book';
-import { det2, eig2, isClose, matMul, matVec, svdSteps, transformShape, UNIT_SQUARE, type Mat2, type Vec2 } from '../lib/linalg';
-import { cardCss, cardStories, chapterIdeas, chapterSummaries, cssMatrix, keyframesCss, lessonCountText, SVD_CARD_MATRIX } from './home';
+import { det2, eig2, isClose, matMul, matVec, rotationAngle, svdSteps, transformShape, UNIT_SQUARE, type Mat2, type Vec2 } from '../lib/linalg';
+import { cardCss, cardStories, chapterIdeas, chapterSummaries, cssMatrix, keyframesCss, lessonCountText, SVD_CARD_MATRIX, SVD_SHOWCASE_MATRIX } from './home';
 
 const lesson = (section: string, part = 1) => ({ data: { section, part } });
 
@@ -150,5 +150,29 @@ describe('the card CSS', () => {
     expect(css).toContain('@media (prefers-reduced-motion:no-preference)');
     expect(css).toContain('.card:is(:hover,:focus-visible,.in-view) .card-4-p0-l0{animation:card-4-p0-l0 1.6s linear both}');
     expect(css).not.toContain('card-4-p0-l1');
+  });
+});
+
+describe('the SVD showcase matrix', () => {
+  const a = SVD_SHOWCASE_MATRIX;
+  const { Vt, S, R } = svdSteps(a);
+
+  it('has det > 0, so the three steps really are rotate, stretch, rotate (no flip hidden in the stretch)', () => {
+    expect(det2(a)).toBeGreaterThan(0);
+    expect(S[1][1]).toBeGreaterThan(0);
+  });
+
+  it('turns at least 20° in both rotations, so the turns are easy to see', () => {
+    expect(Math.abs(rotationAngle(Vt)!)).toBeGreaterThanOrEqual(20);
+    expect(Math.abs(rotationAngle(R)!)).toBeGreaterThanOrEqual(20);
+  });
+
+  it('stretches by two clearly different amounts, so the circle becomes a clear ellipse', () => {
+    expect(S[0][0] / S[1][1]).toBeGreaterThan(2);
+  });
+
+  it('gives A back: U Σ Vᵀ = A', () => {
+    const back = matMul(R, matMul(S, Vt));
+    back.flat().forEach((n, i) => expect(n).toBeCloseTo(a.flat()[i], 12));
   });
 });

@@ -113,25 +113,17 @@
   font-weight: 600;
 }
 
-.home .step-buttons {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-top: 1rem;
-}
-
-.home .step-buttons button {
-  min-height: 2.75rem;
-  padding: 0.4rem 1rem;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  background: var(--paper);
-  color: var(--ink);
-  font: inherit;
-}
-
-.home .step-buttons button:disabled {
-  color: var(--muted);
+/* Read by screen readers, not shown (the pictures' text descriptions). */
+.home .visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 /* ---------- Picture placeholders ---------- */
@@ -152,10 +144,6 @@
 
 .home .picture-box.square {
   aspect-ratio: 1;
-}
-
-.home .picture-box.wide-picture {
-  aspect-ratio: 16 / 9;
 }
 
 /* ---------- Hero ---------- */
