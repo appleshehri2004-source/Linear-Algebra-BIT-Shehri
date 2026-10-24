@@ -164,6 +164,11 @@ import {
   svdSteps,
   svdStepsAt,
   svgMatrix,
+  detState,
+  heroPresets,
+  presetAt,
+  snapHandle,
+  HERO_LIMIT,
   perp,
   unitCircle,
   addFn,
@@ -2231,5 +2236,98 @@ describe('svgMatrix', () => {
         expect(y).toBeCloseTo(my, 12);
       }
     }
+  });
+});
+
+describe('the homepage hero', () => {
+  describe('snapHandle', () => {
+    it('snaps a dragged handle to steps of 0.1', () => {
+      expect(snapHandle([1.234, -0.66])).toEqual([1.2, -0.7]);
+    });
+
+    it(`keeps it inside ±${HERO_LIMIT}`, () => {
+      expect(snapHandle([9, -3.04])).toEqual([HERO_LIMIT, -HERO_LIMIT]);
+    });
+
+    it('leaves no rounding dust, so the numbers shown are exact', () => {
+      expect(snapHandle([0.30000000000000004, 0.7])).toEqual([0.3, 0.7]);
+    });
+  });
+
+  describe('detState', () => {
+    it('says how much area is scaled when nothing flips', () => {
+      expect(detState([[2, 0], [0, 1]])).toEqual({ kind: 'scaled', det: 2 });
+    });
+
+    it('notices a flip (det < 0)', () => {
+      expect(detState([[-1, 0], [0, 1]])).toEqual({ kind: 'flipped', det: -1 });
+    });
+
+    it('notices a collapse onto a line (det = 0, but not everything is 0)', () => {
+      expect(detState([[1, 2], [0.5, 1]])).toEqual({ kind: 'line', det: 0 });
+    });
+
+    it('notices a collapse onto a single point (every number is 0)', () => {
+      expect(detState([[0, 0], [0, 0]])).toEqual({ kind: 'point', det: 0 });
+    });
+
+    it('gives det rounded to 2 places, the same number the readout shows', () => {
+      // 0.1 × 0.3 − 0.2 × 0.1 is 0.01 on paper, but 0.009999999999999998 in a computer.
+      expect(detState([[0.1, 0.1], [0.2, 0.3]]).det).toBe(0.01);
+    });
+
+    it('calls a det that rounds to 0 a collapse, so the words always match the number', () => {
+      expect(detState([[1, 0], [0, 0.004]])).toEqual({ kind: 'line', det: 0 });
+    });
+  });
+
+  describe('heroPresets', () => {
+    it('has the six buttons in order, starting with Reset at the identity', () => {
+      expect(heroPresets.map((p) => p.name)).toEqual(['Reset', 'Stretch', 'Shear', 'Rotate', 'Flip', 'Collapse']);
+      expect(heroPresets[0].matrix).toEqual([[1, 0], [0, 1]]);
+    });
+
+    it('shows what each name says', () => {
+      const state = (name: string) => detState(heroPresets.find((p) => p.name === name)!.matrix);
+      expect(state('Stretch').kind).toBe('scaled');
+      expect(state('Shear')).toEqual({ kind: 'scaled', det: 1 });
+      expect(rotationAngle(heroPresets[3].matrix)).toBe(90);
+      expect(state('Flip').kind).toBe('flipped');
+      expect(state('Collapse').kind).toBe('line');
+    });
+
+    it('only uses numbers a handle can reach (steps of 0.1, inside the limit)', () => {
+      for (const { matrix } of heroPresets) {
+        for (const column of matrix) expect(snapHandle(column)).toEqual(column);
+      }
+    });
+  });
+
+  describe('presetAt', () => {
+    const shear: Mat2 = [[1, 0], [1, 1]];
+    const turn: Mat2 = [[0, 1], [-1, 0]];
+
+    it('starts at `from` and ends exactly on `to`', () => {
+      expect(presetAt(shear, turn, 0)).toEqual(shear);
+      expect(presetAt(shear, turn, 1)).toEqual(turn);
+    });
+
+    it('slides the four numbers in a straight line in general', () => {
+      expect(presetAt([[1, 0], [0, 1]], shear, 0.5)).toEqual([[1, 0], [0.5, 1]]);
+    });
+
+    it('turns the angle when going from one rotation to another, so the shape never shrinks', () => {
+      const half = presetAt([[1, 0], [0, 1]], turn, 0.5);
+      expect(rotationAngle(half)).toBeCloseTo(45, 9);
+      expect(det2(half)).toBeCloseTo(1, 12);
+    });
+
+    it('turns the short way round', () => {
+      // From 170° to −170° is 20° anticlockwise, not 340° clockwise.
+      // Half way is 180°, where î points straight left (the long way would pass 0°, with î pointing right).
+      const [ihat] = presetAt(rotation(170), rotation(-170), 0.5);
+      expect(ihat[0]).toBeCloseTo(-1, 9);
+      expect(ihat[1]).toBeCloseTo(0, 9);
+    });
   });
 });

@@ -212,6 +212,7 @@ html.home {
   --bg: var(--paper);
   --text: var(--ink);
   --link: var(--copper);
+  --grid-faint: var(--border); /* the fixed grid behind the moving one (Plane.css) */
 
   /* Fonts: serif headings, Inter for everything else. KaTeX keeps its own fonts. */
   --font-heading: 'Source Serif 4 Variable', Georgia, 'Times New Roman', serif;

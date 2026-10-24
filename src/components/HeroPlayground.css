@@ -1,0 +1,152 @@
+/* The homepage hero's playground. Colours come from the html.home block in global.css.
+   Every rule starts with .home, because Astro puts all CSS in one shared file (see home.css). */
+
+.home .hero-playground {
+  display: grid;
+  gap: 1rem;
+  max-width: 30rem;
+  margin: 0 auto;
+}
+
+.home .hero-figure {
+  margin: 0;
+}
+
+/* The plane: no extra space around it (Plane.css gives 1rem). */
+.home .hero-figure .plane {
+  margin: 0 auto;
+}
+
+/* The grid that moves with the matrix: darker than the faint fixed grid, lighter than the text. */
+.home .hero-moving-grid {
+  stroke: var(--ink-2);
+  stroke-opacity: 0.3;
+  stroke-width: 1px;
+}
+
+/* Where the x-axis and y-axis have moved to: drawn thicker. */
+.home .hero-moving-axes {
+  stroke: var(--ink-2);
+  stroke-opacity: 0.6;
+  stroke-width: 2px;
+}
+
+/* ---------- Readout ---------- */
+.home .hero-readout {
+  text-align: center;
+}
+
+.home .hero-tex {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 0.25rem 1.5rem;
+  font-size: 1.05rem;
+  /* The numbers keep their place while they change. */
+  font-variant-numeric: tabular-nums;
+}
+
+.home .hero-meaning {
+  margin: 0.5rem 0 0;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+/* ---------- Buttons ---------- */
+.home .hero-presets {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.home .hero-presets button {
+  min-height: 2.75rem;
+  padding: 0.4rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.home .hero-presets button:hover {
+  border-color: var(--brand);
+}
+
+/* The button whose matrix is showing now. */
+.home .hero-presets button[aria-pressed='true'] {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: var(--paper);
+}
+
+/* ---------- Number boxes ---------- */
+.home .hero-numbers {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  text-align: center;
+}
+
+.home .hero-numbers legend {
+  padding: 0;
+  margin: 0 auto 0.5rem;
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+/* Two columns of boxes in square brackets, like the matrix: a b on top, c d below. */
+.home .hero-number-grid {
+  display: inline-grid;
+  grid-template-columns: auto auto;
+  gap: 0.4rem 0.6rem;
+  padding: 0.4rem 0.6rem;
+  border-left: 2px solid var(--ink);
+  border-right: 2px solid var(--ink);
+  border-radius: 6px;
+}
+
+.home .hero-number {
+  width: 4.5rem;
+  /* 16px or more stops the iPhone zooming in when the box is tapped. */
+  font: inherit;
+  font-size: 1rem;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  min-height: 2.75rem; /* 44px: big enough to tap */
+  padding: 0.4rem 0.25rem;
+  border: 2px solid;
+  border-radius: 0.4rem;
+  background: var(--paper);
+  color: var(--ink); /* the numbers are ink; only the border carries î's or ĵ's colour */
+}
+
+.home .hero-number.i {
+  border-color: var(--i-hat);
+}
+
+.home .hero-number.j {
+  border-color: var(--j-hat);
+}
+
+.home .hero-number:focus-visible {
+  outline: 3px solid var(--brand);
+  outline-offset: 2px;
+}
+
+/* Read by screen readers, not shown. */
+.home .visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}

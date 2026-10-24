@@ -60,6 +60,18 @@ describe('TestShape on screen', () => {
     });
   }
 
+  it('with flipY={false} (inside Mafs, which flips y itself), moves points exactly like matVec, with no flip', () => {
+    const shear: Mat2 = [[1, 0], [1, 1]];
+    const html = renderToStaticMarkup(createElement(TestShape, { shape: 'neutral', matrix: shear, flipY: false }));
+    const transforms = transformsIn(html);
+    expect(transforms).toHaveLength(1); // only the matrix: no scale(1 -1)
+    for (const p of points) {
+      const [x, y] = apply(readTransform(transforms[0]), p);
+      expect(x).toBeCloseTo(matVec(shear, p)[0], 12);
+      expect(y).toBeCloseTo(matVec(shear, p)[1], 12);
+    }
+  });
+
   it('leaves the shape where it is for the identity matrix, apart from the y-flip', () => {
     expect(screenPoint([[1, 0], [0, 1]], [0.15, 0.95])).toEqual([0.15, -0.95]);
   });

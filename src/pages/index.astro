@@ -6,6 +6,7 @@
 import '@fontsource-variable/source-serif-4';
 import '../styles/home.css';
 import BaseLayout from '../layouts/BaseLayout.astro';
+import HeroPlayground from '../components/HeroPlayground.tsx';
 import LessonList, { type ChapterLinks } from '../components/LessonList.tsx';
 import { book, lessonNumber } from '../content/book';
 import { chapterIdeas, chapterSummaries, lessonCountText } from '../content/home';
@@ -110,8 +111,9 @@ const firstLesson = lessons[0];
         </p>
       </div>
       <div class="hero-picture">
-        <!-- Session 4: the playground (grid, logo, î and ĵ handles) goes in this box. -->
-        <div class="picture-box square" aria-hidden="true"></div>
+        <!-- client:load: the hero is the first thing on the page, so it starts straight away. Until then the
+             built page holds an empty square of the same size, so nothing below it moves. -->
+        <HeroPlayground client:load />
       </div>
     </div>
   </header>

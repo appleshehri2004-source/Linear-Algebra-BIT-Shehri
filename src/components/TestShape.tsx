@@ -5,8 +5,8 @@
 // costs nothing to move. Put it inside an <svg> whose viewBox is in maths units, e.g. viewBox="-2 -2 4 4".
 //
 // Screens count y downwards; maths counts y upwards. TestShape flips y once, in its outer group, so the matrix inside
-// is the maths matrix exactly (src/components/TestShape.test.ts proves it). Inside Mafs, which flips y itself, this
-// component isn't the right one as it stands (session 4 deals with that).
+// is the maths matrix exactly (src/components/TestShape.test.ts proves it). Inside Mafs, which flips y itself, pass
+// flipY={false} and wrap it in <g style={{ transform: 'var(--mafs-view-transform)' }}> (as HeroPlayground does).
 //
 // Many copies on one page (the chapter cards): put <TestShapeSymbols /> in the page once and give each copy useSymbol,
 // so the logo's paths are in the page once and every copy points at them with <use>.
@@ -22,6 +22,8 @@ interface Props {
   matrix: Mat2;
   /** Point at the shape defined once by <TestShapeSymbols /> instead of drawing it again. */
   useSymbol?: boolean;
+  /** false inside Mafs, which already turns maths coordinates (y up) into screen coordinates (y down). */
+  flipY?: boolean;
 }
 
 // The logo file split into its picture size (viewBox) and its contents (everything inside the outer <svg> tag).
@@ -45,11 +47,11 @@ function ShapeBody({ shape }: { shape: ShapeName }) {
 
 const symbolId = (shape: ShapeName) => `test-shape-${shape}`;
 
-export default function TestShape({ shape, matrix, useSymbol = false }: Props) {
+export default function TestShape({ shape, matrix, useSymbol = false, flipY = true }: Props) {
   const [a, b, c, d, e, f] = svgMatrix(matrix);
   return (
     // aria-hidden: the picture around it carries the text description.
-    <g transform="scale(1 -1)" aria-hidden="true">
+    <g transform={flipY ? 'scale(1 -1)' : undefined} aria-hidden="true">
       <g transform={`matrix(${a} ${b} ${c} ${d} ${e} ${f})`}>
         {useSymbol ? <use href={`#${symbolId(shape)}`} /> : <ShapeBody shape={shape} />}
       </g>

@@ -2037,3 +2037,62 @@ export function svgMatrix(m: Mat2): [number, number, number, number, number, num
   const [[a, b], [c, d]] = m;
   return [a, b, c, d, 0, 0];
 }
+
+// ---- Homepage: the hero playground ----
+
+/** How far a hero handle can go from the origin, on each axis. */
+export const HERO_LIMIT = 2.5;
+
+/**
+ * Where a dragged (or typed) hero handle goes: snapped to steps of 0.1 and kept inside ±HERO_LIMIT.
+ * Because every number is a multiple of 0.1, ad − bc is a multiple of 0.01, so the determinant shown is exact.
+ */
+export function snapHandle(p: Vec2): Vec2 {
+  return snapVec(clampVec(p, HERO_LIMIT), 0.1);
+}
+
+/** What the matrix does to area: scales it, flips it over, or squashes it onto a line or a single point. */
+export interface DetState {
+  kind: 'scaled' | 'flipped' | 'line' | 'point';
+  /** ad − bc rounded to 2 places: the number the readout shows. */
+  det: number;
+}
+
+/**
+ * The determinant and what it means, for the hero's readout. The kind is decided from the rounded det, so the
+ * words always agree with the number on screen (a det that shows as 0 is called a collapse). With every number
+ * 0, everything lands on the origin: a point, not a line.
+ */
+export function detState(m: Mat2): DetState {
+  const det = roundTo(det2(m), 2) + 0; // + 0 turns -0 into 0
+  if (det < 0) return { kind: 'flipped', det };
+  if (det > 0) return { kind: 'scaled', det };
+  const allZero = m.flat().every((n) => roundTo(n, 2) === 0);
+  return { kind: allZero ? 'point' : 'line', det };
+}
+
+/** The hero's six buttons, each a ready-made matrix (stored as its columns). */
+export const heroPresets: { name: string; matrix: Mat2 }[] = [
+  { name: 'Reset', matrix: [[1, 0], [0, 1]] },
+  { name: 'Stretch', matrix: [[2, 0], [0, 1]] },
+  { name: 'Shear', matrix: [[1, 0], [1, 1]] },
+  { name: 'Rotate', matrix: [[0, 1], [-1, 0]] }, // a quarter turn anticlockwise
+  { name: 'Flip', matrix: [[-1, 0], [0, 1]] }, // a mirror in the y-axis
+  { name: 'Collapse', matrix: [[1, 2], [0.5, 1]] }, // ĵ is half of î: everything lands on one line
+];
+
+/**
+ * The matrix part way (t from 0 to 1) through a hero button's glide from `from` to `to`.
+ * Usually the four numbers slide in a straight line. When both ends are rotations, the angle turns instead
+ * (the short way round), so the shape keeps its size the whole way. t = 1 gives `to` exactly.
+ */
+export function presetAt(from: Mat2, to: Mat2, t: number): Mat2 {
+  if (t <= 0) return from;
+  if (t >= 1) return to;
+  const a = rotationAngle(from);
+  const b = rotationAngle(to);
+  if (a === null || b === null) return lerpMatrix(from, to, t);
+  // The turn from a to b, between −180° and 180°.
+  const turn = ((((b - a) % 360) + 540) % 360) - 180;
+  return rotation(a + turn * t);
+}
