@@ -1,15 +1,24 @@
 ---
+// The homepage. Sections follow docs/homepage-brief.md, top to bottom. This is the static version (session 2):
+// the boxes marked "picture" are empty placeholders, the same shape as the interactive pictures that will fill them,
+// so the page doesn't jump when they arrive.
 // The serif heading font, installed from npm and bundled with the site (no Google Fonts). Only the homepage loads it.
 import '@fontsource-variable/source-serif-4';
+import '../styles/home.css';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import LessonList, { type ChapterLinks } from '../components/LessonList.tsx';
 import { book, lessonNumber } from '../content/book';
+import { chapterIdeas, chapterSummaries, lessonCountText } from '../content/home';
 import { exerciseIds, getSortedLessons } from '../content/modules';
 
 const lessons = await getSortedLessons();
 
 // BASE_URL comes from `base` in astro.config.mjs, e.g. "/Linear-Algebra-BIT-Shehri/" or "/".
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const lessonHref = (id: string) => `${base}/lessons/${id}/`;
+
+// The chapter cards: chapters with active sections, with their lesson counts.
+const cards = chapterSummaries(lessons);
 
 // Follow the book: each chapter with its active sections, and each section with its lessons,
 // in the plain shape LessonList wants. Archived sections are left out; chapters with nothing active too.
@@ -27,7 +36,7 @@ const chapters: ChapterLinks[] = book
           .filter((l) => l.data.section === s.number)
           .map((l) => ({
             id: l.id,
-            href: `${base}/lessons/${l.id}/`,
+            href: lessonHref(l.id),
             number: lessonNumber(l.data),
             title: l.data.title,
             exerciseIds: exerciseIds(l),
@@ -36,28 +45,206 @@ const chapters: ChapterLinks[] = book
       })),
   }))
   .filter((chapter) => chapter.sections.length > 0);
+
+// The steps every lesson goes through, in the order they appear on a lesson page.
+const lessonSteps = [
+  { name: 'Question', text: 'A puzzle to think about before any formulas.' },
+  { name: 'Play', text: 'Drag, stretch and flip until you see the answer.' },
+  { name: 'Numbers', text: 'The same picture, written as numbers that update as you move.' },
+  { name: 'Explain', text: 'Why it works, in plain words and then in symbols.' },
+  { name: 'Predict', text: 'Guess what happens next, then reveal it.' },
+  { name: 'Practice', text: 'Short exercises that check themselves.' },
+  { name: 'Go deeper', text: 'The matching 3Blue1Brown video and MIT lecture.' },
+  { name: 'Do in your book', text: 'Exercises to do on paper from the textbook.' },
+];
+
+// The four big ideas, in the order the stepper (session 7) will play them.
+const bigIdeas = [
+  {
+    name: 'Vectors',
+    text: 'A vector is an arrow from the origin, and also a list of numbers: how far right, how far up. Adding vectors is walking one arrow, then the other.',
+  },
+  {
+    name: 'Span',
+    text: 'Stretch two arrows by any amounts and add them. Usually you can reach every point of the plane. When the arrows line up, you are stuck on one line.',
+  },
+  {
+    name: 'Linear transformations',
+    text: 'A matrix moves the whole plane at once. Grid lines stay straight, evenly spaced and parallel, and the origin stays put. Watch where î and ĵ land, and you know where everything lands.',
+  },
+  {
+    name: 'Eigenvectors',
+    text: 'Most arrows get knocked off their line when the plane moves. A few only get longer or shorter. Those are the eigenvectors, and how much they stretch is the eigenvalue.',
+  },
+];
+
+// The optional extras: lessons that go beyond the plane.
+const extras = [
+  { id: '1-9-4-3d', name: 'Matrices in 3D', text: 'The same ideas with three axes: a cube turns, stretches and shears.' },
+  { id: '6-1-4-cross-product', name: 'The cross product', text: 'Two arrows in space give a third, at right angles to both.' },
+  { id: '6-1-3-duality', name: 'Duality', text: 'Why a dot product is secretly a matrix that squashes the plane onto a line.' },
+].filter((e) => lessons.some((l) => l.id === e.id));
+
+const firstLesson = lessons[0];
 ---
 
 <BaseLayout
   home
+  wide
   title="Visual Linear Algebra"
   description={`Learn linear algebra by moving things: drag vectors, stretch grids and watch matrices act, in ${lessons.length} interactive lessons that follow Lay's textbook.`}
 >
-  <h1>Visual Linear Algebra</h1>
-  <p>
-    See the maths move. The lessons follow the chapters and sections of <cite>Linear Algebra and Its Applications</cite> (5th edition) by
-    Lay, Lay and McDonald. Pick a lesson to start.
-  </p>
+  <!-- 1. Hero -->
+  <header class="band hero">
+    <div class="wrap hero-grid">
+      <div class="hero-text">
+        <p class="eyebrow">Visual Linear Algebra · BIT</p>
+        <h1>See linear algebra move</h1>
+        <!-- Tags sit on the same line as the words around them: Astro drops a line break next to a tag, which would eat the space. -->
+        <p class="lead">
+          Drag, stretch and flip the plane, and watch every number change with it. The course follows Lay's <cite>Linear Algebra and Its Applications</cite>, chapters 1–7, built on ideas from 3Blue1Brown and MIT 18.06.
+        </p>
+        <p class="actions">
+          <a class="button" href={lessonHref(firstLesson.id)}>Start chapter 1</a>
+          <a class="text-link" href="#chapters">Browse chapters</a>
+        </p>
+      </div>
+      <div class="hero-picture">
+        <!-- Session 4: the playground (grid, logo, î and ĵ handles) goes in this box. -->
+        <div class="picture-box square" aria-hidden="true"></div>
+      </div>
+    </div>
+  </header>
 
-  <!-- client:visible, like every island: the list is at the top, so it still shows saved ticks as soon as the page opens. -->
-  <LessonList chapters={chapters} client:visible />
+  <main>
+    <!-- 2. Chapter map -->
+    <section class="band" id="chapters" aria-labelledby="chapters-title">
+      <div class="wrap">
+        <h2 id="chapters-title">The chapters</h2>
+        <p class="section-lead">The course follows the book's order. Pick a chapter to see its lessons.</p>
+        <ol class="cards chapter-cards">
+          {
+            cards.map((c) => (
+              <li>
+                <a class="card" href={`#chapter-${c.number}`}>
+                  {/* Session 5: the chapter's little logo animation goes in this box. */}
+                  <span class="picture-box card-picture" aria-hidden="true" />
+                  <span class="card-kicker">Chapter {c.number}</span>
+                  <span class="card-title">{c.title}</span>
+                  <span class="card-text">{chapterIdeas[c.number]}</span>
+                  <span class="card-count">{lessonCountText(c.lessonCount)}</span>
+                </a>
+              </li>
+            ))
+          }
+        </ol>
+      </div>
+    </section>
 
-  <p class="footer-links"><a href={`${base}/about/`}>About and credits</a></p>
+    <!-- All lessons: every lesson with saved progress. The chapter cards jump into this list. -->
+    <section class="band sunken" id="lessons" aria-labelledby="lessons-title">
+      <div class="wrap narrow">
+        <h2 id="lessons-title">All lessons</h2>
+        <!-- client:visible, like every island: it shows saved ticks as soon as it scrolls into view. -->
+        <LessonList chapters={chapters} client:visible />
+      </div>
+    </section>
+
+    <!-- 3. SVD showcase -->
+    <section class="band reveal" aria-labelledby="svd-title">
+      <div class="wrap">
+        <h2 id="svd-title">Every matrix is a rotation, a stretch, and a rotation</h2>
+        <p class="section-lead">
+          The singular value decomposition, A = UΣVᵀ, splits any matrix into three simple moves. Step through them and
+          watch the shape turn, stretch along the axes, and turn again.
+        </p>
+        <!-- Session 6: the SVD showcase goes in this box, with the three matrices beside it. -->
+        <div class="picture-box wide-picture" aria-hidden="true"></div>
+        <p class="step-buttons">
+          <button type="button" disabled>1 rotate</button>
+          <button type="button" disabled>2 stretch</button>
+          <button type="button" disabled>3 rotate</button>
+          <button type="button" disabled>Play all</button>
+        </p>
+      </div>
+    </section>
+
+    <!-- 4. Four big ideas -->
+    <section class="band sunken reveal" aria-labelledby="ideas-title">
+      <div class="wrap">
+        <h2 id="ideas-title">Four big ideas</h2>
+        <div class="ideas-grid">
+          <ol class="ideas">
+            {
+              bigIdeas.map((idea, i) => (
+                <li>
+                  <h3>
+                    <span class="idea-number">{i + 1}</span> {idea.name}
+                  </h3>
+                  <p>{idea.text}</p>
+                </li>
+              ))
+            }
+          </ol>
+          <div class="ideas-picture">
+            <!-- Session 7: one pinned picture that plays each idea as its text scrolls into view. -->
+            <div class="picture-box square" aria-hidden="true"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. How a lesson works -->
+    <section class="band reveal" aria-labelledby="steps-title">
+      <div class="wrap">
+        <h2 id="steps-title">How a lesson works</h2>
+        <ol class="steps">
+          {
+            lessonSteps.map((step) => (
+              <li>
+                <span class="step-name">{step.name}</span>
+                <span class="step-text">{step.text}</span>
+              </li>
+            ))
+          }
+        </ol>
+      </div>
+    </section>
+
+    <!-- 6. Optional extras -->
+    <section class="band sunken reveal" aria-labelledby="extras-title">
+      <div class="wrap">
+        <h2 id="extras-title">Optional extras</h2>
+        <p class="section-lead">Lessons that go beyond the plane, for when you want more.</p>
+        <ul class="cards extra-cards">
+          {
+            extras.map((e) => (
+              <li>
+                <a class="card" href={lessonHref(e.id)}>
+                  <span class="card-title">{e.name}</span>
+                  <span class="card-text">{e.text}</span>
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <!-- 7. Footer -->
+  <footer class="band site-footer">
+    <div class="wrap">
+      <p>
+        The course follows the chapter and section order of <cite>Linear Algebra and Its Applications</cite> by David C.
+        Lay, Steven R. Lay and Judi J. McDonald. The visual approach is inspired by 3Blue1Brown's <cite>Essence of Linear Algebra</cite>, and lessons link to Gilbert Strang's MIT 18.06 lectures. All text,
+        pictures and exercises on this site are our own.
+      </p>
+      <p>BIT logo used with permission of Beijing Institute of Technology.</p>
+      <p class="footer-links">
+        <a href={`${base}/about/`}>About and credits</a>
+        <a href="https://github.com/appleshehri2004-source/Linear-Algebra-BIT-Shehri">Source code on GitHub</a>
+      </p>
+    </div>
+  </footer>
 </BaseLayout>
-
-<style>
-  .footer-links {
-    margin-top: 3rem;
-    color: var(--muted);
-  }
-</style>

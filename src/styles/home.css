@@ -1,0 +1,401 @@
+/* The homepage's layout. Colours and fonts come from the html.home block in global.css: no colours are written here.
+   Mobile first: everything stacks on a phone, and sits side by side from 56rem (about a small laptop) up.
+   Every rule starts with .home: Astro puts all the site's CSS in one shared file, and lessons use some of the same
+   class names (button, card, steps), so without .home these rules would change lesson pages too. */
+
+/* ---------- Bands and widths ---------- */
+/* A band is one full-width stripe of the page. .wrap keeps its content to a readable width in the middle. */
+.home .band {
+  padding: 3rem 0;
+}
+
+.home .band.sunken {
+  background: var(--sunken);
+}
+
+.home .wrap {
+  width: 100%;
+  max-width: 76rem;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.home .wrap.narrow {
+  max-width: 46rem;
+}
+
+@media (min-width: 40rem) {
+  .home .band {
+    padding: 4.5rem 0;
+  }
+  .home .wrap {
+    padding: 0 2rem;
+  }
+}
+
+/* ---------- Type ---------- */
+/* clamp(smallest, grows with the screen, biggest): readable on a phone, big enough on a projector. */
+.home h1 {
+  font-size: clamp(2.25rem, 1.6rem + 3vw, 4rem);
+  line-height: 1.08;
+  letter-spacing: -0.01em;
+  margin: 0.25rem 0 1rem;
+}
+
+.home h2 {
+  font-size: clamp(1.6rem, 1.3rem + 1.4vw, 2.4rem);
+  margin: 0 0 0.75rem;
+}
+
+.home main h3 {
+  font-size: 1.15rem;
+}
+
+.home .eyebrow,
+.home .card-kicker {
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--brand);
+  margin: 0;
+}
+
+.home .lead {
+  font-size: clamp(1.05rem, 1rem + 0.35vw, 1.3rem);
+  color: var(--ink-2);
+  max-width: 34rem;
+}
+
+.home .section-lead {
+  color: var(--ink-2);
+  max-width: 40rem;
+  margin: 0 0 2rem;
+}
+
+/* ---------- Links, buttons, focus ---------- */
+/* Every control gets the same clearly visible focus ring when reached with the keyboard. */
+.home :is(a, button):focus-visible {
+  outline: 3px solid var(--brand);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+.home .actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1.5rem;
+  margin-top: 2rem;
+}
+
+.home .button {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  padding: 0.6rem 1.4rem;
+  border-radius: 999px;
+  background: var(--brand);
+  color: var(--paper);
+  font-weight: 600;
+  text-decoration: none;
+  transition: background-color 0.15s;
+}
+
+.home .button:hover {
+  background: var(--brand-hover);
+}
+
+.home .text-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  font-weight: 600;
+}
+
+.home .step-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.home .step-buttons button {
+  min-height: 2.75rem;
+  padding: 0.4rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+}
+
+.home .step-buttons button:disabled {
+  color: var(--muted);
+}
+
+/* ---------- Picture placeholders ---------- */
+/* The empty boxes where the interactive pictures will go, with a faint grid. Each has a fixed shape (aspect-ratio)
+   so nothing moves when the picture loads. */
+.home .picture-box {
+  display: block;
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background-color: var(--paper);
+  background-image:
+    linear-gradient(var(--border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border) 1px, transparent 1px);
+  background-size: 2rem 2rem;
+  background-position: center;
+}
+
+.home .picture-box.square {
+  aspect-ratio: 1;
+}
+
+.home .picture-box.wide-picture {
+  aspect-ratio: 16 / 9;
+}
+
+/* ---------- Hero ---------- */
+.home .hero {
+  padding-top: 2.5rem;
+}
+
+.home .hero-grid {
+  display: grid;
+  gap: 2.5rem;
+  align-items: center;
+}
+
+.home .hero-picture {
+  max-width: 32rem;
+  width: 100%;
+  margin: 0 auto;
+}
+
+@media (min-width: 56rem) {
+  .home .hero-grid {
+    grid-template-columns: 1.1fr 1fr;
+  }
+  .home .hero {
+    padding: 5rem 0;
+  }
+}
+
+/* ---------- Cards ---------- */
+.home .cards {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 16rem), 1fr));
+}
+
+.home .card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  height: 100%;
+  padding: 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--paper);
+  color: var(--ink);
+  text-decoration: none;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.home .sunken .card {
+  background: var(--paper);
+}
+
+.home .band:not(.sunken) .card {
+  background: var(--sunken);
+}
+
+.home .card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgb(21 36 29 / 0.08);
+}
+
+.home .card-picture {
+  aspect-ratio: 4 / 3;
+  margin-bottom: 0.75rem;
+}
+
+.home .card-title {
+  font-family: var(--font-heading);
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.home .card-text {
+  color: var(--ink-2);
+  font-size: 0.95rem;
+  flex: 1;
+}
+
+.home .card-count {
+  color: var(--muted);
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+}
+
+/* ---------- All lessons ---------- */
+/* When a chapter card jumps to the list, leave a little space above the chapter's heading. */
+.home #lessons [id^='chapter-'] {
+  scroll-margin-top: 1rem;
+}
+
+/* Chapter headings inside the list are one level below "All lessons", so they're smaller. */
+.home #lessons [id^='chapter-'] h2 {
+  font-size: 1.4rem;
+  margin: 2.5rem 0 0.5rem;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html.home {
+    scroll-behavior: smooth;
+  }
+}
+
+/* ---------- Four big ideas ---------- */
+.home .ideas-grid {
+  display: grid;
+  gap: 2rem;
+}
+
+.home .ideas {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 1.5rem;
+}
+
+.home .ideas h3 {
+  margin: 0 0 0.35rem;
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+}
+
+.home .ideas p {
+  margin: 0;
+  color: var(--ink-2);
+}
+
+.home .idea-number {
+  color: var(--brand);
+}
+
+.home .ideas-picture {
+  max-width: 32rem;
+  width: 100%;
+  margin: 0 auto;
+}
+
+@media (min-width: 56rem) {
+  .home .ideas-grid {
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+  }
+  /* The picture stays in view while the four texts scroll past it. */
+  .home .ideas-picture {
+    position: sticky;
+    top: 2rem;
+  }
+}
+
+/* ---------- How a lesson works ---------- */
+.home .steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 13rem), 1fr));
+  counter-reset: step;
+}
+
+.home .steps li {
+  counter-increment: step;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 1rem 1.1rem;
+  border-top: 3px solid var(--brand);
+  background: var(--sunken);
+  border-radius: 0 0 10px 10px;
+}
+
+.home .step-name::before {
+  content: counter(step) '. ';
+  color: var(--brand);
+}
+
+.home .step-name {
+  font-weight: 600;
+}
+
+.home .step-text {
+  color: var(--ink-2);
+  font-size: 0.95rem;
+}
+
+/* ---------- Footer ---------- */
+.home .site-footer {
+  border-top: 1px solid var(--border);
+  color: var(--ink-2);
+  font-size: 0.95rem;
+}
+
+.home .site-footer p {
+  max-width: 46rem;
+}
+
+.home .site-footer .footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 1.5rem;
+  margin-bottom: 0;
+}
+
+/* ---------- Gentle reveal on scroll ---------- */
+/* Only in browsers that can tie an animation to scrolling (animation-timeline), and only for visitors who
+   haven't asked for less motion. Everywhere else, the sections are simply there. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .home .reveal > .wrap {
+      animation: home-reveal linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 35%;
+    }
+  }
+}
+
+@keyframes home-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(1.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Visitors who asked for less motion: no lifting cards either. */
+@media (prefers-reduced-motion: reduce) {
+  .home .card,
+  .home .button {
+    transition: none;
+  }
+  .home .card:hover {
+    transform: none;
+  }
+}

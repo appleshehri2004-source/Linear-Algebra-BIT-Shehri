@@ -54,7 +54,8 @@ export default function LessonList({ chapters }: Props) {
       </p>
 
       {chapters.map((chapter) => (
-        <section key={chapter.number}>
+        // The id lets the homepage's chapter cards jump straight here, e.g. href="#chapter-3".
+        <section key={chapter.number} id={`chapter-${chapter.number}`}>
           <h2>
             Chapter {chapter.number}: {chapter.title}
           </h2>
