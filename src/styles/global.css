@@ -1,71 +1,6 @@
 /* Site-wide styles. Every page gets these through BaseLayout.astro. */
 
-/* ---------- Colour tokens ---------- */
-/* Light theme (the default). */
-:root {
-  --ihat: #1a9e4b; /* i-hat: green */
-  --jhat: #d93a3a; /* j-hat: red */
-  --khat: #1f6fd1; /* k-hat (3D): blue */
-  --vec: #c99a00; /* any other vector: yellow (darker so it shows on white) */
-  --vec2: #e07000; /* a second vector next to the first: orange */
-  --sum: #8a6d00; /* a sum of vectors: deep gold, drawn thicker */
-  --positive: #1a7f3c; /* a positive number, or "yes" (e.g. independent) */
-  --zero: #5e5e66; /* exactly zero */
-  --negative: #c42f2f; /* a negative number, or "no" (e.g. dependent) */
-  --area-kept: #2f6fe0; /* an area patch facing the usual way (det > 0): blue */
-  --area-flipped: #b02fc4; /* an area patch flipped over (det < 0): purple */
-  --row1: #2f6fe0; /* equation 1 of a system (row 1, and its line): blue */
-  --row2: #b02fc4; /* equation 2: purple */
-  --row3: #0e8a8a; /* equation 3: teal */
-  --space: #7048e8; /* a column space or row space (where vectors can reach): violet */
-  --null: #d6336c; /* a null space or left null space (what gets squashed to 0): pink */
-  --cross: #0e8a8a; /* a cross product v × w: teal */
-  --eigen: #0b7285; /* an eigenvector line, lit up because A keeps it on itself: deep cyan */
-
-  --bg: #fdfdfb;
-  --text: #1c1c1e;
-  --muted: #5e5e66;
-  --link: #2a5bd7;
-  --border: #dcdce0;
-  --grid-faint: #e8e8ec; /* the fixed grid behind the moving one */
-  --grid-moving: #8fa9e6; /* the grid that moves with a transformation: brighter */
-
-  color-scheme: light;
-}
-
-/* Dark theme: used automatically when the phone or computer is in dark mode. */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --ihat: #4cd07d;
-    --jhat: #ff6b6b;
-    --khat: #5aa9ff;
-    --vec: #ffd43b;
-    --vec2: #ff9f43;
-    --sum: #fff0a0;
-    --positive: #5ee08f;
-    --zero: #a0a0aa;
-    --negative: #ff7b7b;
-    --area-kept: #6ea2ff;
-    --area-flipped: #e27cf2;
-    --row1: #6ea2ff;
-    --row2: #e27cf2;
-    --row3: #3fd0c9;
-    --space: #a48bff;
-    --null: #f783ac;
-    --cross: #3fd0c9;
-    --eigen: #66d9e8;
-
-    --bg: #16161a;
-    --text: #ececf0;
-    --muted: #a0a0aa;
-    --link: #8ab4ff;
-    --border: #34343c;
-    --grid-faint: #26262c;
-    --grid-moving: #4d6aa8;
-
-    color-scheme: dark;
-  }
-}
+/* Colours live in theme.css (imported just before this file in BaseLayout.astro). */
 
 /* ---------- Page basics ---------- */
 *,
@@ -86,6 +21,57 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
+}
+
+/* ---------- Background (every page except the homepage) ---------- */
+/* Drawn with CSS only, on a layer fixed behind the page so it stays put while you scroll.
+   Layers, top to bottom: a soft glow at the top (dark theme only), dots on every 5th crossing,
+   every 5th grid line, and the faint grid (one line every 24px). */
+html:not(.home) body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% 0%, var(--glow-top), transparent 70%),
+    radial-gradient(circle, var(--grid-major) 1.5px, transparent 2px),
+    linear-gradient(to right, var(--grid-major) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-major) 1px, transparent 1px),
+    linear-gradient(to right, var(--grid) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid) 1px, transparent 1px);
+  background-size:
+    100% 100%,
+    120px 120px,
+    120px 120px,
+    120px 120px,
+    24px 24px,
+    24px 24px;
+  /* The dots sit exactly on the crossings of the stronger lines. */
+  background-position:
+    0 0,
+    -60px -60px,
+    0 0,
+    0 0,
+    0 0,
+    0 0;
+}
+
+/* ---------- Panels ---------- */
+/* The lesson text sits on a see-through panel, so it stays readable over the grid. */
+html:not(.home) main {
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  border-radius: 16px;
+  padding: 0.25rem 1rem 1.25rem;
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+
+@media (min-width: 40rem) {
+  html:not(.home) main {
+    padding: 0.5rem 2rem 2rem;
+  }
 }
 
 /* Mobile-first text column: full width on a phone, capped on big screens. */
@@ -183,64 +169,26 @@ nav.top a,
 }
 
 /* ---------- Homepage look ---------- */
-/* Only the homepage uses these: BaseLayout puts class="home" on <html> when a page asks for it (see docs/homepage-plan.md, D1–D3).
-   Lesson pages never get the class, so they keep the colours above and their dark theme.
-   "html.home" is stronger than ":root", so these win even when the phone is in dark mode: the homepage is always light. */
+/* Only the homepage uses these: BaseLayout puts class="home" on <html> when a page asks for it.
+   The homepage's own colour names now just point at the theme colours (theme.css), so it goes dark
+   and light like every other page and uses green î / red ĵ (docs/homepage-brief.md replaced D1 and D3). */
 html.home {
-  /* Paper and ink */
-  --paper: #faf8f4; /* page background */
-  --sunken: #f2eee6; /* section bands, card backgrounds */
-  --border: #e3ddd2; /* hairlines, grid lines */
-  --ink: #15241d; /* main text */
-  --ink-2: #4b5850; /* secondary text */
-  --muted: #646d65; /* captions, hints */
-
-  /* Brand */
-  --brand: #0e5c3f; /* heading accents, primary button */
-  --brand-hover: #0a4a32;
-  --copper: #a44a24; /* links, secondary accents */
-  --gold: #b98a4e; /* decoration only, never text (too pale to read) */
-  --gold-tint: #e9d6b4; /* the determinant's area fill, at about 60% opacity */
-
-  /* Maths: each colour means one thing */
-  --i-hat: #c4502a; /* î and anything tied to the first column. Arrows only: too pale for text (4.4 : 1) */
-  --j-hat: #2b5fb3; /* ĵ and anything tied to the second column */
-  --output: #0e5c3f; /* output vectors (Av) */
-  --eigen: #a3366f; /* eigenvector lines, always dashed */
-
-  /* The old names the rest of the stylesheet uses, pointed at the homepage colours. */
-  --bg: var(--paper);
-  --text: var(--ink);
-  --link: var(--copper);
-  --grid-faint: var(--border); /* the fixed grid behind the moving one (Plane.css) */
-
-  /* The lesson colours the homepage borrows (the 3D card, the progress ticks, Plane.css), pinned to their
-     light-theme values. Without this, a phone in dark mode would switch them to the pale dark-theme versions
-     (from the @media block above) on top of the always-light homepage. Keep these equal to the :root values. */
-  --ihat: #1a9e4b;
-  --jhat: #d93a3a;
-  --khat: #1f6fd1;
-  --vec: #c99a00;
-  --vec2: #e07000;
-  --sum: #8a6d00;
-  --positive: #1a7f3c;
-  --zero: #5e5e66;
-  --negative: #c42f2f;
-  --area-kept: #2f6fe0;
-  --area-flipped: #b02fc4;
-  --row1: #2f6fe0;
-  --row2: #b02fc4;
-  --row3: #0e8a8a;
-  --space: #7048e8;
-  --null: #d6336c;
-  --cross: #0e8a8a;
-  --grid-moving: #8fa9e6;
+  --paper: var(--bg); /* page background */
+  --sunken: var(--bg-raised); /* section bands, card backgrounds */
+  --ink: var(--text); /* main text */
+  --ink-2: var(--text-muted); /* secondary text */
+  --copper: var(--link); /* links, secondary accents */
+  --gold: var(--vec-x); /* decoration only */
+  --gold-tint: var(--vec-x); /* the determinant's area fill, at about 60% opacity */
+  --i-hat: var(--vec-i); /* î */
+  --j-hat: var(--vec-j); /* ĵ */
+  --output: var(--vec-x); /* output vectors (Av) */
+  --eigen: var(--vec-eigen); /* eigenvector lines, always dashed */
 
   /* Fonts: serif headings, Inter for everything else. KaTeX keeps its own fonts. */
   --font-heading: 'Source Serif 4 Variable', Georgia, 'Times New Roman', serif;
   --font-body: 'Inter Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
 
-  color-scheme: light;
   font-family: var(--font-body);
 }
 

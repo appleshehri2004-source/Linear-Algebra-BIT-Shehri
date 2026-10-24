@@ -1,0 +1,128 @@
+/* The one colour file (docs/homepage-brief.md §2). No colour is typed anywhere else in src/:
+   pages, components, Mafs and three.js all read these variables. theme.test.ts checks both rules.
+
+   BaseLayout puts data-theme="dark" on <html>. A tiny script in its <head> switches to "light" before the
+   page is drawn, if the visitor chose light with the sun/moon button. We don't follow the phone's setting.
+   Rule: every colour keeps the same hue in both themes; only how light it is changes. */
+
+/* ---------- Dark (the default) ---------- */
+:root,
+[data-theme='dark'] {
+  /* Page */
+  --bg: #0b0f1a; /* page background */
+  --bg-deep: #05070d; /* far distance / fog in 3D */
+  --bg-raised: #121829; /* solid bands and cards that must hide what's behind them */
+  --surface: rgba(255, 255, 255, 0.04); /* see-through panels over the background grid */
+  --surface-border: rgba(255, 255, 255, 0.08);
+  --border: #2a3142; /* solid hairlines: plane frames, table rules */
+  --text: #e8ecf5;
+  --text-muted: #9aa4b8;
+  --link: #8ab4ff;
+  --grid: rgba(140, 160, 200, 0.12); /* the faint fixed grid */
+  --grid-major: rgba(140, 160, 200, 0.25); /* every 5th line */
+  --glow-top: rgba(110, 140, 255, 0.14); /* the soft light at the top of each page */
+  --shadow: rgba(0, 0, 0, 0.45);
+
+  /* Brand: the green of the BIT logo, made brighter so it shows on a dark page (same hue). */
+  --brand: #4cc78d;
+  --brand-hover: #6fd6a4;
+
+  /* Vectors: each colour means one thing on every page. */
+  --vec-i: #5ad17a; /* î, always green */
+  --vec-j: #ff6b6b; /* ĵ, always red */
+  --vec-x: #ffd166; /* x, or any other vector: yellow */
+  --vec-eigen: #b388ff; /* eigenvector lines on the homepage */
+  --glow: 0.6; /* 3D glow strength */
+
+  /* Lesson colours the brief doesn't list. Unchanged from before. */
+  --khat: #5aa9ff; /* k-hat (3D): blue */
+  --vec2: #ff9f43; /* a second vector next to the first: orange */
+  --sum: #fff0a0; /* a sum of vectors: pale gold, drawn thicker */
+  --positive: #5ee08f; /* a positive number, or "yes" */
+  --zero: #a0a0aa; /* exactly zero */
+  --negative: #ff7b7b; /* a negative number, or "no" */
+  --area-kept: #6ea2ff; /* an area patch facing the usual way (det > 0) */
+  --area-flipped: #e27cf2; /* an area patch flipped over (det < 0) */
+  --row1: #6ea2ff; /* equation 1 of a system */
+  --row2: #e27cf2; /* equation 2 */
+  --row3: #3fd0c9; /* equation 3 */
+  --space: #a48bff; /* a column space or row space: violet */
+  --null: #f783ac; /* a null space: pink */
+  --cross: #3fd0c9; /* a cross product: teal */
+  --eigen: #66d9e8; /* an eigenvector line in lessons: cyan (lesson texts say "cyan") */
+  --grid-moving: #4d6aa8; /* the grid that moves with a transformation */
+
+  color-scheme: dark;
+}
+
+/* ---------- Light ---------- */
+[data-theme='light'] {
+  --bg: #f6f3ec; /* paper */
+  --bg-deep: #e9e4d8;
+  --bg-raised: #eee9dd;
+  --surface: rgba(255, 255, 255, 0.7);
+  --surface-border: rgba(20, 24, 42, 0.1);
+  --border: #d9d3c6;
+  --text: #14182a;
+  --text-muted: #555c70;
+  --link: #2a5bd7;
+  --grid: rgba(20, 24, 42, 0.08);
+  --grid-major: rgba(20, 24, 42, 0.18);
+  --glow-top: transparent; /* no glow on paper */
+  --shadow: rgba(20, 24, 42, 0.08);
+
+  --brand: #025a30; /* the BIT logo's green */
+  --brand-hover: #014424;
+
+  --vec-i: #1f9d4c;
+  --vec-j: #d63a3a;
+  --vec-x: #b8860b;
+  --vec-eigen: #6a3fd1;
+  --glow: 0;
+
+  --khat: #1f6fd1;
+  --vec2: #e07000;
+  --sum: #8a6d00;
+  --positive: #1a7f3c;
+  --zero: #5e5e66;
+  --negative: #c42f2f;
+  --area-kept: #2f6fe0;
+  --area-flipped: #b02fc4;
+  --row1: #2f6fe0;
+  --row2: #b02fc4;
+  --row3: #0e8a8a;
+  --space: #7048e8;
+  --null: #d6336c;
+  --cross: #0e8a8a;
+  --eigen: #0b7285;
+  --grid-moving: #8fa9e6;
+
+  color-scheme: light;
+}
+
+/* ---------- Old names ---------- */
+/* The lessons were written with these names. They now just point at the colours above,
+   so both themes work without changing any lesson. */
+:root {
+  --ihat: var(--vec-i);
+  --jhat: var(--vec-j);
+  --vec: var(--vec-x);
+  --muted: var(--text-muted);
+  --grid-faint: var(--grid);
+}
+
+/* ---------- Mafs (every 2D plane) ---------- */
+/* ":root .MafsView" is stronger than Mafs's own ".MafsView", so these always win. */
+:root .MafsView {
+  --mafs-bg: transparent;
+  --mafs-fg: var(--text);
+  --mafs-line-color: var(--grid-major);
+  --mafs-origin-color: var(--text-muted);
+  --mafs-green: var(--vec-i);
+  --mafs-red: var(--vec-j);
+  --mafs-yellow: var(--vec-x);
+  --mafs-violet: var(--vec-eigen);
+}
+
+/* KaTeX needs no rule: formulas take their colour from the text around them (var(--text) from the body,
+   or a vector colour when a formula sits inside e.g. <span class="ihat">). */

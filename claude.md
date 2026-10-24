@@ -2,8 +2,8 @@
 - Stack: Astro + React islands + Mafs (2D) + react-three-fiber (3D) + KaTeX + TypeScript + Vitest.
 - All math lives in src/lib/linalg.ts with tests. Components never compute math themselves.
 - A 2x2 matrix is stored as its columns: [[ihatX, ihatY], [jhatX, jhatY]].
-- Colours: i-hat green, j-hat red, other vectors yellow; faint fixed grid behind the moving grid.
-  The homepage is the exception: it uses the palette in docs/homepage-brief.md (i-hat copper, j-hat blue), scoped to `html.home` (decision D1 in docs/homepage-plan.md). Don't change one to match the other.
+- Colours: i-hat green, j-hat red, other vectors yellow; faint fixed grid behind the moving grid. Same on every page, homepage included.
+  All colours live in src/styles/theme.css (dark default, light via the sun/moon toggle; the phone's setting is ignored). Never type a colour anywhere else: theme.test.ts checks this.
 - Every lesson: Question, Play, Numbers, Explain, Predict-then-reveal, Practice, Go deeper.
 - No CDN links or Google Fonts: self-host everything (the site must work in China).
 - I am a coding beginner. Before coding, show a short plan and wait for my OK.

@@ -1,4 +1,4 @@
-/* Makes Mafs use the site's colours (from global.css), in light and dark mode. */
+/* The frame around every 2D plane. Its colours (Mafs's own variables) are set in theme.css. */
 .plane {
   width: 100%;
   max-width: 480px;
@@ -7,10 +7,6 @@
 
 .plane .MafsView,
 .poly-graph .MafsView {
-  --mafs-bg: var(--bg);
-  --mafs-fg: var(--muted);
-  --mafs-origin-color: var(--muted); /* the x and y axes */
-  --mafs-line-color: var(--grid-faint); /* the faint grid */
   border: 1px solid var(--border);
   border-radius: 8px;
   /* Mafs blocks scrolling on the whole plane. Allow it again, so a phone user can scroll past.

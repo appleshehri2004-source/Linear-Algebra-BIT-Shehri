@@ -3,11 +3,12 @@
 // Maths z points up, so the camera is told that "up" is z.
 // Kept light for phones: it only redraws when something changes (frameloop="demand"),
 // draws at most 2 screen pixels per CSS pixel, and uses plain 1-pixel lines.
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Html, OrbitControls } from '@react-three/drei';
 import * as THREE from 'three';
 import { length3, normalize3, planeCorners, type Mat3, type Vec3 } from '../lib/linalg';
+import { splitAlpha, useThemeColors, type ThemeColors } from '../lib/useThemeColors';
 import './Scene3D.css';
 
 interface Props {
@@ -52,42 +53,8 @@ export interface SceneArrow {
   label?: string;
 }
 
-/** The names of the site colours the 3D picture can use (each is a CSS variable, e.g. vec2 is --vec2). */
-export type Colour = keyof ReturnType<typeof readColours>;
-
-/** The site's colours, read from the CSS variables so light and dark mode both work. */
-function readColours() {
-  const css = getComputedStyle(document.documentElement);
-  const get = (name: string) => css.getPropertyValue(name).trim();
-  return {
-    ihat: get('--ihat'),
-    jhat: get('--jhat'),
-    khat: get('--khat'),
-    vec: get('--vec'),
-    vec2: get('--vec2'),
-    sum: get('--sum'),
-    cross: get('--cross'),
-    areaKept: get('--area-kept'),
-    faint: get('--grid-faint'),
-    moving: get('--grid-moving'),
-    muted: get('--muted'),
-    space: get('--space'),
-    null: get('--null'),
-    eigen: get('--eigen'),
-  };
-}
-
-/** readColours, read again when the phone or computer switches between light and dark mode. */
-function useColours() {
-  const [colours, setColours] = useState(readColours);
-  useEffect(() => {
-    const query = matchMedia('(prefers-color-scheme: dark)');
-    const update = () => setColours(readColours());
-    query.addEventListener('change', update);
-    return () => query.removeEventListener('change', update);
-  }, []);
-  return colours;
-}
+/** The names of the site colours the 3D picture can use (each is a CSS variable, see src/lib/useThemeColors.ts). */
+export type Colour = keyof ThemeColors;
 
 /** Points for lines in the xy-plane: x = k and y = k for k from -n to n. Each pair of points is one line. */
 function floorLines(n: number): Float32Array {
@@ -269,7 +236,8 @@ export default function Scene3D({
   surface,
   curves,
 }: Props) {
-  const colours = useColours();
+  const colours = useThemeColors();
+  const faint = splitAlpha(colours.faint); // the grid colour is see-through: three.js needs that as a separate opacity
   const box = useRef<HTMLDivElement>(null);
 
   // A finger dragging on the picture should turn the view, not scroll the page.
@@ -299,7 +267,7 @@ export default function Scene3D({
         gl={{ antialias: true, powerPreference: 'low-power' }}
       >
         {/* Faint and still: the floor grid and the three axes. */}
-        <Lines points={FLOOR} color={colours.faint} />
+        <Lines points={FLOOR} color={faint.color} opacity={faint.opacity} />
         <Lines points={AXES} color={colours.muted} opacity={0.6} />
         <Html position={[3.8, 0, 0]} center className="scene3d-axis">x</Html>
         <Html position={[0, 3.8, 0]} center className="scene3d-axis">y</Html>
