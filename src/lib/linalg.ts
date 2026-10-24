@@ -2024,3 +2024,16 @@ export function blockProduct(a: number[][], b: number[][], rowCut: number, inner
   const product = [0, 1].map((i) => [0, 1].map((j) => addRows(mulRows(aBlocks[i][0], bBlocks[0][j])!, mulRows(aBlocks[i][1], bBlocks[1][j])!)!));
   return { aBlocks, bBlocks, product };
 }
+
+// ---- Homepage: drawing a matrix with SVG ----
+
+/**
+ * The six numbers of SVG's transform="matrix(a b c d e f)" (and CSS's matrix()) for the matrix m.
+ * SVG sends (x, y) to (a·x + c·y + e, b·x + d·y + f), so a, b is the first column (where î lands) and c, d the second
+ * (where ĵ lands). There is no shift: e = f = 0. This is in maths coordinates (y up); the drawing must flip y once
+ * around it, because screens count y downwards (TestShape does this).
+ */
+export function svgMatrix(m: Mat2): [number, number, number, number, number, number] {
+  const [[a, b], [c, d]] = m;
+  return [a, b, c, d, 0, 0];
+}

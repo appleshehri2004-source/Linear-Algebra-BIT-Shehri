@@ -163,6 +163,7 @@ import {
   svd2,
   svdSteps,
   svdStepsAt,
+  svgMatrix,
   perp,
   unitCircle,
   addFn,
@@ -2206,5 +2207,29 @@ describe('blockProduct', () => {
     expect(blockMatrixTex(splitBlocks([[1, 2], [3, 4]], 1, 1))).toBe(
       '\\left[\\begin{array}{c|c} 1 & 2 \\\\ \\hline 3 & 4 \\end{array}\\right]',
     );
+  });
+});
+
+describe('svgMatrix', () => {
+  // SVG's matrix(a b c d e f) sends (x, y) to (a·x + c·y + e, b·x + d·y + f).
+  const applySvg = ([a, b, c, d, e, f]: number[], [x, y]: Vec2): Vec2 => [a * x + c * y + e, b * x + d * y + f];
+  const points: Vec2[] = [[1, 0], [0, 1], [2, -3], [-0.5, 1.5]];
+
+  it('lists the columns in SVG order, with no shift', () => {
+    expect(svgMatrix([[1, 0], [0, 1]])).toEqual([1, 0, 0, 1, 0, 0]);
+    expect(svgMatrix([[1, 2], [3, 4]])).toEqual([1, 2, 3, 4, 0, 0]);
+  });
+
+  it('moves points exactly like matVec, for a shear, a rotation and a flip', () => {
+    const shear: Mat2 = [[1, 0], [1, 1]];
+    const flip: Mat2 = [[-1, 0], [0, 1]];
+    for (const m of [shear, rotation(30), flip]) {
+      for (const p of points) {
+        const [x, y] = applySvg(svgMatrix(m), p);
+        const [mx, my] = matVec(m, p);
+        expect(x).toBeCloseTo(mx, 12);
+        expect(y).toBeCloseTo(my, 12);
+      }
+    }
   });
 });
