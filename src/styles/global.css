@@ -214,6 +214,28 @@ html.home {
   --link: var(--copper);
   --grid-faint: var(--border); /* the fixed grid behind the moving one (Plane.css) */
 
+  /* The lesson colours the homepage borrows (the 3D card, the progress ticks, Plane.css), pinned to their
+     light-theme values. Without this, a phone in dark mode would switch them to the pale dark-theme versions
+     (from the @media block above) on top of the always-light homepage. Keep these equal to the :root values. */
+  --ihat: #1a9e4b;
+  --jhat: #d93a3a;
+  --khat: #1f6fd1;
+  --vec: #c99a00;
+  --vec2: #e07000;
+  --sum: #8a6d00;
+  --positive: #1a7f3c;
+  --zero: #5e5e66;
+  --negative: #c42f2f;
+  --area-kept: #2f6fe0;
+  --area-flipped: #b02fc4;
+  --row1: #2f6fe0;
+  --row2: #b02fc4;
+  --row3: #0e8a8a;
+  --space: #7048e8;
+  --null: #d6336c;
+  --cross: #0e8a8a;
+  --grid-moving: #8fa9e6;
+
   /* Fonts: serif headings, Inter for everything else. KaTeX keeps its own fonts. */
   --font-heading: 'Source Serif 4 Variable', Georgia, 'Times New Roman', serif;
   --font-body: 'Inter Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;

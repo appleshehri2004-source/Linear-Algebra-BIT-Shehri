@@ -85,7 +85,8 @@ export default function SvdShowcase() {
             {/* useSymbol: the logo is defined once on the homepage (TestShapeSymbols in index.astro). */}
             <TestShape shape="bit-logo" matrix={m} flipY={false} useSymbol />
           </g>
-          <Polygon points={transformShape(m, CIRCLE)} color="var(--gold)" fillOpacity={0} weight={2} />
+          {/* The circle's image under the matrix so far: an output, so --output (gold would be too pale: 2.9 : 1). */}
+          <Polygon points={transformShape(m, CIRCLE)} color="var(--output)" fillOpacity={0} weight={2} />
           <HaloArrow tip={m[0]} color="var(--i-hat)" label="î" />
           <HaloArrow tip={m[1]} color="var(--j-hat)" label="ĵ" />
         </Plane>

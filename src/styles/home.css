@@ -78,7 +78,7 @@
 .home :is(a, button):focus-visible {
   outline: 3px solid var(--brand);
   outline-offset: 3px;
-  border-radius: 4px;
+  /* No border-radius here: the outline follows each control's own shape (a round button stays round). */
 }
 
 .home .actions {
@@ -435,10 +435,11 @@
   }
 }
 
-/* Visitors who asked for less motion: no lifting cards either. */
+/* Visitors who asked for less motion: no lifting cards either, and Mafs's handles don't grow their ring. */
 @media (prefers-reduced-motion: reduce) {
   .home .card,
-  .home .button {
+  .home .button,
+  .home .mafs-movable-point * {
     transition: none;
   }
   .home .card:hover {
