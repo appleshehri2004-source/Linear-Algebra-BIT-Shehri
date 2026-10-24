@@ -6,10 +6,12 @@
 import '@fontsource-variable/source-serif-4';
 import '../styles/home.css';
 import BaseLayout from '../layouts/BaseLayout.astro';
+import ChapterCardPicture from '../components/ChapterCardPicture.astro';
 import HeroPlayground from '../components/HeroPlayground.tsx';
+import { TestShapeSymbols } from '../components/TestShape.tsx';
 import LessonList, { type ChapterLinks } from '../components/LessonList.tsx';
 import { book, lessonNumber } from '../content/book';
-import { chapterIdeas, chapterSummaries, lessonCountText } from '../content/home';
+import { cardStories, chapterIdeas, chapterSummaries, lessonCountText } from '../content/home';
 import { exerciseIds, getSortedLessons } from '../content/modules';
 
 const lessons = await getSortedLessons();
@@ -95,6 +97,12 @@ const firstLesson = lessons[0];
   title="Visual Linear Algebra"
   description={`Learn linear algebra by moving things: drag vectors, stretch grids and watch matrices act, in ${lessons.length} interactive lessons that follow Lay's textbook.`}
 >
+  <!-- The BIT logo (and the plain F), defined once. The hero and the chapter cards point at it with <use>,
+       so its 66 paths are in the page only once. -->
+  <svg class="shape-symbols" width="0" height="0" aria-hidden="true" focusable="false">
+    <TestShapeSymbols />
+  </svg>
+
   <!-- 1. Hero -->
   <header class="band hero">
     <div class="wrap hero-grid">
@@ -129,8 +137,7 @@ const firstLesson = lessons[0];
             cards.map((c) => (
               <li>
                 <a class="card" href={`#chapter-${c.number}`}>
-                  {/* Session 5: the chapter's little logo animation goes in this box. */}
-                  <span class="picture-box card-picture" aria-hidden="true" />
+                  <ChapterCardPicture story={cardStories.find((s) => s.chapter === c.number)!} />
                   <span class="card-kicker">Chapter {c.number}</span>
                   <span class="card-title">{c.title}</span>
                   <span class="card-text">{chapterIdeas[c.number]}</span>
@@ -250,3 +257,21 @@ const firstLesson = lessons[0];
     </div>
   </footer>
 </BaseLayout>
+
+<script>
+  // On a touch screen a tap opens the chapter straight away, so the card's little animation would never be seen.
+  // There, each card plays once when it is mostly on screen instead (the "in-view" class; the CSS is in home.ts).
+  if (window.matchMedia('(hover: none)').matches && 'IntersectionObserver' in window) {
+    const watcher = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          entry.target.classList.add('in-view');
+          watcher.unobserve(entry.target);
+        }
+      },
+      { threshold: 0.6 },
+    );
+    document.querySelectorAll('.chapter-cards .card').forEach((card) => watcher.observe(card));
+  }
+</script>

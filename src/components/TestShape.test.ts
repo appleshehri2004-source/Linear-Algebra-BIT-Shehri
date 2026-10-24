@@ -95,6 +95,13 @@ describe('the BIT logo inside TestShape', () => {
 });
 
 describe('TestShape with symbols', () => {
+  it('puts className on the group that holds the matrix, so CSS animates exactly that transform', () => {
+    const html = renderToStaticMarkup(
+      createElement(TestShape, { shape: 'bit-logo', matrix: [[1, 0], [1, 1]], useSymbol: true, className: 'card-1' }),
+    );
+    expect(html).toContain('<g class="card-1" transform="matrix(1 0 1 1 0 0)">');
+  });
+
   it('points at the shape with <use> instead of drawing it again', () => {
     const html = renderToStaticMarkup(createElement(TestShape, { shape: 'bit-logo', matrix: [[1, 0], [0, 1]], useSymbol: true }));
     expect(html).toContain('<use href="#test-shape-bit-logo"');

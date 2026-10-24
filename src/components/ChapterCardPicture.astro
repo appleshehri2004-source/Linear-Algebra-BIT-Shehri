@@ -1,0 +1,66 @@
+---
+// One chapter card's little picture: one or two panels of the plane, with the BIT logo (or a grid) that a matrix
+// moves. Everything here is drawn once, when the site is built: no JavaScript reaches the browser.
+// The motion is CSS: cardCss (src/content/home.ts) writes the @keyframes from frames worked out by linalg.ts, and
+// the rule for when it plays (hover, Tab, or scrolled into view on a phone; never with reduced motion).
+// The logo itself is the <symbol> defined once at the top of the homepage (TestShapeSymbols).
+import TestShape from './TestShape';
+import { cardCss, cssMatrix, layerClass, type CardPanel, type CardStory } from '../content/home';
+import { gridLines, type Vec2 } from '../lib/linalg';
+
+interface Props {
+  story: CardStory;
+}
+
+const { story } = Astro.props;
+
+// SVG counts y downwards, so a panel showing maths y from y0 to y1 starts at -y1 on screen. The drawing inside is
+// flipped back (scale(1 -1)), so everything below is in maths coordinates.
+const viewBox = ({ x, y }: CardPanel) => `${x[0]} ${-y[1]} ${x[1] - x[0]} ${y[1] - y[0]}`;
+/** Lines (lists of points) as one SVG path. */
+const pathOf = (lines: Vec2[][]) => lines.map((line) => 'M' + line.map(([x, y]) => `${x} ${y}`).join('L')).join('');
+const grid = pathOf(gridLines(4));
+const axes = 'M-4 0L4 0M0 -4L0 4';
+/** A line through the origin along d, long enough to cross any panel. */
+const throughOrigin = ([dx, dy]: Vec2) => `M${-6 * dx} ${-6 * dy}L${6 * dx} ${6 * dy}`;
+const lastFrame = <T,>(frames: T[]) => frames[frames.length - 1];
+---
+
+<span class="picture-box card-picture" aria-hidden="true">
+  {
+    story.panels.map((panel, p) => (
+      <span class="card-panel">
+        <svg viewBox={viewBox(panel)} preserveAspectRatio="xMidYMid meet">
+          <g transform="scale(1 -1)">
+            <path d={grid} class="card-grid" />
+            <path d={axes} class="card-axes" />
+            {panel.layers.map((layer, l) =>
+              layer.kind === 'grid' ? (
+                <g class={layerClass(story.chapter, p, l)} transform={cssMatrix(lastFrame(layer.frames))}>
+                  <path d={grid} class="card-moving-grid" />
+                </g>
+              ) : null,
+            )}
+          </g>
+          {panel.layers.map((layer, l) =>
+            layer.kind === 'logo' ? (
+              <TestShape
+                shape="bit-logo"
+                matrix={lastFrame(layer.frames)}
+                useSymbol
+                className={layer.frames.length > 1 ? layerClass(story.chapter, p, l) : undefined}
+              />
+            ) : null,
+          )}
+          <g transform="scale(1 -1)">
+            {panel.lines.map((line) => (
+              <path d={throughOrigin(line.direction)} class={`card-line ${line.kind}`} />
+            ))}
+          </g>
+        </svg>
+        {panel.caption && <span class="card-caption">{panel.caption}</span>}
+      </span>
+    ))
+  }
+</span>
+<style is:inline set:html={cardCss(story)} />

@@ -224,6 +224,79 @@
 .home .card-picture {
   aspect-ratio: 4 / 3;
   margin-bottom: 0.75rem;
+  /* The picture draws its own grid (ChapterCardPicture.astro). */
+  background-image: none;
+  display: flex;
+  gap: 0.25rem;
+  overflow: hidden;
+}
+
+/* One panel of a card's picture: the drawing, and a caption under it when a card has two panels. */
+.home .card-panel {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.home .card-panel svg {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.home .card-caption {
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--muted);
+  padding-bottom: 0.25rem;
+}
+
+/* The lines in a card's picture keep their width however much the picture is scaled. */
+.home .card-picture path {
+  fill: none;
+  vector-effect: non-scaling-stroke;
+}
+
+.home .card-grid {
+  stroke: var(--border);
+  stroke-width: 1px;
+}
+
+.home .card-axes {
+  stroke: var(--ink-2);
+  stroke-opacity: 0.45;
+  stroke-width: 1px;
+}
+
+/* Chapter 4: the grid that tilts to a new basis. */
+.home .card-moving-grid {
+  stroke: var(--ink-2);
+  stroke-opacity: 0.4;
+  stroke-width: 1px;
+}
+
+/* Chapter 5: eigenvector lines, always dashed (never colour alone). */
+.home .card-line.eigen {
+  stroke: var(--eigen);
+  stroke-width: 2px;
+  stroke-dasharray: 6 4;
+}
+
+/* Chapter 6: the line the logo is projected onto. */
+.home .card-line.target {
+  stroke: var(--ink-2);
+  stroke-width: 1.5px;
+}
+
+/* The BIT logo's one-time definition (TestShapeSymbols): it takes no space on the page. */
+.home .shape-symbols {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
 }
 
 .home .card-title {

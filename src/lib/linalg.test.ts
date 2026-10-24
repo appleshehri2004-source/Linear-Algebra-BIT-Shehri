@@ -169,6 +169,7 @@ import {
   presetAt,
   snapHandle,
   HERO_LIMIT,
+  samplePath,
   perp,
   unitCircle,
   addFn,
@@ -2329,5 +2330,23 @@ describe('the homepage hero', () => {
       expect(ihat[0]).toBeCloseTo(-1, 9);
       expect(ihat[1]).toBeCloseTo(0, 9);
     });
+  });
+});
+
+describe('samplePath', () => {
+  const shear: Mat2 = [[1, 0], [1, 1]];
+  const frames = samplePath((t) => matrixAt(shear, t), 21);
+
+  it('takes the asked number of frames, from the start of the path to its end', () => {
+    expect(frames).toHaveLength(21);
+    expect(frames[0]).toEqual([[1, 0], [0, 1]]);
+    expect(frames[20]).toEqual(shear);
+  });
+
+  it('builds the smooth start and stop into the frames: small steps at the ends, big ones in the middle', () => {
+    const step = (i: number) => frames[i + 1][1][0] - frames[i][1][0];
+    expect(step(0)).toBeLessThan(step(9));
+    expect(step(19)).toBeLessThan(step(9));
+    expect(frames[10][1][0]).toBeCloseTo(0.5, 12); // half way in time is half way along
   });
 });

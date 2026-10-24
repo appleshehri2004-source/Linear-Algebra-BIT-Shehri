@@ -24,6 +24,8 @@ interface Props {
   useSymbol?: boolean;
   /** false inside Mafs, which already turns maths coordinates (y up) into screen coordinates (y down). */
   flipY?: boolean;
+  /** A class on the group that holds the matrix, so CSS can animate its transform (the chapter cards do). */
+  className?: string;
 }
 
 // The logo file split into its picture size (viewBox) and its contents (everything inside the outer <svg> tag).
@@ -47,12 +49,12 @@ function ShapeBody({ shape }: { shape: ShapeName }) {
 
 const symbolId = (shape: ShapeName) => `test-shape-${shape}`;
 
-export default function TestShape({ shape, matrix, useSymbol = false, flipY = true }: Props) {
+export default function TestShape({ shape, matrix, useSymbol = false, flipY = true, className }: Props) {
   const [a, b, c, d, e, f] = svgMatrix(matrix);
   return (
     // aria-hidden: the picture around it carries the text description.
     <g transform={flipY ? 'scale(1 -1)' : undefined} aria-hidden="true">
-      <g transform={`matrix(${a} ${b} ${c} ${d} ${e} ${f})`}>
+      <g className={className} transform={`matrix(${a} ${b} ${c} ${d} ${e} ${f})`}>
         {useSymbol ? <use href={`#${symbolId(shape)}`} /> : <ShapeBody shape={shape} />}
       </g>
     </g>

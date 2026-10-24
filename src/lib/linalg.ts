@@ -2096,3 +2096,15 @@ export function presetAt(from: Mat2, to: Mat2, t: number): Mat2 {
   const turn = ((((b - a) % 360) + 540) % 360) - 180;
   return rotation(a + turn * t);
 }
+
+// ---- Homepage: chapter card animations ----
+
+/**
+ * `count` frames of an animation, evenly spaced in time from t = 0 to t = 1, with the smooth start and stop
+ * (easeInOut) built into the frames themselves. CSS can then step through them at an even pace and the motion
+ * still eases. Many frames also mean the browser only ever blends two nearly equal matrices (it doesn't blend
+ * matrix numbers in a straight line, so far-apart frames would bend the motion).
+ */
+export function samplePath(path: (t: number) => Mat2, count = 21): Mat2[] {
+  return Array.from({ length: count }, (_, i) => path(easeInOut(i / (count - 1))));
+}

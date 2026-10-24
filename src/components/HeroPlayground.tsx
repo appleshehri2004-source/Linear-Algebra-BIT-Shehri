@@ -214,7 +214,8 @@ export default function HeroPlayground() {
           <MathPath d={toPath(movedAxes)} className="hero-moving-axes" />
           <Polygon points={square} color="var(--gold-tint)" fillOpacity={0.6} weight={0} />
           <g style={{ transform: 'var(--mafs-view-transform)' }}>
-            <TestShape shape="bit-logo" matrix={matrix} flipY={false} />
+            {/* useSymbol: the logo is defined once on the homepage (TestShapeSymbols in index.astro). */}
+            <TestShape shape="bit-logo" matrix={matrix} flipY={false} useSymbol />
           </g>
           <Polygon points={square} color="var(--gold)" fillOpacity={0} weight={1.5} />
           <HaloFilter />
