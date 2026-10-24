@@ -18,6 +18,7 @@ import {
   svdStepsAt,
   svgMatrix,
   type Mat2,
+  type Mat3,
   type Vec2,
 } from '../lib/linalg';
 
@@ -313,3 +314,16 @@ export function eigenScene(t: number): EigenScene {
     ordinary: matVec(matrix, IDEA_ORDINARY),
   };
 }
+
+// ---- The 3D card in "Optional extras" ----
+
+/**
+ * The 3D card's matrix: a shear that leans k̂ over to (1, 0, 1). The still picture (Still3D.astro) is drawn from it,
+ * and the live 3D view (Load3D, after a tap) starts on it. The buttons are the same as in lesson 1.9.4.
+ */
+export const CARD_3D_MATRIX: Mat3 = [[1, 0, 0], [0, 1, 0], [1, 0, 1]];
+export const CARD_3D_PRESETS: { name: string; matrix: Mat3 }[] = [
+  { name: 'Shear', matrix: CARD_3D_MATRIX },
+  { name: 'Turn about y', matrix: [[0, 0, -1], [0, 1, 0], [1, 0, 0]] },
+  { name: 'Scale', matrix: [[2, 0, 0], [0, 1, 0], [0, 0, 0.5]] },
+];

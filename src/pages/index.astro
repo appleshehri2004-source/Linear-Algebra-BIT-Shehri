@@ -8,13 +8,15 @@ import '../styles/home.css';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import BigIdeas from '../components/BigIdeas.tsx';
 import ChapterCardPicture from '../components/ChapterCardPicture.astro';
+import Load3D from '../components/Load3D.tsx';
+import Still3D from '../components/Still3D.astro';
 import HeroPlayground from '../components/HeroPlayground.tsx';
 import { HaloFilter } from '../components/HomeHalo.tsx';
 import { TestShapeSymbols } from '../components/TestShape.tsx';
 import LessonList, { type ChapterLinks } from '../components/LessonList.tsx';
 import SvdShowcase from '../components/SvdShowcase.tsx';
 import { book, lessonNumber } from '../content/book';
-import { cardStories, chapterIdeas, chapterSummaries, lessonCountText } from '../content/home';
+import { CARD_3D_MATRIX, CARD_3D_PRESETS, cardStories, chapterIdeas, chapterSummaries, lessonCountText } from '../content/home';
 import { exerciseIds, getSortedLessons } from '../content/modules';
 
 const lessons = await getSortedLessons();
@@ -191,14 +193,32 @@ const firstLesson = lessons[0];
         <p class="section-lead">Lessons that go beyond the plane, for when you want more.</p>
         <ul class="cards extra-cards">
           {
-            extras.map((e) => (
-              <li>
-                <a class="card" href={lessonHref(e.id)}>
-                  <span class="card-title">{e.name}</span>
-                  <span class="card-text">{e.text}</span>
-                </a>
-              </li>
-            ))
+            extras.map((e) =>
+              e.id === '1-9-4-3d' ? (
+                // The 3D card isn't one big link, because it holds a button: its title is the link instead.
+                // Its still picture is drawn at build time; three.js only downloads after "Load 3D" is tapped.
+                <li class="extra-3d">
+                  <div class="card card-3d">
+                    <div class="card-3d-text">
+                      <a class="card-title" href={lessonHref(e.id)}>
+                        {e.name}
+                      </a>
+                      <span class="card-text">{e.text}</span>
+                    </div>
+                    <Load3D client:visible matrix={CARD_3D_MATRIX} presets={CARD_3D_PRESETS}>
+                      <Still3D />
+                    </Load3D>
+                  </div>
+                </li>
+              ) : (
+                <li>
+                  <a class="card" href={lessonHref(e.id)}>
+                    <span class="card-title">{e.name}</span>
+                    <span class="card-text">{e.text}</span>
+                  </a>
+                </li>
+              ),
+            )
           }
         </ul>
       </div>
@@ -210,7 +230,7 @@ const firstLesson = lessons[0];
     <div class="wrap">
       <p>
         The course follows the chapter and section order of <cite>Linear Algebra and Its Applications</cite> by David C.
-        Lay, Steven R. Lay and Judi J. McDonald. The visual approach is inspired by 3Blue1Brown's <cite>Essence of Linear Algebra</cite>, and lessons link to Gilbert Strang's MIT 18.06 lectures. All text,
+        Lay, Steven R. Lay and Judi J. McDonald. The visual approach is inspired by 3Blue1Brown's <a href="https://www.3blue1brown.com/topics/linear-algebra"><cite>Essence of Linear Algebra</cite></a>, and lessons link to Gilbert Strang's <a href="https://ocw.mit.edu/courses/18-06-linear-algebra-spring-2010/">MIT 18.06</a> lectures. All text,
         pictures and exercises on this site are our own.
       </p>
       <p>BIT logo used with permission of Beijing Institute of Technology.</p>

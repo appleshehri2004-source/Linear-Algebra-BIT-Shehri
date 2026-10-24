@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { book } from './book';
-import { det2, eig2, isClose, matMul, matVec, rotationAngle, svdSteps, transformShape, UNIT_SQUARE, type Mat2, type Vec2 } from '../lib/linalg';
+import { det2, det3, eig2, obliqueProject, isClose, matMul, matVec, rotationAngle, svdSteps, transformShape, UNIT_SQUARE, type Mat2, type Vec2 } from '../lib/linalg';
 import {
   bigIdeas,
+  CARD_3D_MATRIX,
+  CARD_3D_PRESETS,
   cardCss,
   cardStories,
   chapterIdeas,
@@ -241,5 +243,19 @@ describe('the four big ideas', () => {
 
   it('eigenvectors: the ordinary arrow is knocked off its line', () => {
     expect(Math.abs(cross(IDEA_ORDINARY, eigenScene(1).ordinary))).toBeGreaterThan(0.5);
+  });
+});
+
+describe('the 3D card', () => {
+  it('starts on a shear that leans k̂ over to (1, 0, 1), which keeps volume (det = 1)', () => {
+    expect(CARD_3D_MATRIX[2]).toEqual([1, 0, 1]);
+    expect(det3(CARD_3D_MATRIX)).toBe(1);
+    expect(CARD_3D_PRESETS[0].matrix).toBe(CARD_3D_MATRIX);
+  });
+
+  it("draws its still picture without flattening: the pictures of the box's three edges point clearly different ways", () => {
+    const [i, j, k] = CARD_3D_MATRIX.map(obliqueProject);
+    const sinAngle = (a: Vec2, b: Vec2) => Math.abs(a[0] * b[1] - a[1] * b[0]) / (Math.hypot(...a) * Math.hypot(...b));
+    for (const [a, b] of [[i, j], [j, k], [k, i]]) expect(sinAngle(a, b)).toBeGreaterThan(0.4); // more than about 24° apart
   });
 });

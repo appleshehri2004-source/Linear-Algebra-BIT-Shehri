@@ -171,6 +171,7 @@ import {
   HERO_LIMIT,
   samplePath,
   stepShown,
+  obliqueProject,
   perp,
   unitCircle,
   addFn,
@@ -2377,5 +2378,29 @@ describe('stepShown', () => {
         expect(k).toBeLessThanOrEqual(2);
       }
     }
+  });
+});
+
+describe('obliqueProject', () => {
+  it('keeps the origin at the origin and draws k̂ (z) straight up', () => {
+    expect(obliqueProject([0, 0, 0])).toEqual([0, 0]);
+    expect(obliqueProject([0, 0, 1])).toEqual([0, 1]);
+  });
+
+  it('draws î down to the right and ĵ down to the left', () => {
+    const [ix, iy] = obliqueProject([1, 0, 0]);
+    const [jx, jy] = obliqueProject([0, 1, 0]);
+    expect(ix).toBeGreaterThan(0);
+    expect(iy).toBeLessThan(0);
+    expect(jx).toBeLessThan(0);
+    expect(jy).toBeLessThan(0);
+  });
+
+  it('is linear: the picture of a sum is the sum of the pictures', () => {
+    const p: [number, number, number] = [0.5, -2, 1.5];
+    const [x, y] = obliqueProject(p);
+    const parts = [obliqueProject([0.5, 0, 0]), obliqueProject([0, -2, 0]), obliqueProject([0, 0, 1.5])];
+    expect(x).toBeCloseTo(parts.reduce((s, q) => s + q[0], 0), 12);
+    expect(y).toBeCloseTo(parts.reduce((s, q) => s + q[1], 0), 12);
   });
 });

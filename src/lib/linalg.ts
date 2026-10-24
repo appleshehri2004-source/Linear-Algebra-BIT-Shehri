@@ -2119,3 +2119,18 @@ export function stepShown(n: number, t: number): number | null {
   // The tiny margin keeps 1/3 in step 0 despite rounding; max(0, …) keeps a tiny t in step 0 too.
   return Math.min(n - 1, Math.max(0, Math.ceil(t * n - 1e-9) - 1));
 }
+
+// ---- Homepage: the still picture of the 3D card ----
+
+/** Where î, ĵ and k̂ are drawn in obliqueProject's flat picture (y up). */
+export const OBLIQUE_AXES: [Vec2, Vec2, Vec2] = [[0.6, -0.3], [-0.9, -0.25], [0, 1]];
+
+/**
+ * Where a 3D point is drawn in a flat, slanted picture (z up), as if seen from the front right: î goes down to the
+ * right, ĵ further out to the left and less steeply, k̂ straight up. It's linear, so a box's edges stay straight and
+ * parallel. (A true isometric view draws î + k̂ exactly opposite ĵ, which flattens a cube sheared that way.)
+ */
+export function obliqueProject([x, y, z]: Vec3): Vec2 {
+  const [i, j, k] = OBLIQUE_AXES;
+  return [x * i[0] + y * j[0] + z * k[0] + 0, x * i[1] + y * j[1] + z * k[1] + 0];
+}

@@ -1,0 +1,55 @@
+---
+// The 3D card's still picture: the unit cube moved by CARD_3D_MATRIX, with î, ĵ and k̂ where the matrix sends them,
+// drawn flat (obliqueProject) when the site is built. No JavaScript: three.js only downloads if the visitor taps
+// "Load 3D" (Load3D.tsx). It uses the lesson colours (î green, ĵ red, k̂ blue), like lesson 1.9.4's 3D view.
+import { obliqueProject, parallelepipedEdges, type Vec2, type Vec3 } from '../lib/linalg';
+import { CARD_3D_MATRIX } from '../content/home';
+
+const [i, j, k] = CARD_3D_MATRIX;
+// SVG counts y downwards, so every picture point is drawn at (x, −y).
+const flat = (p: Vec3): Vec2 => {
+  const [x, y] = obliqueProject(p);
+  return [x, -y];
+};
+const segment = (a: Vec3, b: Vec3) => {
+  const [x1, y1] = flat(a);
+  const [x2, y2] = flat(b);
+  return `M${x1} ${y1}L${x2} ${y2}`;
+};
+const edges = parallelepipedEdges(i, j, k).map(([a, b]) => segment(a, b)).join('');
+const axes = [segment([-0.4, 0, 0], [1.8, 0, 0]), segment([0, -0.4, 0], [0, 1.8, 0]), segment([0, 0, -0.4], [0, 0, 1.6])].join('');
+const arrows = [
+  { tip: i, colour: 'ihat', label: 'î' },
+  { tip: j, colour: 'jhat', label: 'ĵ' },
+  { tip: k, colour: 'khat', label: 'k̂' },
+].map((a) => ({ ...a, path: segment([0, 0, 0], a.tip), at: flat(a.tip) }));
+---
+
+<svg
+  class="still-3d"
+  viewBox="-1.85 -1.95 3.2 3.2"
+  role="img"
+  aria-label="A unit cube in 3D, sheared so that k̂ leans over towards î. Tap Load 3D to turn it around yourself."
+>
+  <defs>
+    {
+      arrows.map((a) => (
+        <marker id={`still-3d-head-${a.colour}`} viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+          <path d="M0 0L10 5L0 10z" style={{ fill: `var(--${a.colour})` }} />
+        </marker>
+      ))
+    }
+  </defs>
+  <path d={axes} class="still-3d-axes" />
+  <path d={edges} class="still-3d-cube" />
+  {
+    arrows.map((a) => (
+      <>
+        <path d={a.path} class="still-3d-arrow" style={{ stroke: `var(--${a.colour})` }} marker-end={`url(#still-3d-head-${a.colour})`} />
+        <text x={a.at[0] + 0.12} y={a.at[1] - 0.08} class="still-3d-label" style={{ fill: `var(--${a.colour})` }}>
+          {a.label}
+        </text>
+      </>
+    ))
+  }
+</svg>

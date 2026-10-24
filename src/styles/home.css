@@ -306,6 +306,39 @@
   margin-top: 0.5rem;
 }
 
+/* The 3D card in "Optional extras": a whole row, because the 3D view needs room once it's loaded.
+   It isn't one big link (it holds a button), so it doesn't lift on hover; its title is the link. */
+.home .extra-3d {
+  grid-column: 1 / -1;
+}
+
+.home .card-3d {
+  display: grid;
+  gap: 1rem;
+}
+
+.home .card-3d:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.home .card-3d-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.home .card-3d .card-title {
+  color: var(--ink);
+}
+
+@media (min-width: 56rem) {
+  .home .card-3d {
+    grid-template-columns: 1fr 1.4fr;
+    align-items: center;
+  }
+}
+
 /* ---------- All lessons ---------- */
 /* When a chapter card jumps to the list, leave a little space above the chapter's heading. */
 .home #lessons [id^='chapter-'] {

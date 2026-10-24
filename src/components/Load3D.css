@@ -1,0 +1,71 @@
+/* The 3D card's still picture, "Load 3D" button, and the live 3D view after the tap.
+   Every rule starts with .home, because Astro puts all CSS in one shared file (see home.css). */
+
+.home .load-3d {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.home .load-3d:focus {
+  outline: none; /* focus only lands here after the tap, to keep the keyboard's place */
+}
+
+/* The still picture: the same square as the 3D view that replaces it, so nothing jumps. */
+.home .still-3d {
+  width: 100%;
+  max-width: 20rem;
+  aspect-ratio: 1;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--paper);
+}
+
+.home .still-3d-axes {
+  fill: none;
+  stroke: var(--muted);
+  stroke-width: 1px;
+  vector-effect: non-scaling-stroke;
+}
+
+.home .still-3d-cube {
+  fill: none;
+  stroke: var(--area-kept);
+  stroke-width: 2px;
+  vector-effect: non-scaling-stroke;
+}
+
+.home .still-3d-arrow {
+  fill: none;
+  stroke-width: 3px;
+  vector-effect: non-scaling-stroke;
+}
+
+.home .still-3d-label {
+  font-size: 0.32px;
+  font-weight: 700;
+}
+
+.home .load-3d-button {
+  min-height: 2.75rem;
+  padding: 0.5rem 1.4rem;
+  border: 0;
+  border-radius: 999px;
+  background: var(--brand);
+  color: var(--paper);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.home .load-3d-button:hover {
+  background: var(--brand-hover);
+}
+
+.home .load-3d-note {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+  text-align: center;
+}
