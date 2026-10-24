@@ -184,7 +184,7 @@ export const module4: Record<string, Generator> = {
     const [n] = nullSpaceBasis(a);
     return {
       text:
-        `$A = ${matTex(a)}$ squashes a whole line to $\vec{0}$: its null space. ` +
+        `$A = ${matTex(a)}$ squashes a whole line to $\\vec{0}$: its null space. ` +
         `That line goes through $(x, 1)$. What is $x$?`,
       answer: n[0] / n[1],
       note: 'Column 2 is a multiple of column 1. Which mix of them gives 0?',
@@ -205,7 +205,7 @@ export const module4: Record<string, Generator> = {
     const s = randInt(rand, -3, 3, true);
     const b: Vec2 = [s * c[0], s * c[1]];
     return {
-      text: `$A\vec{x} = ${vecTex(b)}$ with $A = ${matTex(a)}$ has infinitely many solutions. Find the one with $y = 0$.`,
+      text: `$A\\vec{x} = ${vecTex(b)}$ with $A = ${matTex(a)}$ has infinitely many solutions. Find the one with $y = 0$.`,
       answer: completeSolution(a, b)!.particular,
     };
   },
@@ -217,8 +217,8 @@ export const module4: Record<string, Generator> = {
     const all = completeSolution(a, b)!;
     return {
       text:
-        `$A = ${matTex(a)}$ and $\vec{b} = ${vecTex(b)}$: one solution of $A\vec{x} = \vec{b}$ is $${vecTex(all.particular)}$. ` +
-        `Find another solution of $A\vec{x} = \vec{b}$: the one with $y = 1$.`,
+        `$A = ${matTex(a)}$ and $\\vec{b} = ${vecTex(b)}$: one solution of $A\\vec{x} = \\vec{b}$ is $${vecTex(all.particular)}$. ` +
+        `Find another solution of $A\\vec{x} = \\vec{b}$: the one with $y = 1$.`,
       answer: pointOnSolution(all, 1),
       note: 'Add a vector from the null space to the solution you know.',
     };
@@ -230,7 +230,7 @@ export const module4: Record<string, Generator> = {
     const top = col[0] * randInt(rand, -3, 3, true);
     return {
       text:
-        `$A = ${matTex(a)}$. For which number $c$ does $A\vec{x} = \begin{bmatrix} ${top} \\ c \end{bmatrix}$ ` +
+        `$A = ${matTex(a)}$. For which number $c$ does $A\\vec{x} = \\begin{bmatrix} ${top} \\\\ c \\end{bmatrix}$ ` +
         `have a solution? (When is it a mix of the columns of $A$?)`,
       answer: (top * col[1]) / col[0],
     };
@@ -280,8 +280,8 @@ export const module4: Record<string, Generator> = {
     const v = matVec(a, randVec(rand, 3));
     return {
       text:
-        `Cramer's rule for $${matTex(a)}\vec{x} = ${vecTex(v)}$ gives $y = \det B \,/\, \det A$, ` +
-        `where $B$ is $A$ with column 2 swapped for $\vec{v}$. What is $\det B$?`,
+        `Cramer's rule for $${matTex(a)}\\vec{x} = ${vecTex(v)}$ gives $y = \\det B \\,/\\, \\det A$, ` +
+        `where $B$ is $A$ with column 2 swapped for $\\vec{v}$. What is $\\det B$?`,
       answer: cramer2(a, v)!.numerators[1],
     };
   },
@@ -290,7 +290,7 @@ export const module4: Record<string, Generator> = {
     const a = matrixWithDet(rand, [-2, -1, 1, 2]);
     const v = matVec(a, randVec(rand, 3));
     return {
-      text: `Use Cramer's rule to solve $${matTex(a)}\vec{x} = ${vecTex(v)}$.`,
+      text: `Use Cramer's rule to solve $${matTex(a)}\\vec{x} = ${vecTex(v)}$.`,
       answer: cramer2(a, v)!.solution,
     };
   },
@@ -301,8 +301,8 @@ export const module4: Record<string, Generator> = {
     const p = cramerPicture(a, x, 1);
     return {
       text:
-        `$\vec{x} = ${vecTex(x)}$. What is the signed area of the parallelogram made by $\hat{\imath}$ and $\vec{x}$, ` +
-        `and of the one it becomes after $A = ${matTex(a)}$ ($\det A = ${det2(a)}$)?`,
+        `$\\vec{x} = ${vecTex(x)}$. What is the signed area of the parallelogram made by $\\hat{\\imath}$ and $\\vec{x}$, ` +
+        `and of the one it becomes after $A = ${matTex(a)}$ ($\\det A = ${det2(a)}$)?`,
       answer: [p.inputArea, p.outputArea],
       labels: ['before', 'after'],
     };

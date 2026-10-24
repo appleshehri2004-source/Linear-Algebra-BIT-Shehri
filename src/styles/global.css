@@ -123,6 +123,25 @@ a {
   padding: 0.25rem 0;
 }
 
+/* Wide tables scroll sideways on a phone too, instead of being cut off at the edge. */
+main table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+}
+
+main th,
+main td {
+  padding: 0.35rem 0.6rem;
+  text-align: left;
+  vertical-align: middle;
+}
+
+main thead th {
+  border-bottom: 1px solid var(--border);
+}
+
 /* Small helpers for colouring text to match the drawings. */
 .ihat {
   color: var(--ihat);

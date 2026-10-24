@@ -1,4 +1,5 @@
 import { readdirSync, readFileSync } from 'node:fs';
+import katex from 'katex';
 import { describe, expect, it } from 'vitest';
 import { det2, isIndependent } from '../lib/linalg';
 import { answerTex, checkAnswer, matTex, parseNumber, type Rand } from './exercise';
@@ -150,5 +151,30 @@ describe('lessons', () => {
       const text = readFileSync(new URL(file, dir), 'utf8');
       for (const [, id] of text.matchAll(/<Exercise\s+id="([^"]+)"/g)) expect(exercises[id], `${file}: ${id}`).toBeDefined();
     }
+  });
+});
+
+describe('every exercise', () => {
+  it('draws all its maths without a KaTeX error (question, buttons, why line, shown answer)', () => {
+    const problems = new Set<string>();
+    for (const [id, generate] of Object.entries(exercises)) {
+      const rand = seeded(id.length * 31 + 5);
+      for (let i = 0; i < 30; i++) {
+        const q = generate(rand);
+        const texts = [q.text, q.why ?? '', ...(q.choices ?? [])];
+        const pieces = texts.flatMap((t) => t.split('$').filter((_, k) => k % 2 === 1));
+        if (!q.choices) pieces.push(answerTex(q));
+        for (const tex of pieces) {
+          try {
+            katex.renderToString(tex, { throwOnError: true });
+          } catch (e) {
+            problems.add(`${id}: ${(e as Error).message.slice(0, 80)}`);
+          }
+          // A control character means a backslash got eaten in a template string, e.g. \v in \vec.
+          if (/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/.test(tex)) problems.add(`${id}: control character in "${tex.slice(0, 40)}"`);
+        }
+      }
+    }
+    expect([...problems]).toEqual([]);
   });
 });
