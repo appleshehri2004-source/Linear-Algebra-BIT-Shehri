@@ -2,14 +2,18 @@
 // Everything comes from the book map (src/content/book.ts), so archiving a section changes the cards by itself.
 import { book, type BookChapter, type LessonPlace } from './book';
 import {
+  add,
   eig2,
   identity,
+  lerpVec,
+  matVec,
   matMul,
   matrixAt,
   projectionMatrix,
   roundTo,
   rotation,
   samplePath,
+  scale,
   sequenceAt,
   svdStepsAt,
   svgMatrix,
@@ -193,3 +197,119 @@ export function cardCss(story: CardStory): string {
  * real rotate (about −42°), stretch (about ×1.61 and ×0.60) and rotate (about 37°). The tests check all of that.
  */
 export const SVD_SHOWCASE_MATRIX: Mat2 = [[1.2, 0.4], [0.6, 1]];
+
+// ---- The four big ideas ----
+// Four short texts and, for each, an animation the pinned picture plays when the text scrolls into view
+// (BigIdeas.tsx). Each scene below says what to draw at time t, from 0 to 1, using only linalg.ts.
+
+export interface BigIdea {
+  name: string;
+  text: string;
+}
+
+export const bigIdeas: BigIdea[] = [
+  {
+    name: 'Vectors',
+    text: 'A vector is an arrow from the origin, and also a list of numbers: how far right, how far up. Adding vectors is walking one arrow, then the other.',
+  },
+  {
+    name: 'Span',
+    text: 'Stretch two arrows by any amounts and add them. Usually you can reach every point of the plane. When the arrows line up, you are stuck on one line.',
+  },
+  {
+    name: 'Linear transformations',
+    text: 'A matrix moves the whole plane at once. Grid lines stay straight, evenly spaced and parallel, and the origin stays put. Watch where î and ĵ land, and you know where everything lands.',
+  },
+  {
+    name: 'Eigenvectors',
+    text: 'Most arrows get knocked off their line when the plane moves. A few only get longer or shorter. Those are the eigenvectors, and how much they stretch is the eigenvalue.',
+  },
+];
+
+/** How far (0 to 1) time t is through the part of the animation from `start` to `end`. */
+const part = (t: number, start: number, end: number) => Math.min(1, Math.max(0, (t - start) / (end - start)));
+
+// Idea 1, vectors: v grows from the origin, w is walked from v's tip, then v + w appears.
+export const IDEA_V: Vec2 = [2, 1];
+export const IDEA_W: Vec2 = [-0.5, 1.2];
+
+export interface VectorsScene {
+  /** v's tip. */
+  v: Vec2;
+  /** w's tip, drawn from v's tip; null before w starts. */
+  wTip: Vec2 | null;
+  /** v + w's tip, drawn from the origin; null before it starts. */
+  sum: Vec2 | null;
+}
+
+export function vectorsScene(t: number): VectorsScene {
+  const origin: Vec2 = [0, 0];
+  const v = lerpVec(origin, IDEA_V, part(t, 0, 0.35));
+  const wPart = part(t, 0.4, 0.7);
+  const sumPart = part(t, 0.75, 1);
+  return {
+    v,
+    wTip: t < 0.4 ? null : add(IDEA_V, lerpVec(origin, IDEA_W, wPart)),
+    sum: t < 0.75 ? null : lerpVec(origin, add(IDEA_V, IDEA_W), sumPart),
+  };
+}
+
+// Idea 2, span: the points a·u + b·w (whole numbers a, b from −3 to 3) appear, nearest first. Then w swings onto
+// u's line (it ends as −0.8·u), and every point slides onto that one line.
+export const SPAN_U: Vec2 = [1, 0.5];
+export const SPAN_W: Vec2 = [-0.5, 1];
+export const SPAN_W_END: Vec2 = scale(-0.8, SPAN_U);
+const SPAN_RANGE = 3;
+
+export interface SpanScene {
+  u: Vec2;
+  w: Vec2;
+  /** The points a·u + b·w that have appeared so far. */
+  dots: Vec2[];
+  /** true once w has started to swing: then the line through u is drawn. */
+  collapsing: boolean;
+}
+
+export function spanScene(t: number): SpanScene {
+  const w = lerpVec(SPAN_W, SPAN_W_END, part(t, 0.5, 0.95));
+  // How far out the points have appeared: |a| + |b| up to `reach`.
+  const reach = part(t, 0, 0.45) * 2 * SPAN_RANGE;
+  const dots: Vec2[] = [];
+  for (let a = -SPAN_RANGE; a <= SPAN_RANGE; a++) {
+    for (let b = -SPAN_RANGE; b <= SPAN_RANGE; b++) {
+      if (Math.abs(a) + Math.abs(b) <= reach) dots.push(matVec([SPAN_U, w], [a, b]));
+    }
+  }
+  return { u: SPAN_U, w, dots, collapsing: t > 0.5 };
+}
+
+// Idea 3, linear transformations: the logo, the grid, î and ĵ move under one matrix.
+export const IDEA_TRANSFORM: Mat2 = [[1.5, 0], [0.7, 1]];
+export const transformationAt = (t: number): Mat2 => matrixAt(IDEA_TRANSFORM, t);
+
+// Idea 4, eigenvectors: a symmetric matrix with eigenvalue 2 along (1, 1) and 0.5 along (−1, 1).
+// Arrows on those two lines only get longer or shorter; an ordinary arrow is knocked off its line.
+export const IDEA_EIGEN: Mat2 = [[1.25, 0.75], [0.75, 1.25]];
+export const IDEA_ORDINARY: Vec2 = [1.2, 0.2];
+
+export interface EigenScene {
+  matrix: Mat2;
+  /** The eigenvector lines' directions (they never move). */
+  lines: Vec2[];
+  /** The arrows on the eigenvector lines, where they are now. */
+  eigenArrows: Vec2[];
+  /** The ordinary arrow, where it is now. */
+  ordinary: Vec2;
+}
+
+export function eigenScene(t: number): EigenScene {
+  const matrix = matrixAt(IDEA_EIGEN, t);
+  const eigen = eig2(IDEA_EIGEN);
+  const lines = eigen.kind === 'lines' ? eigen.pairs.map((p) => p.direction) : [];
+  return {
+    matrix,
+    lines,
+    eigenArrows: lines.map((d) => matVec(matrix, scale(1.2, d))),
+    ordinary: matVec(matrix, IDEA_ORDINARY),
+  };
+}

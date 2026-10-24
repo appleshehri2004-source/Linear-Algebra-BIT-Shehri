@@ -1,7 +1,27 @@
 import { describe, expect, it } from 'vitest';
 import { book } from './book';
 import { det2, eig2, isClose, matMul, matVec, rotationAngle, svdSteps, transformShape, UNIT_SQUARE, type Mat2, type Vec2 } from '../lib/linalg';
-import { cardCss, cardStories, chapterIdeas, chapterSummaries, cssMatrix, keyframesCss, lessonCountText, SVD_CARD_MATRIX, SVD_SHOWCASE_MATRIX } from './home';
+import {
+  bigIdeas,
+  cardCss,
+  cardStories,
+  chapterIdeas,
+  chapterSummaries,
+  cssMatrix,
+  eigenScene,
+  IDEA_EIGEN,
+  IDEA_ORDINARY,
+  IDEA_TRANSFORM,
+  IDEA_V,
+  IDEA_W,
+  keyframesCss,
+  lessonCountText,
+  spanScene,
+  SVD_CARD_MATRIX,
+  SVD_SHOWCASE_MATRIX,
+  transformationAt,
+  vectorsScene,
+} from './home';
 
 const lesson = (section: string, part = 1) => ({ data: { section, part } });
 
@@ -174,5 +194,52 @@ describe('the SVD showcase matrix', () => {
   it('gives A back: U Σ Vᵀ = A', () => {
     const back = matMul(R, matMul(S, Vt));
     back.flat().forEach((n, i) => expect(n).toBeCloseTo(a.flat()[i], 12));
+  });
+});
+
+describe('the four big ideas', () => {
+  /** The cross product of two plane vectors: 0 exactly when they lie on one line through the origin. */
+  const cross = ([a, b]: Vec2, [c, d]: Vec2) => a * d - b * c;
+
+  it('has four ideas in order: vectors, span, linear transformations, eigenvectors', () => {
+    expect(bigIdeas.map((i) => i.name)).toEqual(['Vectors', 'Span', 'Linear transformations', 'Eigenvectors']);
+  });
+
+  it('vectors: starts with nothing, ends with v, w walked from v, and v + w', () => {
+    expect(vectorsScene(0)).toEqual({ v: [0, 0], wTip: null, sum: null });
+    const end = vectorsScene(1);
+    expect(end.v).toEqual(IDEA_V);
+    expect(end.wTip).toEqual([IDEA_V[0] + IDEA_W[0], IDEA_V[1] + IDEA_W[1]]);
+    expect(end.sum).toEqual(end.wTip); // walking v then w lands where v + w points
+  });
+
+  it('span: the points spread out first, covering the plane (u and w are not on one line)', () => {
+    const mid = spanScene(0.5);
+    expect(mid.dots).toHaveLength(49);
+    expect(Math.abs(cross(mid.u, mid.w))).toBeGreaterThan(0.5);
+  });
+
+  it('span: at the end w lies on u\'s line, and every point is on that one line', () => {
+    const end = spanScene(1);
+    expect(cross(end.u, end.w)).toBeCloseTo(0, 12);
+    for (const p of end.dots) expect(cross(end.u, p)).toBeCloseTo(0, 9);
+  });
+
+  it('linear transformations: starts unmoved and ends exactly on its matrix', () => {
+    expect(transformationAt(0)).toEqual([[1, 0], [0, 1]]);
+    expect(transformationAt(1)).toEqual(IDEA_TRANSFORM);
+  });
+
+  it('eigenvectors: the arrows on the dashed lines stay on them, stretched by 2 and by 0.5', () => {
+    const end = eigenScene(1);
+    expect(end.matrix).toEqual(IDEA_EIGEN);
+    expect(end.lines).toHaveLength(2);
+    end.lines.forEach((d, i) => expect(cross(d, end.eigenArrows[i])).toBeCloseTo(0, 9));
+    const stretch = end.lines.map((d) => eig2(IDEA_EIGEN).kind === 'lines' && matVec(IDEA_EIGEN, d)[0] / d[0]);
+    expect(stretch.sort()).toEqual([0.5, 2]);
+  });
+
+  it('eigenvectors: the ordinary arrow is knocked off its line', () => {
+    expect(Math.abs(cross(IDEA_ORDINARY, eigenScene(1).ordinary))).toBeGreaterThan(0.5);
   });
 });

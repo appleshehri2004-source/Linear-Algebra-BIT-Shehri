@@ -6,6 +6,7 @@
 import '@fontsource-variable/source-serif-4';
 import '../styles/home.css';
 import BaseLayout from '../layouts/BaseLayout.astro';
+import BigIdeas from '../components/BigIdeas.tsx';
 import ChapterCardPicture from '../components/ChapterCardPicture.astro';
 import HeroPlayground from '../components/HeroPlayground.tsx';
 import { HaloFilter } from '../components/HomeHalo.tsx';
@@ -61,26 +62,6 @@ const lessonSteps = [
   { name: 'Practice', text: 'Short exercises that check themselves.' },
   { name: 'Go deeper', text: 'The matching 3Blue1Brown video and MIT lecture.' },
   { name: 'Do in your book', text: 'Exercises to do on paper from the textbook.' },
-];
-
-// The four big ideas, in the order the stepper (session 7) will play them.
-const bigIdeas = [
-  {
-    name: 'Vectors',
-    text: 'A vector is an arrow from the origin, and also a list of numbers: how far right, how far up. Adding vectors is walking one arrow, then the other.',
-  },
-  {
-    name: 'Span',
-    text: 'Stretch two arrows by any amounts and add them. Usually you can reach every point of the plane. When the arrows line up, you are stuck on one line.',
-  },
-  {
-    name: 'Linear transformations',
-    text: 'A matrix moves the whole plane at once. Grid lines stay straight, evenly spaced and parallel, and the origin stays put. Watch where î and ĵ land, and you know where everything lands.',
-  },
-  {
-    name: 'Eigenvectors',
-    text: 'Most arrows get knocked off their line when the plane moves. A few only get longer or shorter. Those are the eigenvectors, and how much they stretch is the eigenvalue.',
-  },
 ];
 
 // The optional extras: lessons that go beyond the plane.
@@ -180,24 +161,9 @@ const firstLesson = lessons[0];
     <section class="band sunken reveal" aria-labelledby="ideas-title">
       <div class="wrap">
         <h2 id="ideas-title">Four big ideas</h2>
-        <div class="ideas-grid">
-          <ol class="ideas">
-            {
-              bigIdeas.map((idea, i) => (
-                <li>
-                  <h3>
-                    <span class="idea-number">{i + 1}</span> {idea.name}
-                  </h3>
-                  <p>{idea.text}</p>
-                </li>
-              ))
-            }
-          </ol>
-          <div class="ideas-picture">
-            <!-- Session 7: one pinned picture that plays each idea as its text scrolls into view. -->
-            <div class="picture-box square" aria-hidden="true"></div>
-          </div>
-        </div>
+        <!-- The four texts and the pinned picture that plays each one. client:visible: it starts when the section
+             scrolls into view; the texts are in the built page before that, for search engines and screen readers. -->
+        <BigIdeas client:visible />
       </div>
     </section>
 

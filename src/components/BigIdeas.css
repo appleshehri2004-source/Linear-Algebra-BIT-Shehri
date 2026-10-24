@@ -1,0 +1,105 @@
+/* The homepage's "Four big ideas" stepper. Colours come from the html.home block in global.css.
+   Every rule starts with .home, because Astro puts all CSS in one shared file (see home.css).
+   Phone first: the picture is pinned to the top of the screen and the texts scroll under it.
+   From 56rem: texts on the left, the picture pinned on the right. */
+
+.home .ideas-grid {
+  display: grid;
+  gap: 1.5rem;
+}
+
+/* ---------- The picture ---------- */
+.home .ideas-picture {
+  /* On a phone: first, and pinned to the top while the texts scroll under it. */
+  order: -1;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 0.5rem 0;
+  background: var(--sunken); /* the band's colour, so the texts disappear under it */
+}
+
+.home .ideas-picture .plane {
+  margin: 0 auto;
+  /* Small enough on a phone to leave room for the text under it. */
+  max-width: min(100%, 18rem);
+}
+
+.home .ideas-picture-caption {
+  margin: 0.4rem 0 0;
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--brand);
+}
+
+/* The moving grid in ideas 3 and 4. */
+.home .ideas-moving-grid {
+  stroke: var(--ink-2);
+  stroke-opacity: 0.3;
+  stroke-width: 1px;
+}
+
+.home .ideas-moving-axes {
+  stroke: var(--ink-2);
+  stroke-opacity: 0.6;
+  stroke-width: 2px;
+}
+
+/* ---------- The texts ---------- */
+.home .ideas {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* Each text is tall enough that only one is in the "on" band at a time. */
+.home .ideas li {
+  min-height: 40vh;
+  padding: 1rem 0 1rem 1rem;
+  border-left: 3px solid transparent;
+}
+
+/* The idea the picture is showing. Marked by a line, not by fading the others: every text stays fully readable. */
+.home .ideas li.active {
+  border-left-color: var(--brand);
+}
+
+.home .ideas h3 {
+  margin: 0 0 0.35rem;
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+}
+
+.home .ideas p {
+  margin: 0;
+  color: var(--ink-2);
+  max-width: 32rem;
+}
+
+.home .idea-number {
+  color: var(--brand);
+}
+
+@media (min-width: 56rem) {
+  .home .ideas-grid {
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+    gap: 3rem;
+  }
+  /* Side by side: the picture on the right, pinned a little below the top while the texts scroll past. */
+  .home .ideas-picture {
+    order: 0;
+    top: 2rem;
+    padding: 0;
+    background: none;
+  }
+  .home .ideas-picture .plane {
+    max-width: 30rem;
+  }
+  /* The last text ends in the middle of the screen, so it can reach the "on" band too. */
+  .home .ideas li:last-child {
+    min-height: 50vh;
+  }
+}
