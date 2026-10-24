@@ -341,9 +341,12 @@ export interface Station {
   pose: StationPose;
 }
 
+/** Station 1's two arrows when the page opens: v and w, and so v + w = (1, 3). */
+export const VECTORS_START: { v: Vec2; w: Vec2 } = { v: [2, 1], w: [-1, 2] };
+
 export const STATIONS: Station[] = [
-  // Low three-quarter view, close: the arrows float in space, so you see depth.
-  { id: 'station-vectors', name: 'Vectors', pose: { azimuth: -28, elevation: 17, distance: 8, lookHeight: 0.6, sweep: 0 } },
+  // A three-quarter view from above, close: you see depth, and dragging "away from you" still feels natural.
+  { id: 'station-vectors', name: 'Vectors', pose: { azimuth: -24, elevation: 30, distance: 8.5, lookHeight: 0.3, sweep: 0 } },
   // Almost straight down: dragging î and ĵ feels like the 2D lessons.
   { id: 'station-matrix', name: 'Matrices', pose: { azimuth: 0, elevation: 76, distance: 11, lookHeight: 0, sweep: 0 } },
   // Straight down and closer, turned a little: the area fills the screen.

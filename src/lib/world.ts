@@ -4,7 +4,7 @@
 //
 // Directions: three.js points y up, so the maths plane lies flat in three.js's x–z floor.
 // The maths point (x, y) is drawn at (x, 0, −y): x to the right, y away from a camera that looks from the front.
-import { easeInOut, lerp, matVec, type Mat2, type Vec2 } from './linalg';
+import { clampVec, easeInOut, lerp, matVec, snapVec, type Mat2, type Vec2 } from './linalg';
 
 export type Vec3 = [number, number, number];
 
@@ -123,6 +123,39 @@ export function portraitStepBack(aspect: number): number {
 /** The maths point (x, y) in three.js coordinates, on the floor. */
 export function toWorld([x, y]: Vec2): Vec3 {
   return [x, 0, -y + 0];
+}
+
+/** The opposite of toWorld: the three.js floor point (x, 0, z) as the maths point (x, −z). */
+export function fromWorld([x, , z]: Vec3): Vec2 {
+  return [x + 0, -z + 0];
+}
+
+/**
+ * Where a line from `origin` going along `direction` meets the floor (height 0), e.g. the line from the camera
+ * through your finger. null if it never does: pointing level or up into the sky, or the floor is behind it.
+ */
+export function rayToFloor(origin: Vec3, direction: Vec3): Vec3 | null {
+  if (direction[1] >= -1e-9) return null;
+  const t = -origin[1] / direction[1];
+  if (t < 0) return null;
+  return [origin[0] + t * direction[0], 0, origin[2] + t * direction[2]];
+}
+
+/** How far a dragged arrow tip may go from the origin in x and in y. */
+export const TIP_LIMIT = 4;
+/** A tip this close (in x and in y) to a lattice dot clicks onto it. */
+export const TIP_MAGNET = 0.2;
+
+/**
+ * Where a dragged arrow tip goes: kept inside ±TIP_LIMIT, in steps of 0.1, and onto the nearest lattice dot
+ * (whole numbers) when it's within TIP_MAGNET of it, so whole-number vectors are easy to hit.
+ * magnet = false (the arrow keys, which move by exactly 0.1): no clicking onto dots, or 1.1 would jump back to 1.
+ */
+export function snapTip(p: Vec2, magnet = true): Vec2 {
+  const inside = clampVec(p, TIP_LIMIT);
+  const dot = snapVec(inside, 1);
+  if (magnet && Math.abs(dot[0] - inside[0]) <= TIP_MAGNET && Math.abs(dot[1] - inside[1]) <= TIP_MAGNET) return dot;
+  return snapVec(inside, 0.1);
 }
 
 /**

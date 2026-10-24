@@ -29,7 +29,7 @@ const shots = [
 ];
 
 // Everything on the page except the world itself.
-const HIDE_WORDS = `.site-name, .station-rail, .station-label, .scroll-hint, .theme-toggle { visibility: hidden !important; }`;
+const HIDE_WORDS = `.site-name, .station-rail, .station-label, .scroll-hint, .theme-toggle, .tip-handle { visibility: hidden !important; }`;
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -40,8 +40,9 @@ const chrome = spawn(chromePath, [
   '--remote-debugging-port=9333',
   `--user-data-dir=${profile}`,
   '--hide-scrollbars',
-  '--use-angle=swiftshader', // draws WebGL without a graphics card, so it works headless
-  '--enable-unsafe-swiftshader',
+  // The Mac's real graphics card (Metal). Without it Chrome draws in software, so slowly that the world's
+  // frame-rate watch turns the glow off, and the dark posters would come out without it.
+  '--use-angle=metal',
   'about:blank',
 ]);
 

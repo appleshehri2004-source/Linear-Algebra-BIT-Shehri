@@ -1,6 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import { STATIONS } from '../content/home';
-import { cameraPose, latticePoints, movingFrameRate, portraitStepBack, stationAt, toWorld, type SectionBox } from './world';
+import {
+  cameraPose,
+  fromWorld,
+  latticePoints,
+  movingFrameRate,
+  portraitStepBack,
+  rayToFloor,
+  snapTip,
+  stationAt,
+  toWorld,
+  type SectionBox,
+} from './world';
 
 // Five sections of 1600px each, starting 0px from the top, on an 1000px-tall screen.
 const VIEW = 1000;
@@ -105,5 +116,41 @@ describe('movingFrameRate', () => {
 
   it('sees a slow device', () => {
     expect(movingFrameRate(Array(50).fill(1 / 25))).toBeCloseTo(25);
+  });
+});
+
+describe('fromWorld', () => {
+  it('undoes toWorld', () => {
+    expect(fromWorld(toWorld([2, -3]))).toEqual([2, -3]);
+  });
+});
+
+describe('rayToFloor', () => {
+  it('finds where a line pointing down meets the floor', () => {
+    // From 2 up, going down and forward at 45°: it lands 2 ahead.
+    expect(rayToFloor([0, 2, 0], [0, -1, -1])).toEqual([0, 0, -2]);
+  });
+
+  it('is null for a line that never comes down to the floor', () => {
+    expect(rayToFloor([0, 2, 0], [0, 0, -1])).toBeNull(); // level
+    expect(rayToFloor([0, 2, 0], [0, 1, -1])).toBeNull(); // into the sky
+  });
+});
+
+describe('snapTip', () => {
+  it('moves in steps of 0.1', () => {
+    expect(snapTip([1.43, -0.77])).toEqual([1.4, -0.8]);
+  });
+
+  it('clicks onto a lattice dot when it is close', () => {
+    expect(snapTip([1.85, 3.12])).toEqual([2, 3]);
+  });
+
+  it('stays inside ±4', () => {
+    expect(snapTip([9, -12])).toEqual([4, -4]);
+  });
+
+  it("doesn't click onto a dot without the magnet (arrow keys)", () => {
+    expect(snapTip([1.1, 2], false)).toEqual([1.1, 2]);
   });
 });

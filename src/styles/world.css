@@ -102,6 +102,10 @@
 /* The station's label sticks to the bottom of the screen while its station is in view.
    In Phases 3–7 the live readout (KaTeX) takes this spot. */
 .home .station-label {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  max-width: 100%;
   position: sticky;
   bottom: 1.25rem;
   margin: 0;
@@ -117,10 +121,35 @@
 }
 
 .home .station-number {
+  align-self: center;
   color: var(--text);
   font-variant-numeric: tabular-nums;
   font-weight: 600;
   margin-right: 0.35rem;
+}
+
+/* Once a live readout has arrived, it replaces the station's name. */
+.home .station-label:has(.readout:not(:empty)) .station-name {
+  display: none;
+}
+
+.home .readout:empty {
+  display: none;
+}
+
+/* Station 1's readout: v, w and v + w side by side, each in its arrow's colour (on a phone they shrink to fit). */
+.home .readout-parts {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  font-size: 0.95rem;
+}
+
+@media (max-width: 26rem) {
+  .home .readout-parts {
+    gap: 0.5rem;
+    font-size: 0.8rem;
+  }
 }
 
 /* The way out at the end of the last station. */
@@ -136,7 +165,7 @@
 /* "Scroll", near the bottom of the first screen, gone once you start. */
 .home .scroll-hint {
   position: absolute;
-  top: calc(100svh - 7rem);
+  top: calc(100svh - 10rem);
   left: 50%;
   margin: 0;
   transform: translateX(-50%);
@@ -166,6 +195,77 @@
   50% {
     transform: translate(-50%, 0.4rem);
   }
+}
+
+/* ---------- Grab handles (station 1: the arrow tips) ---------- */
+/* A fixed layer over the world. The layer lets every touch through; only the handles themselves catch one. */
+.home .world-handles {
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* Each handle is a 44px round button, centred on its tip (the world moves it there every frame: transform).
+   touch-action: none: a finger on a handle drags the tip and never scrolls the page. */
+.home .tip-handle {
+  position: absolute;
+  top: -1.375rem;
+  left: -1.375rem;
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  pointer-events: auto;
+  touch-action: none;
+  cursor: grab;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.home .tip-handle:active {
+  cursor: grabbing;
+}
+
+/* The ring: a thin circle in the arrow's colour (currentColor comes from the .vec / .vec2 class). */
+.home .tip-handle::after {
+  content: '';
+  position: absolute;
+  inset: 0.55rem;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+  opacity: 0.55;
+  transition: opacity 0.2s, transform 0.2s;
+}
+
+.home .tip-handle:hover::after,
+.home .tip-handle:active::after {
+  opacity: 1;
+  transform: scale(1.15);
+}
+
+.home .tip-handle:focus-visible {
+  outline: 3px solid var(--link);
+  outline-offset: 0;
+}
+
+/* Until the first drag, the rings breathe gently: "you can move me". */
+.home .tip-handle.invite::after {
+  animation: tip-invite 1.8s ease-in-out infinite;
+}
+
+@keyframes tip-invite {
+  50% {
+    opacity: 1;
+    transform: scale(1.35);
+  }
+}
+
+/* Away from station 1 the arrows are packed away: the handles disappear and can't be tapped. */
+.home .tip-handle.asleep {
+  visibility: hidden;
+  pointer-events: none;
 }
 
 /* ---------- The station rail (right edge) ---------- */
@@ -244,6 +344,10 @@
 @media (prefers-reduced-motion: reduce) {
   .home .scroll-hint {
     animation: none;
+  }
+  .home .tip-handle.invite::after {
+    animation: none;
+    opacity: 1;
   }
   .home .world-canvas,
   .home .rail-dot,

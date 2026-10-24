@@ -108,6 +108,9 @@ const firstLesson = lessons[0];
       <World client:only="react" />
     </div>
 
+    <!-- The grab handles of the stations (station 1: the arrow tips). Fixed over the world; World.tsx fills it. -->
+    <div id="world-handles" class="world-handles"></div>
+
     <p class="site-name">Visual Linear Algebra · BIT</p>
     <h1 class="visually-hidden">Visual Linear Algebra: see linear algebra move</h1>
     <StationRail />
@@ -126,9 +129,12 @@ const firstLesson = lessons[0];
               <a class="text-link" href="#chapters">Browse chapters</a>
             </p>
           )}
-          <!-- Where the live readout goes in Phases 3–7. For now: the station's number and name. -->
+          <!-- The station's number, then its live readout (World.tsx puts it into the readout spot). Until the
+               readout arrives, and for good without WebGL, the station's name shows instead. -->
           <p class="station-label">
-            <span class="station-number">{String(k + 1).padStart(2, '0')}</span> {station.name}
+            <span class="station-number">{String(k + 1).padStart(2, '0')}</span>
+            <span class="station-name">{station.name}</span>
+            <span class="readout" id={`readout-${station.id.replace('station-', '')}`} />
           </p>
         </section>
       ))

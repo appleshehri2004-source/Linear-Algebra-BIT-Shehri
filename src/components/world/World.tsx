@@ -2,14 +2,24 @@
 // endless grid, the lattice dots and fog. The camera follows the scroll through the 5 stations (CameraRig).
 // index.astro loads it with client:only="react", on top of a still poster of station 1: this canvas starts
 // see-through and fades in once its first frame is drawn. Without WebGL it draws nothing and the poster stays.
+//
+// It also holds the stations' state (station 1: the arrows v and w). The 3D parts draw it inside the canvas;
+// the handles and the readout are ordinary HTML, put into their places on the page with React portals.
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Canvas, useFrame } from '@react-three/fiber';
+import type * as THREE from 'three';
+import { VECTORS_START } from '../../content/home';
+import type { Vec2 } from '../../lib/linalg';
 import { useThemeColors, useThemeGlow } from '../../lib/useThemeColors';
 import { onWorldChange, world } from '../../lib/worldScroll';
 import CameraRig from './CameraRig';
 import FrameRateWatch from './FrameRateWatch';
 import Lattice from './Lattice';
 import OriginGlow from './OriginGlow';
+import TipHandles from './TipHandles';
+import VectorsReadout from './VectorsReadout';
+import VectorsStation from './VectorsStation';
 import WorldGrid from './WorldGrid';
 
 /** true if this browser can draw WebGL 2 (every modern phone can; very old ones or locked-down ones can't). */
@@ -44,6 +54,15 @@ export default function World() {
   const [struggling, setStruggling] = useState(false);
   const [webgl] = useState(hasWebGL2);
 
+  // Station 1: the two arrows. The handle buttons and the camera are shared between the page and the canvas.
+  const [v, setV] = useState<Vec2>(VECTORS_START.v);
+  const [w, setW] = useState<Vec2>(VECTORS_START.w);
+  const handleButtons = useRef<(HTMLElement | null)[]>([]);
+  const camera = useRef<THREE.Camera | null>(null);
+  // The spots on the page (index.astro) where the handles and the readout go.
+  const handleLayer = document.getElementById('world-handles');
+  const vectorsReadout = document.getElementById('readout-vectors');
+
   // Fade the whole world (canvas and poster) out after station 5, straight on the page: no React re-draw per scroll.
   useEffect(() => {
     const layer = box.current?.closest<HTMLElement>('.world-layer');
@@ -57,32 +76,50 @@ export default function World() {
 
   if (!webgl) return null;
 
+  const glow = struggling ? 0 : themeGlow;
+
   return (
-    <div ref={box} className={ready ? 'world-canvas ready' : 'world-canvas'}>
-      <Canvas
-        // The handles of later stations sit under the page's HTML, so the canvas listens on the whole page wrapper.
-        eventSource={document.getElementById('home-root') ?? undefined}
-        eventPrefix="client"
-        frameloop={running ? 'demand' : 'never'}
-        dpr={[1, dpr]}
-        camera={{ fov: 42, near: 0.1, far: 200 }}
-        gl={{ antialias: true, powerPreference: 'high-performance' }}
-      >
-        <FrameRateWatch
-          onChange={(slow) => {
-            setDpr(slow ? 1 : 2);
-            setStruggling(slow);
-          }}
-        />
-        <color attach="background" args={[colours.bgDeep]} />
-        <fog attach="fog" args={[colours.bgDeep, 8, 30]} />
-        <OriginGlow colour={colours.glowTop} strength={struggling ? 0 : themeGlow} />
-        <WorldGrid colours={colours} />
-        {/* Glowing dots are drawn in the bright text colour (dark mode); flat ink dots in the muted one (paper). */}
-        <Lattice colour={themeGlow > 0 ? colours.text : colours.muted} glow={struggling ? 0 : themeGlow} />
-        <CameraRig />
-        <FirstFrame onReady={() => setReady(true)} />
-      </Canvas>
-    </div>
+    <>
+      {handleLayer &&
+        createPortal(
+          <TipHandles
+            buttons={handleButtons}
+            camera={camera}
+            tips={[
+              { name: 'v', value: v, set: setV, colourClass: 'vec' },
+              { name: 'w', value: w, set: setW, colourClass: 'vec2' },
+            ]}
+          />,
+          handleLayer,
+        )}
+      {vectorsReadout && createPortal(<VectorsReadout v={v} w={w} />, vectorsReadout)}
+      <div ref={box} className={ready ? 'world-canvas ready' : 'world-canvas'}>
+        <Canvas
+          // The handles of later stations sit under the page's HTML, so the canvas listens on the whole page wrapper.
+          eventSource={document.getElementById('home-root') ?? undefined}
+          eventPrefix="client"
+          frameloop={running ? 'demand' : 'never'}
+          dpr={[1, dpr]}
+          camera={{ fov: 42, near: 0.1, far: 200 }}
+          gl={{ antialias: true, powerPreference: 'high-performance' }}
+        >
+          <FrameRateWatch
+            onChange={(slow) => {
+              setDpr(slow ? 1 : 2);
+              setStruggling(slow);
+            }}
+          />
+          <color attach="background" args={[colours.bgDeep]} />
+          <fog attach="fog" args={[colours.bgDeep, 8, 30]} />
+          <OriginGlow colour={colours.glowTop} strength={glow} />
+          <WorldGrid colours={colours} />
+          {/* Glowing dots are drawn in the bright text colour (dark mode); flat ink dots in the muted one (paper). */}
+          <Lattice colour={themeGlow > 0 ? colours.text : colours.muted} glow={glow} />
+          <VectorsStation v={v} w={w} colours={colours} glow={glow} handles={handleButtons} cameraOut={camera} />
+          <CameraRig />
+          <FirstFrame onReady={() => setReady(true)} />
+        </Canvas>
+      </div>
+    </>
   );
 }
