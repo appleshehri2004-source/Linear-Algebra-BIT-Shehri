@@ -12,7 +12,7 @@ import Load3D from '../components/Load3D.tsx';
 import Still3D from '../components/Still3D.astro';
 import { HaloFilter } from '../components/HomeHalo.tsx';
 import { TestShapeSymbols } from '../components/TestShape.tsx';
-import LessonList, { type ChapterLinks } from '../components/LessonList.tsx';
+import CourseExplorer from '../components/CourseExplorer.tsx';
 import SvdShowcase from '../components/SvdShowcase.tsx';
 import StationRail from '../components/world/StationRail.astro';
 import World from '../components/world/World.tsx';
@@ -25,6 +25,7 @@ import {
   chapterIdeas,
   chapterSummaries,
   lessonCountText,
+  type ChapterLinks,
 } from '../content/home';
 import '../styles/world.css';
 import { exerciseIds, getSortedLessons } from '../content/modules';
@@ -39,7 +40,7 @@ const lessonHref = (id: string) => `${base}/lessons/${id}/`;
 const cards = chapterSummaries(lessons);
 
 // Follow the book: each chapter with its active sections, and each section with its lessons,
-// in the plain shape LessonList wants. Archived sections are left out; chapters with nothing active too.
+// in the plain shape the Course panel wants. Archived sections are left out; chapters with nothing active too.
 const chapters: ChapterLinks[] = book
   .map((chapter) => ({
     number: chapter.number,
@@ -165,12 +166,12 @@ const firstLesson = lessons[0];
       </div>
     </section>
 
-    <!-- All lessons: every lesson with saved progress. The chapter cards jump into this list. -->
+    <!-- The Course panel: every lesson by chapter, with saved progress. The chapter cards open a chapter in it.
+         client:idle (not client:visible): it must be listening before someone clicks a chapter card above it. -->
     <section class="band sunken" id="lessons" aria-labelledby="lessons-title">
-      <div class="wrap narrow">
+      <div class="wrap">
         <h2 id="lessons-title">All lessons</h2>
-        <!-- client:visible, like every island: it shows saved ticks as soon as it scrolls into view. -->
-        <LessonList chapters={chapters} client:visible />
+        <CourseExplorer chapters={chapters} client:idle />
       </div>
     </section>
 

@@ -9,8 +9,12 @@ import { toWorld } from '../../lib/world';
 import { ARROW_LIFT } from './Arrow3D';
 
 interface Props {
-  /** Where the tips are now, as maths points on the plane, in the same order as the buttons. */
-  tips: MutableRefObject<Vec2[]>;
+  /**
+   * Where the tips are right now, as maths points on the plane, in the same order as the buttons. It's a function,
+   * asked every frame at the moment the buttons move: a value worked out elsewhere could be one frame old, and on a
+   * phone (where nothing is drawn until something moves) the rings were left behind their arrows.
+   */
+  tips: () => Vec2[];
   /** The handle buttons on the page. */
   buttons: MutableRefObject<(HTMLElement | null)[]>;
   /** Filled in here: the camera. */
@@ -24,7 +28,7 @@ export default function HandleAnchors({ tips, buttons, cameraOut }: Props) {
   cameraOut.current = camera;
 
   useFrame(() => {
-    tips.current.forEach((tip, k) => {
+    tips().forEach((tip, k) => {
       const el = buttons.current[k];
       if (!el) return;
       // Project the tip from 3D onto the screen (−1…1 each way), then into pixels.
@@ -35,6 +39,7 @@ export default function HandleAnchors({ tips, buttons, cameraOut }: Props) {
       const x = ((point.x + 1) / 2) * size.width;
       const y = ((1 - point.y) / 2) * size.height;
       el.style.transform = `translate(${x}px, ${y}px)`;
+      el.dataset.placed = ''; // until this first happens, the handle stays hidden (world.css)
     });
   });
 

@@ -3,6 +3,9 @@
 
 .home .svd-showcase {
   display: grid;
+  /* One column that never grows past the screen: without this, the 480px plane stretched it on a phone and the
+     whole page became wider than the screen. */
+  grid-template-columns: minmax(0, 1fr);
   gap: 1.5rem;
   align-items: center;
 }

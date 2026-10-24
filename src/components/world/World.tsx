@@ -14,9 +14,9 @@ import { createPortal } from 'react-dom';
 import { Canvas, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { MATRIX_START, MATRIX_X, VECTORS_START } from '../../content/home';
-import { identity, lerpMatrix, roundTo, type Mat2, type Vec2 } from '../../lib/linalg';
+import { add, identity, lerpMatrix, roundTo, sub, type Mat2, type Vec2 } from '../../lib/linalg';
 import { useThemeColors, useThemeGlow } from '../../lib/useThemeColors';
-import { stationPresence, worldMatrix4 } from '../../lib/world';
+import { snapTip, stationPresence, worldMatrix4 } from '../../lib/world';
 import { onWorldChange, world } from '../../lib/worldScroll';
 import CameraRig from './CameraRig';
 import FrameRateWatch from './FrameRateWatch';
@@ -114,6 +114,13 @@ export default function World() {
             tips={[
               { name: 'v', value: v, set: setV, colourClass: 'vec' },
               { name: 'w', value: w, set: setW, colourClass: 'vec2' },
+              // Dragging the sum keeps v and moves w, so that v + w lands under the finger.
+              {
+                name: 'v + w',
+                value: add(v, w),
+                set: (p: Vec2) => setW(snapTip(sub(p, v), false)),
+                colourClass: 'sum',
+              },
             ]}
           />,
           handleLayer,

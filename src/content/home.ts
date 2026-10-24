@@ -22,6 +22,7 @@ import {
   type Vec2,
 } from '../lib/linalg';
 import type { StationPose } from '../lib/world';
+import type { Progress } from '../lib/progress';
 
 /** What one chapter card shows. */
 export interface ChapterSummary {
@@ -367,3 +368,48 @@ export const STATIONS: Station[] = [
   // Very low, lifted, and circling as you scroll: the logo rises off the plane.
   { id: 'station-3d', name: 'Into 3D', pose: { azimuth: 40, elevation: 14, distance: 9, lookHeight: 1, sweep: 100 } },
 ];
+
+// ---------- The Course panel (CourseExplorer.tsx) ----------
+// Every chapter with its active sections and their lessons, in the plain shape the panel wants (index.astro builds
+// it from the book map). Sections with no lesson yet are kept, so the panel can say they're coming.
+
+export interface LessonLink {
+  id: string;
+  href: string;
+  /** e.g. "1.3.2" */
+  number: string;
+  title: string;
+  exerciseIds: string[];
+  /** An advanced lesson the reader can skip: shown with an "Optional" pill. */
+  optional?: boolean;
+}
+
+/** One section of the book, e.g. "1.3 Vector Equations", with its lessons. No lessons yet means "coming soon". */
+export interface SectionLinks {
+  number: string;
+  title: string;
+  page?: number;
+  lessons: LessonLink[];
+}
+
+/** One chapter of the book, with its active sections. */
+export interface ChapterLinks {
+  number: number;
+  title: string;
+  sections: SectionLinks[];
+}
+
+/** How far the reader is through one chapter: lessons marked complete out of all its lessons. */
+export interface ChapterProgress {
+  number: number;
+  done: number;
+  total: number;
+}
+
+/** Lessons complete per chapter, from the saved progress, for the chapter rings. */
+export function chapterProgress(chapters: ChapterLinks[], progress: Progress): ChapterProgress[] {
+  return chapters.map((chapter) => {
+    const lessons = chapter.sections.flatMap((s) => s.lessons);
+    return { number: chapter.number, done: lessons.filter((l) => progress.lessons[l.id]).length, total: lessons.length };
+  });
+}

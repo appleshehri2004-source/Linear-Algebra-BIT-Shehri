@@ -8,6 +8,7 @@ import {
   cardCss,
   cardStories,
   chapterIdeas,
+  chapterProgress,
   chapterSummaries,
   cssMatrix,
   eigenScene,
@@ -257,5 +258,25 @@ describe('the 3D card', () => {
     const [i, j, k] = CARD_3D_MATRIX.map(obliqueProject);
     const sinAngle = (a: Vec2, b: Vec2) => Math.abs(a[0] * b[1] - a[1] * b[0]) / (Math.hypot(...a) * Math.hypot(...b));
     for (const [a, b] of [[i, j], [j, k], [k, i]]) expect(sinAngle(a, b)).toBeGreaterThan(0.4); // more than about 24° apart
+  });
+});
+
+describe('chapterProgress', () => {
+  const link = (id: string) => ({ id, href: `/${id}/`, number: id, title: id, exerciseIds: [] });
+  const chapters = [
+    { number: 1, title: 'One', sections: [{ number: '1.1', title: 'A', lessons: [link('a'), link('b')] }] },
+    { number: 2, title: 'Two', sections: [{ number: '2.1', title: 'B', lessons: [] }, { number: '2.2', title: 'C', lessons: [link('c')] }] },
+  ];
+
+  it('counts the complete lessons of each chapter, out of all of its lessons', () => {
+    const progress = { lessons: { a: true as const, c: true as const }, exercises: {} };
+    expect(chapterProgress(chapters, progress)).toEqual([
+      { number: 1, done: 1, total: 2 },
+      { number: 2, done: 1, total: 1 },
+    ]);
+  });
+
+  it('is all zeros with nothing saved', () => {
+    expect(chapterProgress(chapters, { lessons: {}, exercises: {} }).map((c) => c.done)).toEqual([0, 0]);
   });
 });

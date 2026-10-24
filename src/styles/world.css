@@ -252,7 +252,36 @@
   cursor: grabbing;
 }
 
-/* The ring: a thin circle in the arrow's colour (currentColor comes from the .vec / .vec2 class). */
+/* The knob: a small solid dot in the arrow's colour, always there, so it's clear the tip can be grabbed.
+   (currentColor comes from the .vec / .vec2 / .sum / .ihat / .jhat class.) */
+.home .tip-handle::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0.6rem;
+  height: 0.6rem;
+  margin: -0.3rem 0 0 -0.3rem;
+  border: 2px solid var(--bg);
+  border-radius: 50%;
+  background: currentColor;
+  box-sizing: content-box;
+}
+
+/* Fingers are bigger than mouse pointers: 56px handles on touch screens. */
+@media (pointer: coarse) {
+  .home .tip-handle {
+    top: -1.75rem;
+    left: -1.75rem;
+    width: 3.5rem;
+    height: 3.5rem;
+  }
+  .home .tip-handle::after {
+    inset: 0.8rem;
+  }
+}
+
+/* The ring: a thin circle in the arrow's colour around the knob. */
 .home .tip-handle::after {
   content: '';
   position: absolute;
@@ -284,6 +313,11 @@
     opacity: 1;
     transform: scale(1.35);
   }
+}
+
+/* Before the 3D world has drawn its first frame, a handle doesn't know where its tip is yet: keep it hidden. */
+.home .tip-handle:not([data-placed]) {
+  visibility: hidden;
 }
 
 /* Away from station 1 the arrows are packed away: the handles disappear and can't be tapped. */
@@ -348,8 +382,18 @@
   box-shadow: 0 0 calc(12px * var(--glow)) var(--brand);
 }
 
-/* The station's name appears next to its dot on hover or keyboard focus (on a computer). */
+/* The station's name appears next to its dot on hover or keyboard focus (on a computer). It's placed outside the
+   link's box (position: absolute), so the hidden names don't make an invisible strip over the world that
+   swallows taps meant for the arrow handles. */
+.home .station-rail a {
+  position: relative;
+}
+
 .home .rail-name {
+  position: absolute;
+  right: 100%;
+  white-space: nowrap;
+  pointer-events: none;
   font-size: 0.8rem;
   opacity: 0;
   transform: translateX(0.4rem);

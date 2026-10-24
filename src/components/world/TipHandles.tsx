@@ -14,11 +14,12 @@ import { ARROW_LIFT } from './Arrow3D';
 const say = (n: number) => String(roundTo(n, 1) + 0).replace('-', '−');
 
 interface Tip {
-  /** What it's called: "v", "w", "î", "ĵ". */
+  /** What it's called: "v", "w", "v + w", "î", "ĵ". */
   name: string;
   value: Vec2;
+  /** Where the tip should go (already snapped). For v + w this moves w, so the sum's tip lands there. */
   set: (p: Vec2) => void;
-  /** The CSS class of its colour (vec, vec2, ihat, jhat), for the ring. */
+  /** The CSS class of its colour (vec, vec2, sum, ihat, jhat), for the ring. */
   colourClass: string;
 }
 
@@ -34,9 +35,18 @@ interface Props {
 
 const ray = new THREE.Raycaster();
 
-/** The point on the plane under the screen spot (x, y), in maths coordinates. null if that spot looks at the sky. */
+/**
+ * The point on the plane under the screen spot (x, y), in maths coordinates. null if that spot looks at the sky.
+ * It measures the 3D canvas itself, not the window: on an iPhone the two differ while Safari's address bar grows
+ * and shrinks, and using the window's size made a drag aim at the wrong spot (sometimes the sky: no move at all).
+ */
 function planePointAt(x: number, y: number, camera: THREE.Camera): Vec2 | null {
-  ray.setFromCamera(new THREE.Vector2((x / window.innerWidth) * 2 - 1, 1 - (y / window.innerHeight) * 2), camera);
+  const canvas = document.querySelector('.world-canvas canvas');
+  const box = canvas?.getBoundingClientRect() ?? new DOMRect(0, 0, window.innerWidth, window.innerHeight);
+  ray.setFromCamera(
+    new THREE.Vector2(((x - box.left) / box.width) * 2 - 1, 1 - ((y - box.top) / box.height) * 2),
+    camera,
+  );
   const { origin, direction } = ray.ray;
   // The arrows lie ARROW_LIFT above the floor, so aim at that height: move the line down by it and hit the floor.
   const hit = rayToFloor([origin.x, origin.y - ARROW_LIFT, origin.z], direction.toArray() as Vec3);
@@ -56,17 +66,23 @@ export default function TipHandles({ station, tips, buttons, camera }: Props) {
     return onWorldChange(update);
   }, [station]);
 
+  /** Move tip k to the plane point under the finger or mouse. */
+  function aim(k: number, e: PointerEvent<HTMLButtonElement>) {
+    if (!camera.current) return;
+    const p = planePointAt(e.clientX, e.clientY, camera.current);
+    if (p) tips[k].set(snapTip(p));
+  }
+
   function onPointerDown(k: number, e: PointerEvent<HTMLButtonElement>) {
     e.preventDefault(); // no text selection, no focus jump
     e.currentTarget.setPointerCapture(e.pointerId); // keep getting moves even if the finger leaves the button
     dragging.current = k;
     setTouched(true);
+    aim(k, e); // the tip comes to the finger straight away, even before it moves
   }
 
   function onPointerMove(k: number, e: PointerEvent<HTMLButtonElement>) {
-    if (dragging.current !== k || !camera.current) return;
-    const p = planePointAt(e.clientX, e.clientY, camera.current);
-    if (p) tips[k].set(snapTip(p));
+    if (dragging.current === k) aim(k, e);
   }
 
   function onPointerUp() {

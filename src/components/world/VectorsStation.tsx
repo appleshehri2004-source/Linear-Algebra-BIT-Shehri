@@ -20,7 +20,7 @@ interface Props {
   w: Vec2;
   colours: ThemeColors;
   glow: number;
-  /** The two handle buttons on the page (v's, then w's), moved here every frame to sit over the tips. */
+  /** The handle buttons on the page (v's, w's, then v + w's), kept over the tips by HandleAnchors. */
   handles: MutableRefObject<(HTMLElement | null)[]>;
   /** Filled in here: the camera, so the handles can turn a finger's spot into a point on the plane. */
   cameraOut: MutableRefObject<THREE.Camera | null>;
@@ -28,8 +28,6 @@ interface Props {
 
 export default function VectorsStation({ v, w, colours, glow, handles, cameraOut }: Props) {
   const group = useRef<THREE.Group>(null);
-  // Where the tips are on screen right now (shrunk with the station as it packs away), for the handles.
-  const tips = useRef<Vec2[]>([v, w]);
 
   useFrame(() => {
     // Pack the station away as you scroll on: everything shrinks back into the origin.
@@ -38,10 +36,11 @@ export default function VectorsStation({ v, w, colours, glow, handles, cameraOut
       group.current.scale.setScalar(Math.max(1e-3, shown));
       group.current.visible = shown > 0.01;
     }
-    tips.current = [scale(shown, v), scale(shown, w)];
   });
 
   const sum = add(v, w);
+  // Where the tips are right now (shrunk with the station as it packs away), for the handles.
+  const tipsNow = () => [v, w, sum].map((tip) => scale(stationPresence(world.s, 0), tip));
   // The dashed sides of the parallelogram, just above the floor.
   const lift = (p: Vec2) => {
     const [x, , z] = toWorld(p);
@@ -58,8 +57,7 @@ export default function VectorsStation({ v, w, colours, glow, handles, cameraOut
         <Arrow3D tip={v} colour={colours.vec} glow={glow} />
         <Arrow3D tip={w} colour={colours.vec2} glow={glow} />
       </group>
-      {/* After the group, so it reads the tips this frame's useFrame above has just worked out. */}
-      <HandleAnchors tips={tips} buttons={handles} cameraOut={cameraOut} />
+      <HandleAnchors tips={tipsNow} buttons={handles} cameraOut={cameraOut} />
     </>
   );
 }

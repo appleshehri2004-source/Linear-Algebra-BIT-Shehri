@@ -4,7 +4,7 @@
 //
 // The bending itself happens in World.tsx: the lattice, this file's MovingGrid and the logo sit in one group
 // that A transforms. This part draws what must NOT be bent (arrows keep their round thickness).
-import { useRef, type MutableRefObject } from 'react';
+import type { MutableRefObject } from 'react';
 import * as THREE from 'three';
 import { matVec, type Mat2, type Vec2 } from '../../lib/linalg';
 import type { ThemeColors } from '../../lib/useThemeColors';
@@ -52,9 +52,6 @@ interface Props {
 }
 
 export default function MatrixStation({ matrix, x, shown, colours, glow, handles, cameraOut }: Props) {
-  const tips = useRef<Vec2[]>([]);
-  tips.current = [matrix[0], matrix[1]]; // the handles sit on the columns' tips
-
   return (
     <>
       {shown > 0.01 && (
@@ -64,7 +61,8 @@ export default function MatrixStation({ matrix, x, shown, colours, glow, handles
           <Arrow3D tip={matrix[1]} colour={colours.jhat} glow={glow} opacity={shown} />
         </>
       )}
-      <HandleAnchors tips={tips} buttons={handles} cameraOut={cameraOut} />
+      {/* The handles sit on the columns' tips. */}
+      <HandleAnchors tips={() => [matrix[0], matrix[1]]} buttons={handles} cameraOut={cameraOut} />
     </>
   );
 }

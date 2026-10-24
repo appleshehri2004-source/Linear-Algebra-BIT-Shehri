@@ -1,9 +1,10 @@
+// ARCHIVED (2026-10-24): replaced on the homepage by CourseExplorer.tsx. Kept for reference, not used.
 // The list of all lessons on the home page, with the reader's saved progress:
 // "4 of 15 lessons complete" at the top, then the book's chapters and sections,
 // with a tick and an exercise count next to each lesson.
 import { useEffect, useState } from 'react';
-import { emptyProgress, loadProgress, solvedCount, type Progress } from '../lib/progress';
-import './Progress.css';
+import { emptyProgress, loadProgress, solvedCount, type Progress } from '../../lib/progress';
+import '../Progress.css';
 
 export interface LessonLink {
   id: string;
