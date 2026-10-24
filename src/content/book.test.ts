@@ -1,5 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { activeInBookOrder, allSections, book, chapterOf, getSection, lessonNumber, sectionNumbers } from './book';
+import {
+  activeInBookOrder,
+  allSections,
+  book,
+  chapterOf,
+  doInYourBook,
+  getSection,
+  lessonNumber,
+  sectionNumbers,
+} from './book';
 
 describe('the book map', () => {
   it('lists chapters 1 to 10 in order', () => {
@@ -44,6 +53,21 @@ describe('the book map', () => {
   it('throws for a section that is not in the book', () => {
     expect(() => getSection('1.11')).toThrow();
     expect(() => chapterOf('11.1')).toThrow();
+  });
+});
+
+describe('doInYourBook', () => {
+  it('has exercise numbers for every active section, and only for active sections', () => {
+    const active = allSections.filter((s) => s.status === 'active').map((s) => s.number);
+    expect(Object.keys(doInYourBook).sort()).toEqual([...active].sort());
+  });
+
+  it('lists each exercise once, counting up, with no number in both lists', () => {
+    for (const { core, more } of Object.values(doInYourBook)) {
+      expect(core.length).toBeGreaterThan(0);
+      for (const list of [core, more]) expect(list).toEqual([...list].sort((a, b) => a - b));
+      expect(core.filter((n) => more.includes(n))).toEqual([]);
+    }
   });
 });
 

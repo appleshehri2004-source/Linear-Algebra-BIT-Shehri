@@ -7,6 +7,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Line, Point } from 'mafs';
 import {
+  consistency,
   easeInOut,
   equationLine,
   equationText,
@@ -179,11 +180,14 @@ export default function EliminationPlayer({ systems, random = false, range = 6 }
         <p className="demo-status">
           {solution
             ? `Solved: ${solution.map((n, i) => `${names[i]} = ${formatNumber(n).replace('-', '−')}`).join(', ')}`
-            : 'No unique solution'}
+            : consistency(rows).consistent
+              ? 'Infinitely many solutions'
+              : 'No solution: the system is inconsistent'}
         </p>
       )}
 
-      {size === 2 && (
+      {/* The picture only works for 2 equations in 2 unknowns: each row is then a line in the plane. */}
+      {size === 2 && rows[0].length === 3 && (
         <Plane range={range}>
           {ghostLine && slide < 1 && (
             <Line.ThroughPoints

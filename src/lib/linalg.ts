@@ -630,16 +630,18 @@ export function rrefSteps(augmented: number[][]): Elimination {
   const impossible = rref.findIndex((row) => isZeroRow(row.slice(0, -1)) && Math.abs(row[unknowns]) >= TINY);
   if (impossible !== -1) {
     steps.push({
-      description: `No unique solution: R${impossible + 1} says 0 = ${formatNumber(rref[impossible][unknowns])}, so there is no solution`,
+      description: `No solution: R${impossible + 1} says 0 = ${formatNumber(rref[impossible][unknowns]).replace('-', '−')}, which is never true`,
       matrix: rref,
       changedRow: null,
     });
     return { steps, solution: null, pivotColumns, rref };
   }
   if (pivotColumns.length < unknowns) {
+    // A column with no pivot is a "free" unknown: no equation pins it down.
     const free = [...Array(unknowns).keys()].filter((c) => !pivotColumns.includes(c));
+    const name = ['x', 'y', 'z'][free[0]] ?? `unknown ${free[0] + 1}`;
     steps.push({
-      description: `No unique solution: column ${free[0] + 1} has no pivot`,
+      description: `Infinitely many solutions: nothing pins down ${name}, so it can be anything`,
       matrix: rref,
       changedRow: null,
     });
@@ -745,6 +747,74 @@ export function randomSystem(size: 2 | 3, rand: () => number = Math.random): num
   // A 0 in the top-left corner would need a row swap first: allowed, but not for the first example.
   if (Math.abs(det) < TINY || rows[0][0] === 0) return randomSystem(size, rand);
   return rows.map((row) => [...row, row.reduce((sum, k, i) => sum + k * answer[i], 0)]);
+}
+
+/**
+ * One of the three elementary row operations, on a matrix stored as rows (rows counted from 0):
+ * - swap: swap rows i and j,
+ * - scale: multiply row i by k (k is not 0),
+ * - add: add k copies of row j to row i (R_i → R_i + k·R_j).
+ */
+export type RowOp =
+  | { kind: 'swap'; i: number; j: number }
+  | { kind: 'scale'; i: number; k: number }
+  | { kind: 'add'; i: number; j: number; k: number };
+
+/** The matrix after one row operation. The old matrix is left as it was. */
+export function applyRowOp(rows: number[][], op: RowOp): number[][] {
+  const m = copyRows(rows);
+  if (op.kind === 'swap') [m[op.i], m[op.j]] = [m[op.j], m[op.i]];
+  else if (op.kind === 'scale') m[op.i] = m[op.i].map((x) => cleanZero(op.k * x));
+  else m[op.i] = m[op.i].map((x, c) => cleanZero(x + op.k * m[op.j][c]));
+  return m;
+}
+
+/** The row operation that undoes op: swap back, divide by k, or take the k copies away again. */
+export function inverseRowOp(op: RowOp): RowOp {
+  if (op.kind === 'swap') return op;
+  if (op.kind === 'scale') return { kind: 'scale', i: op.i, k: 1 / op.k };
+  return { kind: 'add', i: op.i, j: op.j, k: -op.k };
+}
+
+/**
+ * Is the system with this augmented matrix (stored as rows) consistent, i.e. does it have at least one solution?
+ * It is not when elimination reaches a row "0 = c" with c not 0; then contradiction is that c.
+ * x + y = 1, x + y = 3: R2 − R1 gives 0 = 2, so { consistent: false, contradiction: 2 }.
+ */
+export function consistency(augmented: number[][]): { consistent: boolean; contradiction: number | null } {
+  const { rref } = rrefSteps(augmented);
+  const unknowns = augmented[0].length - 1;
+  const bad = rref.find((row) => isZeroRow(row.slice(0, -1)) && Math.abs(row[unknowns]) >= TINY);
+  return bad ? { consistent: false, contradiction: bad[unknowns] + 0 } : { consistent: true, contradiction: null };
+}
+
+/**
+ * The pivot columns of a matrix stored as rows (counted from 0): the columns that get a pivot when it is
+ * row reduced. Every column counts, including the last one; for an augmented matrix, a pivot in the
+ * last column means the system is inconsistent.
+ */
+export function pivotColumnsOf(rows: number[][]): number[] {
+  // rrefSteps treats its last column as the right-hand side, so add a column of 0s for it to ignore.
+  return rrefSteps(rows.map((row) => [...row, 0])).pivotColumns;
+}
+
+/**
+ * Which shape a matrix (stored as rows) is in:
+ * - 'echelon': a staircase. Rows of all 0s are at the bottom, and each row's first non-zero number
+ *   (its leading entry) is to the right of the leading entry above it, so everything below a leading entry is 0.
+ * - 'reduced': echelon, and also every leading entry is 1 with only 0s above it.
+ * - 'neither': not a staircase.
+ */
+export function echelonKind(rows: number[][]): 'reduced' | 'echelon' | 'neither' {
+  const lead = rows.map((row) => row.findIndex((x) => Math.abs(x) >= TINY)); // -1 for a row of 0s
+  for (let r = 1; r < rows.length; r++) {
+    if (lead[r - 1] === -1 && lead[r] !== -1) return 'neither'; // a zero row above a non-zero row
+    if (lead[r] !== -1 && lead[r] <= lead[r - 1]) return 'neither'; // not stepping to the right
+  }
+  const reduced = lead.every(
+    (c, r) => c === -1 || (Math.abs(rows[r][c] - 1) < TINY && rows.every((row, s) => s === r || Math.abs(row[c]) < TINY)),
+  );
+  return reduced ? 'reduced' : 'echelon';
 }
 
 // ---------- Rank and the four subspaces (Module 4 part 2) ----------

@@ -1,0 +1,96 @@
+---
+title: One-to-one and onto
+description: "Does a transformation reach every point, and can you tell where each point came from? Count pivots to find out."
+section: '1.9'
+part: 3
+threeBlueOneBrown: https://www.3blue1brown.com/lessons/nonsquare-matrices
+mit: https://ocw.mit.edu/courses/18-06-linear-algebra-spring-2010/resources/lecture-30-linear-transformations-and-their-matrices/
+tongji: 第二章 §3 逆矩阵
+---
+
+import Formula from '../../components/Formula.astro';
+import MatrixPlayground from '../../components/MatrixPlayground.tsx';
+import NonSquareDemo from '../../components/NonSquareDemo.tsx';
+import NumberLineDemo from '../../components/NumberLineDemo.tsx';
+import Exercise from '../../components/Exercise.tsx';
+import DoInYourBook from '../../components/DoInYourBook.astro';
+
+## Question
+
+A transformation moves every point somewhere. Two questions about where they go: does it reach **every** point of the output, and does each output point come from **only one** input?
+
+## Play
+
+**In the plane.** Press each button and watch the grid. Which ones cover the whole plane? Which ones squash two different points onto the same spot?
+
+<MatrixPlayground
+  client:visible
+  matrix={[[1, 0], [1, 1]]}
+  presets={[
+    { name: 'Shear', matrix: [[1, 0], [1, 1]] },
+    { name: 'Rotate 90°', matrix: [[0, 1], [-1, 0]] },
+    { name: 'Project', matrix: [[1, 0], [0, 0]] },
+    { name: 'Columns on one line', matrix: [[1, 2], [-1, -2]] },
+  ]}
+/>
+
+**From 2D into 3D.** The flat plane lands as a tilted sheet. Different points stay different, but most of space is never reached.
+
+<NonSquareDemo client:visible columns={[[2, -1, -2], [0, 1, 1]]} vector={[1, 1]} />
+
+**From 2D onto a line.** Every number on the line is reached, but by a whole line of points each.
+
+<NumberLineDemo client:visible row={[1, -2]} vector={[4, 3]} />
+
+## Numbers
+
+Count the pivots of each standard matrix.
+
+| Transformation | Matrix | Size | Pivots | Every column? | Every row? |
+| --- | --- | --- | --- | --- | --- |
+| Shear | <Formula tex="\begin{bmatrix} 1 & 1 \\ 0 & 1 \end{bmatrix}" /> | 2 × 2 | 2 | yes | yes |
+| Project | <Formula tex="\begin{bmatrix} 1 & 0 \\ 0 & 0 \end{bmatrix}" /> | 2 × 2 | 1 | no | no |
+| Into 3D | <Formula tex="\begin{bmatrix} 2 & 0 \\ -1 & 1 \\ -2 & 1 \end{bmatrix}" /> | 3 × 2 | 2 | yes | no |
+| Onto a line | <Formula tex="\begin{bmatrix} 1 & -2 \end{bmatrix}" /> | 1 × 2 | 1 | no | yes |
+
+For **Project**, <Formula tex="(2, 1)" /> and <Formula tex="(2, -3)" /> both land on <Formula tex="(2, 0)" />, and <Formula tex="(0, 1)" /> is never reached. For **Into 3D**, <Formula tex="T(\mathbf{x}) = \mathbf{0}" /> means <Formula tex="2x_1 = 0" />, <Formula tex="-x_1 + x_2 = 0" />, <Formula tex="-2x_1 + x_2 = 0" />, so only <Formula tex="\mathbf{x} = \mathbf{0}" />.
+
+## Explain
+
+**Onto.** <Formula tex="T : \mathbb{R}^n \to \mathbb{R}^m" /> maps <Formula tex="\mathbb{R}^n" /> *onto* <Formula tex="\mathbb{R}^m" /> when every <Formula tex="\mathbf{b}" /> in <Formula tex="\mathbb{R}^m" /> is the image of **at least one** <Formula tex="\mathbf{x}" />. In other words, the range is the whole codomain: <Formula tex="T(\mathbf{x}) = \mathbf{b}" /> always has a solution.
+
+**One-to-one.** <Formula tex="T" /> is *one-to-one* when every <Formula tex="\mathbf{b}" /> is the image of **at most one** <Formula tex="\mathbf{x}" />: two different inputs never land on the same output. It may still miss some points.
+
+**One test for one-to-one.** For a linear <Formula tex="T" />, it is enough to look at <Formula tex="\mathbf{0}" />: **T is one-to-one exactly when <Formula tex="T(\mathbf{x}) = \mathbf{0}" /> has only the trivial solution.** Why? If <Formula tex="T(\mathbf{u}) = T(\mathbf{v})" /> with <Formula tex="\mathbf{u} \ne \mathbf{v}" />, then <Formula tex="T(\mathbf{u} - \mathbf{v}) = \mathbf{0}" /> with <Formula tex="\mathbf{u} - \mathbf{v} \ne \mathbf{0}" />. And the other way round, a nontrivial <Formula tex="\mathbf{x}" /> with <Formula tex="T(\mathbf{x}) = \mathbf{0}" /> lands on the same spot as <Formula tex="\mathbf{0}" /> does.
+
+**Both, from the standard matrix A** (everything from §1.4 and §1.7 comes together here):
+
+- <Formula tex="T" /> maps onto <Formula tex="\mathbb{R}^m" /> ⇔ the columns of <Formula tex="A" /> span <Formula tex="\mathbb{R}^m" /> ⇔ **a pivot in every row**.
+- <Formula tex="T" /> is one-to-one ⇔ the columns of <Formula tex="A" /> are linearly independent ⇔ **a pivot in every column**.
+
+**What the size already tells you.** An <Formula tex="m \times n" /> matrix has at most one pivot per row and one per column.
+
+- More columns than rows (<Formula tex="n > m" />): some column has no pivot, so **never one-to-one**.
+- More rows than columns (<Formula tex="m > n" />): some row has no pivot, so **never onto**.
+- Square: both are possible, and it can still be neither, like **Project**.
+
+## Predict
+
+Can a linear transformation <Formula tex="T : \mathbb{R}^3 \to \mathbb{R}^2" /> be one-to-one?
+
+<details>
+  <summary>Reveal</summary>
+  No. Its standard matrix is <Formula tex="2 \times 3" />: at most 2 pivots for 3 columns, so one column has no pivot and <Formula tex="T(\mathbf{x}) = \mathbf{0}" /> has a nontrivial solution. Squashing 3D space into a plane always piles some points on top of each other.
+</details>
+
+## Practice
+
+<Exercise id="1.9-one-to-one-onto" client:visible />
+
+<DoInYourBook section="1.9" />
+
+## Go deeper
+
+**Square matrices are special.** For an <Formula tex="n \times n" /> matrix, "a pivot in every column" and "a pivot in every row" are the same thing (<Formula tex="n" /> pivots), so one-to-one and onto come together or not at all. That is the start of the *Invertible Matrix Theorem* in §2.3.
+
+**Undoing a transformation.** A one-to-one and onto <Formula tex="T" /> can be run backwards: each output came from exactly one input. That backwards map is the *inverse*, the subject of §2.2.

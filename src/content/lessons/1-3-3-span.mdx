@@ -11,6 +11,7 @@ tongji: 第四章 §1 向量组及其线性组合
 import Formula from '../../components/Formula.astro';
 import SpanTracer from '../../components/SpanTracer.tsx';
 import Exercise from '../../components/Exercise.tsx';
+import DoInYourBook from '../../components/DoInYourBook.astro';
 
 ## Question
 
@@ -45,6 +46,14 @@ With <Formula tex="a = 2" />, <Formula tex="b = -1" />, <Formula tex="\vec{v} = 
 
 **Why fixing a gives a line.** With <Formula tex="a" /> fixed, <Formula tex="a\vec{v}" /> is one fixed point. Adding <Formula tex="b\vec{w}" /> slides you from there along the direction of <Formula tex="\vec{w}" />, forwards or backwards. All those points form a straight line. Changing <Formula tex="a" /> moves that line sideways, and the lines together cover the plane.
 
+**Is b in the span? Ask a system.** "Can I reach <Formula tex="\mathbf{b}" />?" means "are there weights <Formula tex="x_1, x_2" /> with <Formula tex="x_1\mathbf{a}_1 + x_2\mathbf{a}_2 = \mathbf{b}" />?" Read that *vector equation* one row at a time and it is an ordinary system, whose augmented matrix is just the vectors side by side:
+
+<Formula display tex="x_1 \begin{bmatrix} 1 \\ 0 \\ 2 \end{bmatrix} + x_2 \begin{bmatrix} 1 \\ 1 \\ 0 \end{bmatrix} = \begin{bmatrix} 3 \\ 1 \\ 4 \end{bmatrix} \quad\Longleftrightarrow\quad \left[\begin{array}{cc|c} 1 & 1 & 3 \\ 0 & 1 & 1 \\ 2 & 0 & 4 \end{array}\right]" />
+
+Row 2 says <Formula tex="x_2 = 1" />, row 1 then gives <Formula tex="x_1 = 2" />, and row 3 checks out: <Formula tex="2 \cdot 2 + 0 = 4" />. So <Formula tex="\mathbf{b} = 2\mathbf{a}_1 + \mathbf{a}_2" /> is in the span. If the bottom number of <Formula tex="\mathbf{b}" /> had been 5 instead, row reduction would end with <Formula tex="0 = 1" />: inconsistent, so <Formula tex="\mathbf{b}" /> would **not** be in the span. Everything from §1.1 and §1.2 now answers questions about vectors.
+
+**In 3D.** Two arrows in <Formula tex="\mathbb{R}^3" /> that don't lie on one line span a **plane** through the origin, not all of space. Most points of space are off that plane, which is why "is b in the span?" is a real question there.
+
 ## Predict
 
 <Formula tex="\vec{v} = (1, 2)" /> and <Formula tex="\vec{w} = (2, 4)" />. Is the point <Formula tex="(3, 5)" /> in their span?
@@ -60,6 +69,14 @@ With <Formula tex="a = 2" />, <Formula tex="b = -1" />, <Formula tex="\vec{v} = 
 
 <Exercise id="1.3-line" client:visible />
 
+<Exercise id="1.4-solve" client:visible />
+
+<Exercise id="1.3-in-span" client:visible />
+
+<Exercise id="1.3-h-span" client:visible />
+
+<DoInYourBook section="1.3" />
+
 ## Go deeper
 
-The span of three vectors in 3D can be a line, a plane, or all of space. 3Blue1Brown's "Linear combinations, span, and basis vectors" (linked below) shows this, and the next lesson gives the "same line" case its proper name: *dependent*.
+The span of three vectors in 3D can be a line, a plane, or all of space. 3Blue1Brown's "Linear combinations, span, and basis vectors" (linked below) shows this. The "same line" case gets its proper name, *linearly dependent*, in §1.7.

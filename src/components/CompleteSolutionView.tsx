@@ -1,7 +1,7 @@
-// Lesson 4.6: the complete solution of A·x = b, for a matrix that squashes the plane onto a line (rank 1).
-// Output (right): the column space is a violet line. Drag the yellow b; near the line it snaps onto it.
-// Input (left): while b is on the line, every solution shows as a gold line, parallel to the pink null space:
-// one particular solution plus any amount of the null space direction. Off the line: "no solution".
+// Lesson 1.5.1: every solution of A·x = b, for a 2x2 matrix whose columns lie on one line.
+// Right: the mixes of A's columns fill a violet line. Drag the yellow b; near the line it snaps onto it.
+// Left: while b is on the line, every solution shows as a gold line, parallel to the pink line of solutions
+// of A·x = 0: one particular solution p plus any multiple t·v of the direction v. Off the line: "no solution".
 // A slider picks one solution x on the gold line, and the output shows A·x landing exactly on b.
 import { useState } from 'react';
 import { Line, Text, Vector } from 'mafs';
@@ -91,7 +91,7 @@ export default function CompleteSolutionView({ matrix, start, range = 7 }: Props
       {all ? (
         <>
           <p className="demo-status" aria-live="polite">
-            b is on the column space, so there are infinitely many solutions: x = {pair(all.particular)} + t ·{' '}
+            b is on the violet line (a mix of A's columns), so there are infinitely many solutions: x = {pair(all.particular)} + t ·{' '}
             {pair(all.directions[0])}
           </p>
           <div className="transform-scrub">
@@ -110,7 +110,7 @@ export default function CompleteSolutionView({ matrix, start, range = 7 }: Props
         </>
       ) : (
         <p className="demo-status" aria-live="polite">
-          No solution: b is off the violet line, and A can only land on that line.
+          No solution: b is off the violet line, and no mix of A's columns gives it.
         </p>
       )}
     </div>

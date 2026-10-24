@@ -1,4 +1,4 @@
-// Lesson 1.4: drag v and w and see if they're independent. Then play "reach the target":
+// Lesson 1.7.1: drag v and w and see if they're independent. Then play "reach the target":
 // move sliders a and b until a·v + b·w lands on the target point.
 import { useEffect, useState } from 'react';
 import { Point, Vector } from 'mafs';

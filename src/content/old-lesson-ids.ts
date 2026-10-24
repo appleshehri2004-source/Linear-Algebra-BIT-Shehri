@@ -3,18 +3,18 @@
 // Used to keep the reader's saved progress (src/lib/progress.ts) and to forward old links (astro.config.mjs).
 // Never remove a line: someone may still have the old id saved, or an old link bookmarked.
 export const oldLessonIds: Record<string, string> = {
-  '4-1-system-transformation': '1-1-1-system-transformation',
+  '4-1-system-transformation': '1-1-1-systems-of-equations',
   '4-2-elimination': '1-2-1-elimination',
   '1-1-vectors': '1-3-1-vectors',
   '1-2-adding-scaling': '1-3-2-adding-scaling',
   '1-3-span': '1-3-3-span',
   '4-6-complete-solution': '1-5-1-complete-solution',
-  '1-4-independence-basis': '1-7-1-independence-basis',
+  '1-4-independence-basis': '1-7-1-linear-independence',
   '2-1-linear-transformations': '1-8-1-linear-transformations',
   '2-6-non-square': '1-8-2-non-square',
   '2-2-matrix-times-vector': '1-9-1-matrix-times-vector',
   '2-3-gallery': '1-9-2-gallery',
-  '2-5-3d': '1-9-3-3d',
+  '2-5-3d': '1-9-4-3d',
   '2-4-composition': '2-1-1-composition',
   '4-3-inverse': '2-2-1-inverse',
   '4-5-rank-subspaces': '2-8-1-rank-subspaces',
@@ -43,4 +43,8 @@ export const oldLessonIds: Record<string, string> = {
   '6-3-least-squares': '6-5-1-least-squares',
   '8-5-symmetric-matrices-and-quadratic-forms': '7-1-1-symmetric-matrices-and-quadratic-forms',
   '8-6-svd-circle-to-ellipse': '7-4-1-svd-circle-to-ellipse',
+  // Renamed again in Phase 3, when the lesson was rewritten to follow its book section.
+  '1-1-1-system-transformation': '1-1-1-systems-of-equations',
+  '1-7-1-independence-basis': '1-7-1-linear-independence',
+  '1-9-3-3d': '1-9-4-3d',
 };

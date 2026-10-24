@@ -1,5 +1,7 @@
 // A practice question with random numbers: type an answer, press Check, get told right or wrong.
 // After 2 wrong tries it shows the correct answer. "New question" picks new numbers.
+// Some questions have buttons to pick from instead (e.g. Yes / No): a wrong pick greys that button out,
+// and when only the right one is left, the answer is shown. Matrix answers get their boxes in a grid.
 // Use it in a lesson as <Exercise id="1.2-add" client:visible />. The questions live in src/exercises/.
 import { useEffect, useId, useState, type FormEvent } from 'react';
 import katex from 'katex';
@@ -37,6 +39,8 @@ export default function Exercise({ id }: Props) {
   const [typed, setTyped] = useState<string[]>([]);
   const [wrongTries, setWrongTries] = useState(0);
   const [feedback, setFeedback] = useState<Feedback>(null);
+  // For questions with buttons: the buttons already picked that were wrong.
+  const [wrongPicks, setWrongPicks] = useState<number[]>([]);
 
   function newQuestion() {
     if (!generate) return;
@@ -44,6 +48,7 @@ export default function Exercise({ id }: Props) {
     setQuestion(q);
     setTyped(typeof q.answer === 'number' ? [''] : q.answer.map(() => ''));
     setWrongTries(0);
+    setWrongPicks([]);
     setFeedback(null);
   }
 
@@ -52,21 +57,18 @@ export default function Exercise({ id }: Props) {
   if (!generate) return <p className="exercise">Unknown exercise "{id}".</p>;
   if (!question) return <div className="exercise exercise-loading">Loading a question…</div>;
 
+  const { choices, gridRows } = question;
   const isVector = typeof question.answer !== 'number';
   const labels = question.labels ?? ['x', 'y', 'z'];
   const solved = feedback === 'right';
-  const showAnswer = wrongTries >= 2 && !solved;
+  // With buttons, the answer shows once only the right button is left (after 1 wrong try for Yes / No).
+  const triesAllowed = choices ? Math.min(2, choices.length - 1) : 2;
+  const showAnswer = wrongTries >= triesAllowed && !solved;
+  const answered = solved || showAnswer;
 
-  function check(e: FormEvent) {
-    e.preventDefault();
-    if (!question || solved) return;
-    const numbers = typed.map(parseNumber);
-    if (numbers.some((n) => n === null)) {
-      // A typo doesn't count as a wrong try.
-      setFeedback('not-a-number');
-      return;
-    }
-    if (checkAnswer(question, numbers as number[])) {
+  function judge(numbers: number[]) {
+    if (!question) return;
+    if (checkAnswer(question, numbers)) {
       setFeedback('right');
       // Remember the solve for the home page. No wrong tries yet means first try.
       recordSolved(id, wrongTries === 0);
@@ -74,6 +76,24 @@ export default function Exercise({ id }: Props) {
       setFeedback('wrong');
       setWrongTries((n) => n + 1);
     }
+  }
+
+  function check(e: FormEvent) {
+    e.preventDefault();
+    if (!question || solved || choices) return;
+    const numbers = typed.map(parseNumber);
+    if (numbers.some((n) => n === null)) {
+      // A typo doesn't count as a wrong try.
+      setFeedback('not-a-number');
+      return;
+    }
+    judge(numbers as number[]);
+  }
+
+  function pickChoice(i: number) {
+    if (answered) return;
+    if (i !== question?.answer) setWrongPicks((old) => [...old, i]);
+    judge([i]);
   }
 
   function type(i: number, value: string) {
@@ -87,30 +107,54 @@ export default function Exercise({ id }: Props) {
       <p className="exercise-text" dangerouslySetInnerHTML={{ __html: renderText(question.text) }} />
       {question.note && <p className="exercise-note">{question.note}</p>}
 
-      <div className={isVector ? 'exercise-boxes exercise-vector' : 'exercise-boxes'}>
-        {typed.map((t, i) => (
-          <label key={i} className="exercise-box">
-            {isVector && <span>{labels[i]} =</span>}
-            <input
-              id={i === 0 ? inputId : undefined}
-              type="text"
-              // A normal keyboard: the iPhone number pad has no minus sign.
-              autoComplete="off"
-              autoCorrect="off"
-              spellCheck={false}
-              value={t}
-              disabled={solved}
-              onChange={(e) => type(i, e.target.value)}
-              aria-label={isVector ? labels[i] : 'Your answer'}
+      {choices ? (
+        <div className="exercise-choices" role="group" aria-label="Pick an answer">
+          {choices.map((choice, i) => (
+            <button
+              key={i}
+              type="button"
+              className={answered && i === question.answer ? 'choice right-choice' : 'choice secondary'}
+              disabled={answered || wrongPicks.includes(i)}
+              onClick={() => pickChoice(i)}
+              dangerouslySetInnerHTML={{ __html: renderText(choice) }}
             />
-          </label>
-        ))}
-      </div>
+          ))}
+        </div>
+      ) : (
+        <div
+          className={gridRows ? 'exercise-boxes exercise-grid' : isVector ? 'exercise-boxes exercise-vector' : 'exercise-boxes'}
+          style={gridRows ? { gridTemplateColumns: `repeat(${typed.length / gridRows}, auto)` } : undefined}
+        >
+          {typed.map((t, i) => {
+            const cols = gridRows ? typed.length / gridRows : 1;
+            const name = gridRows ? `row ${Math.floor(i / cols) + 1}, column ${(i % cols) + 1}` : isVector ? labels[i] : 'Your answer';
+            return (
+              <label key={i} className="exercise-box">
+                {isVector && !gridRows && <span>{labels[i]} =</span>}
+                <input
+                  id={i === 0 ? inputId : undefined}
+                  type="text"
+                  // A normal keyboard: the iPhone number pad has no minus sign.
+                  autoComplete="off"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  value={t}
+                  disabled={solved}
+                  onChange={(e) => type(i, e.target.value)}
+                  aria-label={name}
+                />
+              </label>
+            );
+          })}
+        </div>
+      )}
 
       <div className="exercise-buttons">
-        <button type="submit" disabled={solved}>
-          Check
-        </button>
+        {!choices && (
+          <button type="submit" disabled={solved}>
+            Check
+          </button>
+        )}
         <button type="button" className="secondary" onClick={newQuestion}>
           New question
         </button>
@@ -120,13 +164,19 @@ export default function Exercise({ id }: Props) {
         {feedback === 'right' && <span className="right">Right!</span>}
         {feedback === 'wrong' && !showAnswer && <span className="wrong">Not quite. Try again.</span>}
         {feedback === 'not-a-number' && <span className="wrong">Please type a number in every box.</span>}
-        {showAnswer && (
+        {showAnswer && choices && (
+          <span className="wrong">
+            Not quite. The answer is <strong dangerouslySetInnerHTML={{ __html: renderText(choices[question.answer as number]) }} />.
+          </span>
+        )}
+        {showAnswer && !choices && (
           <span className="wrong">
             Not quite. The answer is{' '}
             <span dangerouslySetInnerHTML={{ __html: katex.renderToString(answerTex(question)) }} />.
           </span>
         )}
       </p>
+      {answered && question.why && <p className="exercise-why" dangerouslySetInnerHTML={{ __html: renderText(question.why) }} />}
     </form>
   );
 }

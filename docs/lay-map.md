@@ -646,10 +646,7 @@ How to read this file:
 ## References to fix in Phase 3 (found in Phase 2)
 After the lessons moved into book order, these "Lesson x.y.z" references in lesson text point to a *later* lesson,
 or to an archived one. Phase 2 only renumbered them. Phase 3 should reword each one when it rewrites that chapter.
-- 1.1.1 → 3.3.1 (det A = 0 squashes the plane) and → 2.2.1 (inverse), both in Go deeper.
-- 1.5.1 → 2.8.1, twice (the rank-1 matrix and its null space).
-- 1.8.2 → 6.1.1 (dot product) and → 1.9.2 ("Project" can't be undone).
-- 1.9.1 → 6.1.1 (dot product, Go deeper).
+- ~~1.1.1 → 3.3.1 and → 2.2.1~~, ~~1.5.1 → 2.8.1~~, ~~1.8.2 → 6.1.1 and → 1.9.2~~, ~~1.9.1 → 6.1.1~~: fixed in Phase 3, Chapter 1.
 - 4.1.1 → 4.1.2 (the eight rules; the next lesson in the same section, which is fine).
 - 5.1.1 → 5.3.1 (powers, Go deeper).
 - 5.3.1 → 5.4.2, twice (P⁻¹MP, similar matrices).

@@ -1,0 +1,107 @@
+---
+title: 'Systems of equations: where lines meet'
+description: "Two equations are two lines: they cross once, never, or all along. Solve any system with three row moves that never change the answer."
+section: '1.1'
+part: 1
+mit: https://ocw.mit.edu/courses/18-06-linear-algebra-spring-2010/resources/lecture-1-the-geometry-of-linear-equations/
+tongji: 第二章 §1 线性方程组和矩阵
+---
+
+import Formula from '../../components/Formula.astro';
+import EliminationPlayer from '../../components/EliminationPlayer.tsx';
+import Exercise from '../../components/Exercise.tsx';
+import DoInYourBook from '../../components/DoInYourBook.astro';
+
+## Question
+
+Two equations with two unknowns, like <Formula tex="x + y = 3" /> and <Formula tex="x - y = 1" />. What does a solution look like? And can a system have **no** solution, or **lots** of them?
+
+## Play
+
+Each equation is drawn as a line. Pick a system, then press **Next step** to do one row move at a time, or **Play** to watch them all. The row that just changed is highlighted, and the move is written above it.
+
+<EliminationPlayer
+  client:visible
+  systems={[
+    { name: 'One solution', rows: [[1, 1, 3], [1, -1, 1]] },
+    { name: 'No solution', rows: [[1, 2, 4], [2, 4, 2]] },
+    { name: 'Infinitely many', rows: [[1, 2, 4], [2, 4, 8]] },
+  ]}
+/>
+
+Watch the lines in **One solution**: every move turns one of them, but the crossing point never moves. In the other two systems, look at what the last row turns into.
+
+## Numbers
+
+A system with three unknowns, and its **augmented matrix**: one row per equation, the numbers in front of <Formula tex="x, y, z" />, then a bar, then the right-hand side.
+
+<Formula display tex="\begin{cases} x + y + z = 6 \\ 2x - y + z = 3 \\ x + 2y - z = 2 \end{cases} \qquad \left[\begin{array}{ccc|c} 1 & 1 & 1 & 6 \\ 2 & -1 & 1 & 3 \\ 1 & 2 & -1 & 2 \end{array}\right]" />
+
+1. Clear the <Formula tex="x" />'s under the top-left 1: <Formula tex="R_2 \to R_2 - 2R_1" /> and <Formula tex="R_3 \to R_3 - R_1" />.
+   <Formula display tex="\left[\begin{array}{ccc|c} 1 & 1 & 1 & 6 \\ 0 & -3 & -1 & -9 \\ 0 & 1 & -2 & -4 \end{array}\right]" />
+2. Swap rows 2 and 3, so the row starting with a 1 comes first: <Formula tex="R_2 \leftrightarrow R_3" />.
+   <Formula display tex="\left[\begin{array}{ccc|c} 1 & 1 & 1 & 6 \\ 0 & 1 & -2 & -4 \\ 0 & -3 & -1 & -9 \end{array}\right]" />
+3. Clear the <Formula tex="y" /> under it: <Formula tex="R_3 \to R_3 + 3R_2" /> gives <Formula tex="-7z = -21" />. Scale it: <Formula tex="R_3 \to -\tfrac{1}{7}R_3" />, so <Formula tex="z = 3" />.
+   <Formula display tex="\left[\begin{array}{ccc|c} 1 & 1 & 1 & 6 \\ 0 & 1 & -2 & -4 \\ 0 & 0 & 1 & 3 \end{array}\right]" />
+4. Work back up. Row 2 says <Formula tex="y - 2z = -4" />, so <Formula tex="y = -4 + 6 = 2" />. Row 1 says <Formula tex="x + y + z = 6" />, so <Formula tex="x = 6 - 2 - 3 = 1" />.
+
+Check in the original equations: <Formula tex="1 + 2 + 3 = 6" />, <Formula tex="2 - 2 + 3 = 3" />, <Formula tex="1 + 4 - 3 = 2" />. ✓
+
+## Explain
+
+**A system and its solutions.** A *linear equation* only adds up numbers times unknowns: no <Formula tex="x^2" />, no <Formula tex="xy" />. A *system* is a few of them at once. A *solution* is a choice of numbers that makes **every** equation true, and the *solution set* is all the solutions together.
+
+**The picture.** With two unknowns, each equation is a straight line, and a solution is a point on both lines. Two lines can only do three things:
+
+- **cross once**: exactly one solution,
+- **be parallel**: no solution, because the lines never meet,
+- **be the same line**: infinitely many solutions, every point on it.
+
+They can never cross exactly twice, so a system never has exactly two solutions. With three unknowns each equation is a flat plane, and the same three outcomes are the only ones possible.
+
+**Consistent or not.** A system with at least one solution is *consistent*. One with none is *inconsistent*.
+
+**The augmented matrix** holds a system without the letters. Leave off the right-hand column and you have the *coefficient matrix*. A matrix with <Formula tex="m" /> rows and <Formula tex="n" /> columns is "<Formula tex="m \times n" />": rows first, like a seat number in a theatre.
+
+**Three row moves**, the *elementary row operations*:
+
+- **Replacement**: add a multiple of one row to another (<Formula tex="R_2 \to R_2 - 2R_1" />),
+- **Interchange**: swap two rows (<Formula tex="R_2 \leftrightarrow R_3" />),
+- **Scaling**: multiply a row by a number that isn't 0 (<Formula tex="R_3 \to -\tfrac17 R_3" />).
+
+**Why the answer never changes.** If numbers solve equations 1 and 2, they also solve "equation 2 minus 2 times equation 1". And every move can be undone (add the 2 copies back, swap back, divide by the number again), so no new solutions sneak in either. That's what you saw in the picture: a move swaps one line for a different line **through the same crossing point**. Two matrices joined by row moves are called *row equivalent*, and their systems have the same solution set.
+
+**How to spot no solution.** In **No solution**, the last row turns into <Formula tex="[\,0 \;\; 0 \mid -6\,]" />, which says <Formula tex="0 = -6" />. No numbers make that true, so the system is inconsistent. In **Infinitely many** it turns into <Formula tex="[\,0 \;\; 0 \mid 0\,]" />, which says <Formula tex="0 = 0" />: always true, so it tells you nothing new, and one line's worth of points is left.
+
+So every system asks two questions. **Existence**: is there a solution at all? **Uniqueness**: if there is, is there only one?
+
+## Predict
+
+How many solutions do <Formula tex="x + 2y = 4" /> and <Formula tex="3x + 6y = 12" /> have?
+
+<details>
+  <summary>Reveal</summary>
+  Infinitely many. The second equation is just 3 times the first, so both are the same line. <Formula tex="R_2 \to R_2 - 3R_1" /> turns row 2 into <Formula tex="0 = 0" />. Any point on the line works, for example <Formula tex="(4, 0)" />, <Formula tex="(0, 2)" /> and <Formula tex="(2, 1)" />. Press **Infinitely many** above: it is the same line, written with smaller numbers.
+</details>
+
+## Practice
+
+<Exercise id="4.1-solve" client:visible />
+
+<Exercise id="4.2-solve3" client:visible />
+
+<Exercise id="4.2-new-row" client:visible />
+
+<Exercise id="1.1-which-op" client:visible />
+
+<Exercise id="1.1-consistent" client:visible />
+
+<Exercise id="1.1-h-consistent" client:visible />
+
+<DoInYourBook section="1.1" />
+
+## Go deeper
+
+**The row picture and the column picture.** Everything here reads a system one equation (one *row*) at a time. You can also read it one *column* at a time, as a question about combining arrows. That is the next big idea, in §1.3 and §1.4. MIT 18.06 Lecture 1 (linked below) shows both pictures, with planes in 3D.
+
+**Why computers love this.** The three moves are so simple that a computer can solve a thousand equations with a thousand unknowns in a fraction of a second. §1.2 turns them into a recipe that always works.

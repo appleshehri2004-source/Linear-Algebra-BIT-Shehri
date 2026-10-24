@@ -1,6 +1,6 @@
-// Lesson 4.1: solving A·x = v as a game. Drag the yellow x; the gold arrow A·x (where A sends x) moves live.
-// Get A·x onto the target v. That x is the solution of the system.
-// The green and red arrows are A's columns (where î and ĵ land), so A·x = x₁·(column 1) + x₂·(column 2).
+// Lesson 1.4.1: solving A·x = b as a game. Drag the yellow x; the gold arrow A·x moves live.
+// Get A·x onto the target b. That x is the solution of the system.
+// The green and red arrows are A's columns, so A·x = x₁·(column 1) + x₂·(column 2).
 import { useEffect, useState } from 'react';
 import { Point, Text, Vector } from 'mafs';
 import { distance, formatNumber, matVec, solve2, type Mat2, type Vec2 } from '../lib/linalg';
@@ -66,7 +66,7 @@ export default function SolveGame({ matrix, range = 6 }: Props) {
           <>
             <Point x={target[0]} y={target[1]} color={hit ? 'var(--positive)' : 'var(--text)'} />
             <Text x={target[0]} y={target[1]} attach="sw" attachDistance={10} size={18} color="var(--text)">
-              v
+              b
             </Text>
           </>
         )}
@@ -80,8 +80,8 @@ export default function SolveGame({ matrix, range = 6 }: Props) {
       <p className="demo-status" aria-live="polite" style={hit ? { color: 'var(--positive)' } : undefined}>
         {target &&
           (hit
-            ? `Hit! A sends x = (${show(x[0])}, ${show(x[1])}) to v.`
-            : `Target: v = (${show(target[0])}, ${show(target[1])})`)}
+            ? `Hit! A·x = b when x = (${show(x[0])}, ${show(x[1])}).`
+            : `Target: b = (${show(target[0])}, ${show(target[1])})`)}
       </p>
 
       <div className="demo-row">

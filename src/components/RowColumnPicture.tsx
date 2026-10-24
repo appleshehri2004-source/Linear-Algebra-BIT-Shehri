@@ -1,6 +1,6 @@
-// Lesson 4.1: one system A·x = v, two pictures side by side (stacked on a phone).
+// Lesson 1.4.1: one system A·x = b, two pictures side by side (stacked on a phone).
 // Row picture: each equation is a line; the solution is where the lines cross.
-// Column picture: x₁ copies of column 1 (green) then x₂ copies of column 2 (red), tip to tail, reach v.
+// Column picture: x₁ copies of column 1 (green) then x₂ copies of column 2 (red), tip to tail, reach b.
 import { Line, Point, Text, Vector } from 'mafs';
 import { add, augmentedRows, equationLine, equationText, formatNumber, scale, solve2, type Mat2, type Vec2 } from '../lib/linalg';
 import Plane from './Plane';
@@ -10,7 +10,7 @@ import './EliminationPlayer.css';
 interface Props {
   /** The matrix A, stored as its columns. Must have det ≠ 0. */
   matrix: Mat2;
-  /** The right-hand side v. */
+  /** The right-hand side b. */
   target: Vec2;
   /** Each plane shows -range to range. */
   range?: number;
@@ -50,18 +50,18 @@ export default function RowColumnPicture({ matrix, target, range = 6 }: Props) {
       </figure>
 
       <figure>
-        <figcaption>Column picture: columns add up to v</figcaption>
+        <figcaption>Column picture: columns add up to b</figcaption>
         <Plane range={range}>
           <Vector tip={target} color="var(--vec)" weight={5} />
           <Vector tip={first} color="var(--ihat)" weight={3} />
           <Vector tail={first} tip={both} color="var(--jhat)" weight={3} />
           <Text x={target[0]} y={target[1]} attach="nw" attachDistance={10} size={18} color="var(--vec)">
-            v
+            b
           </Text>
         </Plane>
         <p className="demo-message">
           {show(x[0])}·<span className="ihat">(column 1)</span> {x[1] < 0 ? '−' : '+'} {show(Math.abs(x[1]))}·
-          <span className="jhat">(column 2)</span> = v
+          <span className="jhat">(column 2)</span> = b
         </p>
       </figure>
     </div>

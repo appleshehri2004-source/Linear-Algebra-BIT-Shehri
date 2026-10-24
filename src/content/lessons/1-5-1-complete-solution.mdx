@@ -1,87 +1,94 @@
 ---
-title: The complete solution
-description: "When det A = 0, Ax = b has no answer or a whole line of them. See the complete solution: one answer plus the null space."
+title: 'Solution sets: lines, planes and their shifted copies'
+description: "Solve Ax = 0 and Ax = b and draw every solution at once: a line or plane through the origin, and the same shape slid over."
 section: '1.5'
 part: 1
-threeBlueOneBrown: https://www.3blue1brown.com/lessons/inverse-matrices
 mit: https://ocw.mit.edu/courses/18-06-linear-algebra-spring-2010/resources/lecture-8-solving-ax-b-row-reduced-form-r/
 tongji: 第四章 §4 线性方程组的解的结构
 ---
 
 import Formula from '../../components/Formula.astro';
 import CompleteSolutionView from '../../components/CompleteSolutionView.tsx';
-import PredictReveal from '../../components/PredictReveal.tsx';
 import Exercise from '../../components/Exercise.tsx';
+import DoInYourBook from '../../components/DoInYourBook.astro';
 
 ## Question
 
-When <Formula tex="\det A = 0" />, there is no single answer to <Formula tex="A\vec{x} = \vec{b}" />. Is there **no** answer, or **lots**? And if there are lots, what do they look like?
+When a system has infinitely many solutions, can you still **write them all down**? What shape do they make, and how are the solutions of <Formula tex="A\mathbf{x} = \mathbf{b}" /> related to those of <Formula tex="A\mathbf{x} = \mathbf{0}" />?
 
 ## Play
 
-<Formula tex="A" /> squashes the plane onto the <span class="space">**violet**</span> line. Drag <span class="vec">**b**</span> on the right. Near the line, it snaps onto it. Then slide **t**.
+Here <Formula tex="A" />'s two columns, <Formula tex="(1, 2)" /> and <Formula tex="(2, 4)" />, lie on one line, so their mixes only fill the <span class="space">**violet**</span> line on the right. Drag <span class="vec">**b**</span> there: near the line it snaps onto it. On the left, the <span class="null">**pink**</span> line is every solution of <Formula tex="A\mathbf{x} = \mathbf{0}" />, and the <span class="sum">**gold**</span> line every solution of <Formula tex="A\mathbf{x} = \mathbf{b}" />. Slide **t**, then drag <span class="vec">**b**</span> off the violet line.
 
 <CompleteSolutionView client:visible matrix={[[1, 2], [2, 4]]} start={[3, 6]} />
 
 ## Numbers
 
-<Formula tex="A" /> is the rank 1 matrix from Lesson 2.8.1. With <Formula tex="\vec{b} = (3, 6)" />, the equations are:
+**First, Ax = 0.** The equations are <Formula tex="x + 2y = 0" /> and <Formula tex="2x + 4y = 0" />. <Formula tex="R_2 \to R_2 - 2R_1" /> turns row 2 into <Formula tex="0 = 0" />, so <Formula tex="y" /> is free and <Formula tex="x = -2y" />. Write <Formula tex="t" /> for the free <Formula tex="y" />:
 
-<Formula display tex="\begin{cases} x + 2y = 3 \\ 2x + 4y = 6 \end{cases}" />
+<Formula display tex="\mathbf{x} = \begin{bmatrix} -2t \\ t \end{bmatrix} = t \begin{bmatrix} -2 \\ 1 \end{bmatrix}" />
 
-Elimination: <Formula tex="R_2 \to R_2 - 2R_1" /> turns row 2 into <Formula tex="0 = 0" />. That's always true, so only <Formula tex="x + 2y = 3" /> is left, and <Formula tex="y" /> can be anything (it is **free**).
+That is the pink line through the origin, written in **parametric vector form**.
 
-- Choose <Formula tex="y = 0" />: then <Formula tex="x = 3" />. One **particular solution** is <Formula tex="(3, 0)" />.
-- The null space is the line through <Formula tex="(-2, 1)" /> (Lesson 2.8.1).
+**Now Ax = b, with b = (3, 6).** The same step leaves <Formula tex="x + 2y = 3" />, so <Formula tex="x = 3 - 2y" />:
 
-<Formula display tex="\vec{x} = \begin{bmatrix} 3 \\ 0 \end{bmatrix} + t\begin{bmatrix} -2 \\ 1 \end{bmatrix}" />
+<Formula display tex="\mathbf{x} = \begin{bmatrix} 3 - 2t \\ t \end{bmatrix} = \begin{bmatrix} 3 \\ 0 \end{bmatrix} + t \begin{bmatrix} -2 \\ 1 \end{bmatrix}" />
 
-Check <Formula tex="t = 1" />: <Formula tex="\vec{x} = (1, 1)" />, and <Formula tex="1 + 2 \cdot 1 = 3" />. ✓
+Check <Formula tex="t = 1" />: <Formula tex="\mathbf{x} = (1, 1)" />, and <Formula tex="1 + 2 = 3" />, <Formula tex="2 + 4 = 6" />. ✓ The direction <Formula tex="(-2, 1)" /> is the same as for <Formula tex="A\mathbf{x} = \mathbf{0}" />: only the starting point moved.
 
-Now move <Formula tex="\vec{b}" /> to <Formula tex="(3, 7)" />. The same step gives <Formula tex="0 = 7 - 2 \cdot 3 = 1" />. That's never true: **no solution**.
+With <Formula tex="\mathbf{b} = (3, 7)" /> instead, row 2 becomes <Formula tex="0 = 1" />: inconsistent, no solution at all.
+
+**In 3D.** One equation, <Formula tex="x + 2y - z = 0" />, has two free unknowns, <Formula tex="y" /> and <Formula tex="z" />. Then <Formula tex="x = -2y + z" />, and
+
+<Formula display tex="\mathbf{x} = y \begin{bmatrix} -2 \\ 1 \\ 0 \end{bmatrix} + z \begin{bmatrix} 1 \\ 0 \\ 1 \end{bmatrix}," />
+
+a plane through the origin, spanned by those two vectors.
 
 ## Explain
 
-<Formula tex="A\vec{x}" /> always lands in the <span class="space">**column space**</span>. So:
+**Homogeneous systems.** A system <Formula tex="A\mathbf{x} = \mathbf{0}" /> is called *homogeneous*. It always has the solution <Formula tex="\mathbf{x} = \mathbf{0}" />, the *trivial solution*. The real question is whether it has a *nontrivial* one, and the answer comes from §1.2: **there is a nontrivial solution exactly when there is at least one free unknown.**
 
-- If <Formula tex="\vec{b}" /> is **off** the column space, nothing lands there: **no solution**. Elimination shows this as a row saying <Formula tex="0 = 1" />.
-- If <Formula tex="\vec{b}" /> is **on** it, take any one solution <Formula tex="\vec{x}_p" /> and add anything from the <span class="null">**null space**</span>:
+**What the solutions look like.** Each free unknown gives one vector, and every solution of <Formula tex="A\mathbf{x} = \mathbf{0}" /> is a mix of them. So the solution set is a span: just the origin (no free unknowns), a line through the origin (one), a plane through the origin (two), and so on.
 
-<Formula display tex="\vec{x} = \vec{x}_p + \vec{x}_n, \qquad A(\vec{x}_p + \vec{x}_n) = \vec{b} + \vec{0} = \vec{b}" />
+**Parametric vector form** means writing the solutions as <Formula tex="\mathbf{x} = t\,\mathbf{v}" /> or <Formula tex="\mathbf{x} = s\,\mathbf{u} + t\,\mathbf{v}" />, with the free unknowns as the numbers <Formula tex="s, t" /> that can be anything.
 
-That's the **complete solution**: one particular solution, plus the whole null space. It is the <span class="null">pink</span> line slid over to pass through <Formula tex="\vec{x}_p" />, which is why the <span class="sum">**gold**</span> line is parallel to the pink one.
+**Ax = b is a shifted copy.** Suppose <Formula tex="\mathbf{p}" /> is one solution of <Formula tex="A\mathbf{x} = \mathbf{b}" />. Then every solution is
 
-It also works the other way round: if <Formula tex="\vec{x}_1" /> and <Formula tex="\vec{x}_2" /> both solve it, then <Formula tex="A(\vec{x}_1 - \vec{x}_2) = \vec{b} - \vec{b} = \vec{0}" />. Any two solutions differ by a null space vector, so the gold line holds **every** solution.
+<Formula display tex="\mathbf{x} = \mathbf{p} + \mathbf{v}_h, \qquad \text{where } \mathbf{v}_h \text{ is any solution of } A\mathbf{x} = \mathbf{0}." />
 
-| <Formula tex="\vec{b}" /> in the column space? | Null space | Solutions |
-| --- | --- | --- |
-| No | anything | none |
-| Yes | just <Formula tex="\vec{0}" /> | exactly one |
-| Yes | a line (or more) | infinitely many |
+Why? The two rules from Lesson 1.4.1 do it. <Formula tex="A(\mathbf{p} + \mathbf{v}_h) = A\mathbf{p} + A\mathbf{v}_h = \mathbf{b} + \mathbf{0} = \mathbf{b}" />, so each of these is a solution. And if <Formula tex="\mathbf{w}" /> is any solution, then <Formula tex="A(\mathbf{w} - \mathbf{p}) = \mathbf{b} - \mathbf{b} = \mathbf{0}" />, so <Formula tex="\mathbf{w}" /> is <Formula tex="\mathbf{p}" /> plus a solution of the homogeneous system. In the picture: the gold line is the pink line slid over to pass through <Formula tex="\mathbf{p}" />. (That only works when <Formula tex="A\mathbf{x} = \mathbf{b}" /> has at least one solution; off the violet line, there is none.)
+
+**A recipe for writing it down.**
+
+1. Row reduce the augmented matrix to reduced echelon form.
+2. Write each basic unknown in terms of the free ones.
+3. Write <Formula tex="\mathbf{x}" /> as a column, and split it: a constant part (<Formula tex="\mathbf{p}" />) plus one vector for each free unknown.
 
 ## Predict
 
-<Formula tex="A" /> is the same matrix. Tap where you think the yellow vector <Formula tex="(1, 1)" /> will land.
-
-<PredictReveal client:visible matrix={[[1, 2], [2, 4]]} vector={[1, 1]} range={7} />
+The solutions of <Formula tex="A\mathbf{x} = \mathbf{0}" /> are all multiples of <Formula tex="(1, -1, 2)" />, and <Formula tex="(4, 0, 1)" /> is one solution of <Formula tex="A\mathbf{x} = \mathbf{b}" />. Is <Formula tex="(6, -2, 5)" /> also a solution of <Formula tex="A\mathbf{x} = \mathbf{b}" />?
 
 <details>
-  <summary>Why</summary>
-  On <Formula tex="(3, 6)" />, the same spot as <Formula tex="(3, 0)" />. <Formula tex="(1, 1)" /> is on the gold line (<Formula tex="t = 1" />), and every point on the gold line lands on <Formula tex="\vec{b} = (3, 6)" />.
+  <summary>Reveal</summary>
+  Yes. <Formula tex="(6, -2, 5) - (4, 0, 1) = (2, -2, 4) = 2\,(1, -1, 2)" />, a solution of the homogeneous system. So <Formula tex="(6, -2, 5)" /> is <Formula tex="\mathbf{p}" /> plus a solution of <Formula tex="A\mathbf{x} = \mathbf{0}" />: it is on the shifted line.
 </details>
 
 ## Practice
 
-<Exercise id="4.6-particular" client:visible />
+<Exercise id="1.5-nontrivial" client:visible />
+
+<Exercise id="1.5-parametric" client:visible />
+
+<Exercise id="1.5-parametric-b" client:visible />
 
 <Exercise id="4.6-another" client:visible />
 
 <Exercise id="4.6-solvable" client:visible />
 
+<DoInYourBook section="1.5" />
+
 ## Go deeper
 
-**In 3D**, the complete solution can be a point, a line or a plane: one particular solution, plus a null space of dimension 0, 1 or 2. Each free unknown adds one dimension.
+**The particular solution isn't special.** Setting the free unknowns to 0 is just a convenient choice. Any point on the gold line works as <Formula tex="\mathbf{p}" />.
 
-**The particular solution isn't special.** Setting the free unknowns to 0 is just a convenient choice. Any point on the gold line works as <Formula tex="\vec{x}_p" />.
-
-**Differential equations work the same way.** "Particular solution + everything the left side sends to 0" is how linear differential equations are solved too. It works because both are linear.
+**Differential equations work the same way.** "One particular solution, plus everything the left side sends to 0" is also how linear differential equations are solved. It works for the same reason: the two rules <Formula tex="A(\mathbf{u} + \mathbf{v}) = A\mathbf{u} + A\mathbf{v}" /> and <Formula tex="A(c\mathbf{u}) = cA\mathbf{u}" />. MIT 18.06 Lecture 8 (linked below) solves <Formula tex="A\mathbf{x} = \mathbf{b}" /> this way for bigger matrices.

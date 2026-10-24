@@ -1,0 +1,99 @@
+---
+title: 'The matrix equation Ax = b'
+description: "A matrix times a vector is a mix of the matrix's columns. Write any system as Ax = b, and see when it can be solved for every b."
+section: '1.4'
+part: 1
+threeBlueOneBrown: https://www.3blue1brown.com/lessons/inverse-matrices
+mit: https://ocw.mit.edu/courses/18-06-linear-algebra-spring-2010/resources/lecture-1-the-geometry-of-linear-equations/
+tongji: 第二章 §2 矩阵的运算
+---
+
+import Formula from '../../components/Formula.astro';
+import SolveGame from '../../components/SolveGame.tsx';
+import RowColumnPicture from '../../components/RowColumnPicture.tsx';
+import Exercise from '../../components/Exercise.tsx';
+import DoInYourBook from '../../components/DoInYourBook.astro';
+
+## Question
+
+In Lesson 1.3.3, "is <Formula tex="\mathbf{b}" /> in the span?" meant finding weights with <Formula tex="x_1\mathbf{a}_1 + x_2\mathbf{a}_2 = \mathbf{b}" />. That is a lot to write. Can one short product say the same thing?
+
+## Play
+
+The green and red arrows are the two columns of <Formula tex="A" />. Drag the yellow <span class="vec">**x**</span>: its two numbers are the weights. The gold arrow <span class="sum">**Ax**</span> is that mix of the columns. Get it onto the target <Formula tex="\mathbf{b}" />.
+
+<SolveGame client:visible matrix={[[2, 1], [-1, 1]]} />
+
+## Numbers
+
+<Formula tex="A" /> has columns <Formula tex="(2, 1)" /> and <Formula tex="(-1, 1)" />. For <Formula tex="\mathbf{x} = (2, 3)" />, the product <Formula tex="A\mathbf{x}" /> is **2 of column 1 plus 3 of column 2**:
+
+<Formula display tex="\begin{bmatrix} 2 & -1 \\ 1 & 1 \end{bmatrix} \begin{bmatrix} 2 \\ 3 \end{bmatrix} = 2 \begin{bmatrix} 2 \\ 1 \end{bmatrix} + 3 \begin{bmatrix} -1 \\ 1 \end{bmatrix} = \begin{bmatrix} 1 \\ 5 \end{bmatrix}" />
+
+**The quick way, one row at a time.** Each entry of <Formula tex="A\mathbf{x}" /> is a row of <Formula tex="A" /> times <Formula tex="\mathbf{x}" />, number by number, added up. The top entry is <Formula tex="2 \cdot 2 + (-1) \cdot 3 = 1" />, the bottom one <Formula tex="1 \cdot 2 + 1 \cdot 3 = 5" />. Same answer.
+
+It works for any size, as long as <Formula tex="\mathbf{x}" /> has one number per column of <Formula tex="A" />:
+
+<Formula display tex="\begin{bmatrix} 1 & 0 & 2 \\ 3 & -1 & 1 \end{bmatrix} \begin{bmatrix} 4 \\ 1 \\ -2 \end{bmatrix} = 4 \begin{bmatrix} 1 \\ 3 \end{bmatrix} + 1 \begin{bmatrix} 0 \\ -1 \end{bmatrix} - 2 \begin{bmatrix} 2 \\ 1 \end{bmatrix} = \begin{bmatrix} 0 \\ 9 \end{bmatrix}" />
+
+A <Formula tex="2 \times 3" /> matrix times a vector with 2 numbers is **not defined**: there aren't enough weights for the columns.
+
+## Explain
+
+**The definition.** If <Formula tex="A" /> has columns <Formula tex="\mathbf{a}_1, \dots, \mathbf{a}_n" /> and <Formula tex="\mathbf{x}" /> has entries <Formula tex="x_1, \dots, x_n" />, then
+
+<Formula display tex="A\mathbf{x} = x_1\mathbf{a}_1 + x_2\mathbf{a}_2 + \cdots + x_n\mathbf{a}_n." />
+
+**One question, three ways to write it.** The same problem can be written as
+
+- a **matrix equation**, <Formula tex="A\mathbf{x} = \mathbf{b}" />,
+- a **vector equation**, <Formula tex="x_1\mathbf{a}_1 + \cdots + x_n\mathbf{a}_n = \mathbf{b}" />,
+- a **system**, with augmented matrix <Formula tex="[\,\mathbf{a}_1 \;\cdots\; \mathbf{a}_n \mid \mathbf{b}\,]" />.
+
+All three have exactly the same solutions, so you pick the one that helps: the matrix equation is short to write, the vector equation gives the picture, and the augmented matrix is what you row reduce. Below, the same system drawn both ways: as two lines that cross (Lesson 1.1.1), and as columns that add up to <Formula tex="\mathbf{b}" />.
+
+<RowColumnPicture client:visible matrix={[[2, 1], [-1, 1]]} target={[1, 5]} />
+
+So <Formula tex="A\mathbf{x} = \mathbf{b}" /> has a solution **exactly when <Formula tex="\mathbf{b}" /> is a mix of the columns of <Formula tex="A" />**.
+
+**When can every b be reached?** For an <Formula tex="m \times n" /> matrix <Formula tex="A" />, these four sentences are either all true or all false:
+
+1. <Formula tex="A\mathbf{x} = \mathbf{b}" /> has a solution for **every** <Formula tex="\mathbf{b}" /> in <Formula tex="\mathbb{R}^m" />.
+2. Every <Formula tex="\mathbf{b}" /> in <Formula tex="\mathbb{R}^m" /> is a mix of the columns of <Formula tex="A" />.
+3. The columns of <Formula tex="A" /> span <Formula tex="\mathbb{R}^m" />.
+4. <Formula tex="A" /> has a pivot in **every row**.
+
+Number 4 is the one you can check: row reduce <Formula tex="A" /> (the coefficient matrix, not the augmented one) and count. If a row of an echelon form is all 0s, some <Formula tex="\mathbf{b}" /> will give that row <Formula tex="0 = c" /> with <Formula tex="c \ne 0" />.
+
+**Two rules that make Ax easy to work with.** For any vectors <Formula tex="\mathbf{u}, \mathbf{v}" /> and number <Formula tex="c" />:
+
+<Formula display tex="A(\mathbf{u} + \mathbf{v}) = A\mathbf{u} + A\mathbf{v} \qquad\text{and}\qquad A(c\,\mathbf{u}) = c\,(A\mathbf{u})" />
+
+Both come straight from the definition: mixing the columns with <Formula tex="u_i + v_i" /> is the same as mixing with <Formula tex="u_i" />, mixing with <Formula tex="v_i" />, and adding. These two rules are the heart of §1.5 and §1.8.
+
+## Predict
+
+<Formula tex="A" /> is a <Formula tex="3 \times 2" /> matrix. Can <Formula tex="A\mathbf{x} = \mathbf{b}" /> have a solution for every <Formula tex="\mathbf{b}" /> in <Formula tex="\mathbb{R}^3" />?
+
+<details>
+  <summary>Reveal</summary>
+  No. A pivot needs its own column, so 2 columns give at most 2 pivots, and one of the 3 rows has none. In pictures: two arrows in 3D span at most a plane, and most of space is off it.
+</details>
+
+## Practice
+
+<Exercise id="1.4-ax" client:visible />
+
+<Exercise id="4.1-columns" client:visible />
+
+<Exercise id="1.4-span-rm" client:visible />
+
+<Exercise id="1.4-condition" client:visible />
+
+<DoInYourBook section="1.4" />
+
+## Go deeper
+
+**Columns or rows?** The column way ("a mix of the columns") explains what <Formula tex="A\mathbf{x}" /> means; the row way is quicker by hand. MIT 18.06 Lecture 1 (linked below) calls them the column picture and the row picture.
+
+**Coming up.** In §1.8 the same product gets a new meaning: <Formula tex="A" /> becomes a machine that moves every vector <Formula tex="\mathbf{x}" /> to <Formula tex="A\mathbf{x}" />. 3Blue1Brown's video (linked below) is built on that view.

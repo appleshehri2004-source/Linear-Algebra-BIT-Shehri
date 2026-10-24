@@ -28,7 +28,7 @@ Press **Play A**, then **Rewind with A⁻¹**. Try every button. The last one is
   presets={[
     { name: 'Shear', matrix: [[1, 0], [1, 1]] },
     { name: 'Rotate 90°', matrix: [[0, 1], [-1, 0]] },
-    { name: 'Lesson 1.1.1', matrix: [[2, 1], [-1, 1]] },
+    { name: 'Lesson 1.4.1', matrix: [[2, 1], [-1, 1]] },
     { name: 'Squash', matrix: [[1, 0], [0, 0]] },
   ]}
 />
@@ -41,7 +41,7 @@ The **shear** pushes <span class="jhat">**ĵ**</span> one step to the right. To 
 
 <Formula display tex="A^{-1}A = \begin{bmatrix} 1 & 0 \\ 0 & 1 \end{bmatrix} = I" />
 
-**Rotate 90°** is undone by rotating 90° the other way. The matrix from **Lesson 1.1.1** has <Formula tex="\det A = 3" />, and its inverse is full of thirds:
+**Rotate 90°** is undone by rotating 90° the other way. The matrix from **Lesson 1.4.1** has <Formula tex="\det A = 3" />, and its inverse is full of thirds:
 
 <Formula display tex="A = \begin{bmatrix} 2 & -1 \\ 1 & 1 \end{bmatrix}" />
 
@@ -65,15 +65,15 @@ For a 2×2 matrix there's a formula: swap <Formula tex="a" /> and <Formula tex="
 
 <Formula display tex="A\vec{x} = \vec{v} \quad\Longrightarrow\quad \vec{x} = A^{-1}\vec{v}" />
 
-For Lesson 1.1.1's system, with <Formula tex="\vec{v} = (1, 5)" />:
+For Lesson 1.4.1's system, with <Formula tex="\vec{v} = (1, 5)" />:
 
 <Formula display tex="\vec{x} = \frac13 \begin{bmatrix} 1 & 1 \\ -1 & 2 \end{bmatrix} \begin{bmatrix} 1 \\ 5 \end{bmatrix} = \frac13 \begin{bmatrix} 6 \\ 9 \end{bmatrix} = \begin{bmatrix} 2 \\ 3 \end{bmatrix}" />
 
-That's the same answer as the game in Lesson 1.1.1.
+That's the same answer as the game in Lesson 1.4.1.
 
 ## Predict
 
-<Formula tex="A" /> is Lesson 1.1.1's matrix. First <Formula tex="A" /> plays, then <Formula tex="A^{-1}" />. Tap where you think the yellow vector <Formula tex="(3, 1)" /> ends up.
+<Formula tex="A" /> is Lesson 1.4.1's matrix. First <Formula tex="A" /> plays, then <Formula tex="A^{-1}" />. Tap where you think the yellow vector <Formula tex="(3, 1)" /> ends up.
 
 <PredictReveal client:visible steps={[[[2, 1], [-1, 1]], [[1 / 3, -1 / 3], [1 / 3, 2 / 3]]]} vector={[3, 1]} />
 

@@ -1,6 +1,7 @@
+import { readdirSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { det2, isIndependent } from '../lib/linalg';
-import { checkAnswer, matTex, parseNumber, type Rand } from './exercise';
+import { answerTex, checkAnswer, matTex, parseNumber, type Rand } from './exercise';
 import { exercises } from './index';
 import { module1 } from './module1';
 import { module4 } from './module4';
@@ -33,6 +34,20 @@ describe('every exercise', () => {
 
         // A question must never print "NaN" or "undefined".
         expect(q.text).not.toMatch(/NaN|undefined|Infinity/);
+        expect(q.why ?? '').not.toMatch(/NaN|undefined|Infinity/);
+
+        // Buttons: the answer is one of them, and no two buttons say the same thing.
+        if (q.choices) {
+          expect(Number.isInteger(q.answer)).toBe(true);
+          expect(q.answer).toBeGreaterThanOrEqual(0);
+          expect(q.answer).toBeLessThan(q.choices.length);
+          expect(new Set(q.choices).size).toBe(q.choices.length);
+        }
+        // A matrix answer fills whole rows.
+        if (q.gridRows) {
+          expect(Array.isArray(q.answer)).toBe(true);
+          expect((q.answer as number[]).length % q.gridRows).toBe(0);
+        }
       }
     });
   }
@@ -80,6 +95,25 @@ describe('parseNumber', () => {
   });
 });
 
+describe('answerTex', () => {
+  it('writes a number, a vector, and a matrix answer listed row by row', () => {
+    expect(answerTex({ text: '', answer: 2.5 })).toBe('2.5');
+    expect(answerTex({ text: '', answer: [1, -2] })).toBe('\\begin{bmatrix} 1 \\\\ -2 \\end{bmatrix}');
+    // Rows (1 2 3) and (4 5 6).
+    expect(answerTex({ text: '', answer: [1, 2, 3, 4, 5, 6], gridRows: 2 })).toBe(
+      '\\begin{bmatrix} 1 & 2 & 3 \\\\ 4 & 5 & 6 \\end{bmatrix}',
+    );
+  });
+});
+
+describe('checkAnswer with buttons', () => {
+  it('accepts only the right button', () => {
+    const q = { text: 'Consistent?', answer: 1, choices: ['Yes', 'No'] };
+    expect(checkAnswer(q, [1])).toBe(true);
+    expect(checkAnswer(q, [0])).toBe(false);
+  });
+});
+
 describe('matTex', () => {
   it('puts column 1 (i-hat) on the left', () => {
     expect(matTex([[1, -2], [3, 0]])).toBe('\\begin{bmatrix} 1 & 3 \\\\ -2 & 0 \\end{bmatrix}');
@@ -105,6 +139,16 @@ describe('4.2-new-row', () => {
       const q = module4['4.2-new-row'](rand);
       const step = q.text.slice(q.text.indexOf('R_2 \\to'));
       expect(step).not.toMatch(/[-+] -|\{-/);
+    }
+  });
+});
+
+describe('lessons', () => {
+  it('only use exercise ids that exist', () => {
+    const dir = new URL('../content/lessons/', import.meta.url);
+    for (const file of readdirSync(dir)) {
+      const text = readFileSync(new URL(file, dir), 'utf8');
+      for (const [, id] of text.matchAll(/<Exercise\s+id="([^"]+)"/g)) expect(exercises[id], `${file}: ${id}`).toBeDefined();
     }
   });
 });

@@ -96,6 +96,11 @@ import {
   formatNumber,
   lerpRows,
   randomSystem,
+  applyRowOp,
+  consistency,
+  echelonKind,
+  pivotColumnsOf,
+  inverseRowOp,
   inverse2,
   rrefSteps,
   rank,
@@ -833,11 +838,11 @@ describe('rrefSteps', () => {
     expect(solution).toEqual([3, 2]);
   });
 
-  it('reports "no unique solution" for a dependent system', () => {
+  it('reports "infinitely many solutions" for a dependent system, naming the free unknown', () => {
     // x + 2y = 3 and 2x + 4y = 6 are the same line.
     const { steps, solution } = rrefSteps([[1, 2, 3], [2, 4, 6]]);
     expect(solution).toBeNull();
-    expect(steps[steps.length - 1].description).toMatch(/no unique solution/i);
+    expect(steps[steps.length - 1].description).toMatch(/infinitely many solutions.*\by\b/i);
   });
 
   it('does not change the matrix it was given', () => {
@@ -2026,5 +2031,65 @@ describe('functions and polynomials as vectors (Module 9)', () => {
     expect(polyTex([0, -1])).toBe('-x');
     expect(polyTex([-2, 0, -1.5])).toBe('-1.5x^2 - 2');
     expect(polyTex([0, 0, 0])).toBe('0');
+  });
+});
+
+describe('applyRowOp and inverseRowOp', () => {
+  const rows = [
+    [1, 2, 3],
+    [4, 5, 6],
+  ];
+
+  it('swaps, scales and adds rows without changing the original', () => {
+    expect(applyRowOp(rows, { kind: 'swap', i: 0, j: 1 })).toEqual([[4, 5, 6], [1, 2, 3]]);
+    expect(applyRowOp(rows, { kind: 'scale', i: 1, k: -2 })).toEqual([[1, 2, 3], [-8, -10, -12]]);
+    expect(applyRowOp(rows, { kind: 'add', i: 1, j: 0, k: -4 })).toEqual([[1, 2, 3], [0, -3, -6]]);
+    expect(rows).toEqual([[1, 2, 3], [4, 5, 6]]);
+  });
+
+  it('undoes each operation with its inverse', () => {
+    const ops = [
+      { kind: 'swap', i: 0, j: 1 },
+      { kind: 'scale', i: 0, k: 4 },
+      { kind: 'add', i: 1, j: 0, k: 3 },
+    ] as const;
+    for (const op of ops) expect(applyRowOp(applyRowOp(rows, op), inverseRowOp(op))).toEqual(rows);
+  });
+});
+
+describe('consistency', () => {
+  it('finds a solution when one exists', () => {
+    expect(consistency([[1, 2, 5], [3, 4, 6]])).toEqual({ consistent: true, contradiction: null });
+    // Two copies of one line: infinitely many solutions, still consistent.
+    expect(consistency([[1, 1, 2], [2, 2, 4]]).consistent).toBe(true);
+  });
+
+  it('spots a row that says 0 = c', () => {
+    expect(consistency([[1, 1, 1], [1, 1, 3]])).toEqual({ consistent: false, contradiction: 2 });
+    // Row 3 is row 1 + row 2 on the left, but not on the right.
+    expect(consistency([[1, 0, 2, 1], [0, 1, -1, 2], [1, 1, 1, 4]]).consistent).toBe(false);
+  });
+});
+
+describe('pivotColumnsOf', () => {
+  it('finds the pivot columns, which may skip a column', () => {
+    // x + 2y - z = 3, 2x + 4y + z = 9: column 2 gets no pivot.
+    expect(pivotColumnsOf([[1, 2, -1, 3], [2, 4, 1, 9]])).toEqual([0, 2]);
+    // An inconsistent augmented matrix has a pivot in its last column.
+    expect(pivotColumnsOf([[1, 1, 1], [1, 1, 3]])).toEqual([0, 2]);
+  });
+});
+
+describe('echelonKind', () => {
+  it('tells reduced echelon, echelon and neither apart', () => {
+    expect(echelonKind([[1, 0, 2], [0, 1, 3], [0, 0, 0]])).toBe('reduced');
+    expect(echelonKind([[2, 4, 1], [0, 3, 5], [0, 0, 0]])).toBe('echelon');
+    // Leading 1s, but a 4 above the second one.
+    expect(echelonKind([[1, 4, 0], [0, 1, 3]])).toBe('echelon');
+    // A row of 0s above a non-zero row.
+    expect(echelonKind([[1, 2, 3], [0, 0, 0], [0, 1, 1]])).toBe('neither');
+    // The second leading entry is not to the right of the first.
+    expect(echelonKind([[0, 1, 2], [1, 0, 3]])).toBe('neither');
+    expect(echelonKind([[1, 2], [3, 4]])).toBe('neither');
   });
 });

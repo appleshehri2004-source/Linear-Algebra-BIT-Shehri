@@ -1,0 +1,81 @@
+---
+// "Do in your book": which exercises from Lay's textbook to do for one section, by number only.
+// Use it at the end of Practice in a section's last lesson: <DoInYourBook section="1.1" />
+// The numbers live in doInYourBook in src/content/book.ts.
+import { doInYourBook, getSection } from '../content/book';
+
+interface Props {
+  section: string;
+}
+
+const { section: number } = Astro.props;
+const section = getSection(number);
+const lists = doInYourBook[number];
+if (!lists) throw new Error(`No "Do in your book" exercises for section ${number} in src/content/book.ts.`);
+---
+
+<aside class="do-in-book" aria-label="Exercises to do in the textbook">
+  <p class="label">Do in your book</p>
+  <p class="where">
+    Lay, §{section.number} {section.title}{section.page !== undefined && ` (starts on p. ${section.page})`}: the exercises at
+    the end of the section.
+  </p>
+  <dl>
+    <dt>Core</dt>
+    <dd>{lists.core.join(', ')}</dd>
+    {
+      lists.more.length > 0 && (
+        <>
+          <dt>More</dt>
+          <dd>{lists.more.join(', ')}</dd>
+        </>
+      )
+    }
+  </dl>
+  <p class="hint">Core covers every kind of problem in the section; More is harder. Answers to the odd-numbered exercises are at the back of the book.</p>
+</aside>
+
+<style>
+  .do-in-book {
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--link);
+    border-radius: 0.6rem;
+    padding: 0.75rem 1rem;
+    margin: 1.5rem 0 1rem;
+  }
+
+  .label {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .where {
+    margin: 0.4rem 0;
+  }
+
+  dl {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.25rem 0.75rem;
+    margin: 0.5rem 0;
+  }
+
+  dt {
+    font-weight: 600;
+  }
+
+  dd {
+    margin: 0;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .hint {
+    margin: 0.4rem 0 0;
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+</style>

@@ -8,7 +8,6 @@ import {
   cramerPicture,
   det2,
   det3,
-  equationText,
   formatNumber,
   inverse2,
   leftNullSpaceBasis,
@@ -24,18 +23,7 @@ import {
   type Mat3,
   type Vec2,
 } from '../lib/linalg';
-import { matTex, pick, randInt, randVec, vecTex, type Generator, type Rand } from './exercise';
-
-/** TeX for a system of equations, one per line, e.g. "2x - y = 1" over "x + y = 5". */
-function systemTex(rows: number[][]): string {
-  return `\\begin{cases} ${rows.map((row) => equationText(row).replace(/−/g, '-')).join(' \\\\ ')} \\end{cases}`;
-}
-
-/** TeX for an augmented matrix [A | b], with a bar before the last column. Stored as rows. */
-function augmentedTex(rows: number[][]): string {
-  const n = rows[0].length - 1;
-  return `\\left[\\begin{array}{${'c'.repeat(n)}|c} ${rows.map((row) => row.join(' & ')).join(' \\\\ ')} \\end{array}\\right]`;
-}
+import { augmentedTex, matTex, pick, randInt, randVec, systemTex, vecTex, type Generator, type Rand } from './exercise';
 
 /** TeX for "this many copies of" a row: nothing for 1, "2\," for 2, "\tfrac{3}{2}\," for 1.5. k must be positive. */
 function multipleTex(k: number): string {
@@ -100,7 +88,7 @@ export const module4: Record<string, Generator> = {
   '4.1-columns': (rand) => {
     const rows = randomSystem(2, rand);
     return {
-      text: `Write $${systemTex(rows)}$ as $A\\vec{x} = \\vec{v}$. What is the first column of $A$ (the column that multiplies $x$)?`,
+      text: `Write $${systemTex(rows)}$ as $A\\mathbf{x} = \\mathbf{b}$. What is the first column of $A$ (the column that multiplies $x$)?`,
       answer: [rows[0][0], rows[1][0]],
       labels: ['top', 'bottom'],
     };
@@ -229,7 +217,7 @@ export const module4: Record<string, Generator> = {
     const all = completeSolution(a, b)!;
     return {
       text:
-        `$A = ${matTex(a)}$ sends $${vecTex(all.particular)}$ to $\vec{b} = ${vecTex(b)}$. ` +
+        `$A = ${matTex(a)}$ and $\vec{b} = ${vecTex(b)}$: one solution of $A\vec{x} = \vec{b}$ is $${vecTex(all.particular)}$. ` +
         `Find another solution of $A\vec{x} = \vec{b}$: the one with $y = 1$.`,
       answer: pointOnSolution(all, 1),
       note: 'Add a vector from the null space to the solution you know.',
@@ -243,7 +231,7 @@ export const module4: Record<string, Generator> = {
     return {
       text:
         `$A = ${matTex(a)}$. For which number $c$ does $A\vec{x} = \begin{bmatrix} ${top} \\ c \end{bmatrix}$ ` +
-        `have a solution? (Where can $A$ land?)`,
+        `have a solution? (When is it a mix of the columns of $A$?)`,
       answer: (top * col[1]) / col[0],
     };
   },

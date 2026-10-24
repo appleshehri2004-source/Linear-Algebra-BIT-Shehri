@@ -81,6 +81,41 @@
   cursor: default;
 }
 
+/* Answer boxes laid out as a matrix, between two bracket lines. */
+.exercise-grid {
+  display: inline-grid;
+  gap: 0.4rem;
+  padding: 0.3rem 0.5rem;
+  border-left: 2px solid var(--muted);
+  border-right: 2px solid var(--muted);
+  border-radius: 0.3rem;
+}
+
+.exercise-grid .exercise-box input {
+  width: 4.5rem;
+}
+
+/* Buttons to pick an answer from (Yes / No and short lists). */
+.exercise-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0.75rem 0;
+}
+
+.exercise button.right-choice {
+  background: var(--ihat);
+  border-color: var(--ihat);
+  color: var(--bg);
+  opacity: 1;
+}
+
+.exercise-why {
+  margin: 0.25rem 0 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
 .exercise-feedback {
   min-height: 1.6rem;
   margin: 0.5rem 0 0;

@@ -45,6 +45,12 @@ So **two arrows decide everything**: once you know where î and ĵ land, you kno
 
 That is matrix-times-vector: **x copies of the first column plus y copies of the second.** The grid lines stay parallel and evenly spaced because every point follows the same recipe.
 
+**The standard matrix.** The book writes <Formula tex="\mathbf{e}_1, \mathbf{e}_2" /> for î and ĵ (and <Formula tex="\mathbf{e}_1, \dots, \mathbf{e}_n" /> in <Formula tex="\mathbb{R}^n" />, the columns of the identity matrix). The same argument works in any size: **every linear transformation <Formula tex="T : \mathbb{R}^n \to \mathbb{R}^m" /> is a matrix transformation**, <Formula tex="T(\mathbf{x}) = A\mathbf{x}" />, and there is only one such <Formula tex="A" />:
+
+<Formula display tex="A = \big[\, T(\mathbf{e}_1) \;\; T(\mathbf{e}_2) \;\; \cdots \;\; T(\mathbf{e}_n) \,\big]." />
+
+It is called the *standard matrix* of <Formula tex="T" />. To find it, follow each <Formula tex="\mathbf{e}_j" /> and write where it goes as column <Formula tex="j" />.
+
 ## Predict
 
 With the same matrix, where does <Formula tex="(1, 1)" /> land? Work it out first. Then press **Rewind**, drag <span class="vec">**v**</span> to <Formula tex="(1, 1)" />, and press **Play** to check.
@@ -64,4 +70,4 @@ With the same matrix, where does <Formula tex="(1, 1)" /> land? Work it out firs
 
 ## Go deeper
 
-Textbooks often teach the "row" way first: the top number is row 1 dotted with <Formula tex="(x, y)" />, so <Formula tex="1 \cdot (-1) + 3 \cdot 2 = 5" />. It gives the same answer, and the dot product from lesson 6.1.1 is the reason it works. MIT 18.06 Lecture 1 (linked below) calls these the *row picture* and the *column picture* and shows both.
+The row–vector rule from Lesson 1.4.1 gives the same numbers: the top number is row 1 times <Formula tex="(x, y)" />, number by number, so <Formula tex="1 \cdot (-1) + 3 \cdot 2 = 5" />. MIT 18.06 Lecture 1 (linked below) calls these the *row picture* and the *column picture* and shows both.

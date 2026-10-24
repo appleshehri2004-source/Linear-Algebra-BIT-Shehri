@@ -1,0 +1,86 @@
+---
+title: Linear independence
+description: "Do some vectors add anything new, or is one of them made of the others? Test independence with row reduction and three quick checks."
+section: '1.7'
+part: 1
+threeBlueOneBrown: https://www.3blue1brown.com/lessons/span
+mit: https://ocw.mit.edu/courses/18-06-linear-algebra-spring-2010/resources/lecture-9-independence-basis-and-dimension/
+tongji: 第四章 §2 向量组的线性相关性
+---
+
+import Formula from '../../components/Formula.astro';
+import TargetGame from '../../components/TargetGame.tsx';
+import Exercise from '../../components/Exercise.tsx';
+import DoInYourBook from '../../components/DoInYourBook.astro';
+
+## Question
+
+You have a few vectors. Does each one add something new to their span, or is one of them just a mix of the others, along for the ride?
+
+## Play
+
+Drag <span class="vec">**v**</span> and <span class="vec2">**w**</span>. The label under the plane says whether they are **independent** or **dependent**.
+
+**Reach the target.** Move the sliders <Formula tex="a" /> and <Formula tex="b" /> until the tip of <span class="sum">**a·v + b·w**</span> lands on the target dot. If you get stuck, press **Show answer**.
+Then put <span class="vec">**v**</span> and <span class="vec2">**w**</span> on one line and try again.
+
+<TargetGame client:visible />
+
+## Numbers
+
+**Three vectors in 3D.** Are <Formula tex="\mathbf{v}_1 = (1, 2, 0)" />, <Formula tex="\mathbf{v}_2 = (0, 1, 1)" /> and <Formula tex="\mathbf{v}_3 = (2, 5, 1)" /> independent? Ask whether <Formula tex="x_1\mathbf{v}_1 + x_2\mathbf{v}_2 + x_3\mathbf{v}_3 = \mathbf{0}" /> has a solution other than all 0s. Row reduce the matrix with these columns:
+
+<Formula display tex="\begin{bmatrix} 1 & 0 & 2 \\ 2 & 1 & 5 \\ 0 & 1 & 1 \end{bmatrix} \xrightarrow{R_2 \to R_2 - 2R_1} \begin{bmatrix} 1 & 0 & 2 \\ 0 & 1 & 1 \\ 0 & 1 & 1 \end{bmatrix} \xrightarrow{R_3 \to R_3 - R_2} \begin{bmatrix} 1 & 0 & 2 \\ 0 & 1 & 1 \\ 0 & 0 & 0 \end{bmatrix}" />
+
+Column 3 has no pivot, so <Formula tex="x_3" /> is free: there **is** a nontrivial solution, and the vectors are **dependent**. Take <Formula tex="x_3 = 1" />: then <Formula tex="x_2 = -1" /> and <Formula tex="x_1 = -2" />, so
+
+<Formula display tex="-2\mathbf{v}_1 - \mathbf{v}_2 + \mathbf{v}_3 = \mathbf{0}, \qquad\text{that is}\qquad \mathbf{v}_3 = 2\mathbf{v}_1 + \mathbf{v}_2." />
+
+Check: <Formula tex="2(1, 2, 0) + (0, 1, 1) = (2, 5, 1)" />. ✓ <Formula tex="\mathbf{v}_3" /> adds nothing new: the three vectors only span a plane.
+
+## Explain
+
+**The definition.** Vectors <Formula tex="\mathbf{v}_1, \dots, \mathbf{v}_p" /> are *linearly independent* when
+
+<Formula display tex="x_1\mathbf{v}_1 + x_2\mathbf{v}_2 + \cdots + x_p\mathbf{v}_p = \mathbf{0}" />
+
+has **only the trivial solution**, all <Formula tex="x_i = 0" />. If some other choice of weights also gives <Formula tex="\mathbf{0}" />, they are *linearly dependent*, and that choice is a *linear dependence relation*, like <Formula tex="-2\mathbf{v}_1 - \mathbf{v}_2 + \mathbf{v}_3 = \mathbf{0}" /> above.
+
+**How to test it.** Put the vectors in the columns of a matrix <Formula tex="A" />. The equation above is just <Formula tex="A\mathbf{x} = \mathbf{0}" /> (Lesson 1.4.1), so by Lesson 1.5.1: **the columns of A are independent exactly when every column of A has a pivot** (no free unknowns).
+
+**What dependent means.** A set of two or more vectors is dependent exactly when **at least one of them is a mix of the others**. In the picture: two vectors are dependent when they lie on one line through the origin, and their span is only that line instead of the whole plane.
+
+**Three quick tests**, no row reduction needed:
+
+- **Two vectors** are dependent exactly when one is a multiple of the other.
+- **Too many vectors**: more vectors than entries in each (like 4 vectors in <Formula tex="\mathbb{R}^3" />) are always dependent. A <Formula tex="3 \times 4" /> matrix has at most 3 pivots, so one column is left without.
+- **The zero vector**: any set that contains <Formula tex="\mathbf{0}" /> is dependent, because <Formula tex="1 \cdot \mathbf{0} = \mathbf{0}" /> is already a nontrivial relation.
+
+If none of them applies, row reduce.
+
+## Predict
+
+<Formula tex="\mathbf{v} = (1, 0)" /> and <Formula tex="\mathbf{w} = (0, 0)" />. Independent or dependent?
+
+<details>
+  <summary>Reveal</summary>
+  Dependent. The set contains the zero vector: <Formula tex="0 \cdot \mathbf{v} + 1 \cdot \mathbf{w} = \mathbf{0}" /> is a nontrivial relation. The span is just the x-axis. Drag w onto the origin to check.
+</details>
+
+## Practice
+
+<Exercise id="1.4-dependent" client:visible />
+
+<Exercise id="1.7-independent" client:visible />
+
+<Exercise id="1.7-h-dependent" client:visible />
+
+<Exercise id="1.7-inspection" client:visible />
+
+<DoInYourBook section="1.7" />
+
+## Go deeper
+
+**Not "pairwise".** Three vectors can be dependent even when no two of them are multiples of each other, like the example in Numbers. Dependence is about the whole set.
+
+**Where this goes.** A set of vectors that is independent **and** spans a space is called a *basis* of it. The book introduces that in §2.8 and §4.3. MIT 18.06 Lecture 9 (linked below) covers independence, basis and dimension together.

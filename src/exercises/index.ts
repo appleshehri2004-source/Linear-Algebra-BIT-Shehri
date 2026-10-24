@@ -1,4 +1,4 @@
-// Every practice question on the site, by id. Add a module's questions here when you write them.
+// Every practice question on the site, by id. Add a module's (or a book chapter's) questions here when you write them.
 import type { Generator } from './exercise';
 import { module1 } from './module1';
 import { module2 } from './module2';
@@ -9,6 +9,7 @@ import { module6 } from './module6';
 import { module7 } from './module7';
 import { module8 } from './module8';
 import { module9 } from './module9';
+import { chapter1 } from './chapter1';
 
 export const exercises: Record<string, Generator> = {
   ...module1,
@@ -20,4 +21,5 @@ export const exercises: Record<string, Generator> = {
   ...module7,
   ...module8,
   ...module9,
+  ...chapter1,
 };

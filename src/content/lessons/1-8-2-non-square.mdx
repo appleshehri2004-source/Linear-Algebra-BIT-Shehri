@@ -11,6 +11,7 @@ import Formula from '../../components/Formula.astro';
 import NonSquareDemo from '../../components/NonSquareDemo.tsx';
 import NumberLineDemo from '../../components/NumberLineDemo.tsx';
 import Exercise from '../../components/Exercise.tsx';
+import DoInYourBook from '../../components/DoInYourBook.astro';
 
 ## Question
 
@@ -38,11 +39,14 @@ The 1 by 2 matrix also has two columns, but each column is just one number: <spa
 
 ## Explain
 
-- **Columns = how many numbers go in.** There is one column for each basis arrow of the input. 2 columns means the input is 2D.
-- **Rows = how many numbers come out.** Each column says where a basis arrow lands, written with as many numbers as the output has. 3 rows means the output is 3D.
-- **Same rule as always.** Take <Formula tex="x" /> copies of column 1 plus <Formula tex="y" /> copies of column 2. Nothing about "multiply by the columns" needs the matrix to be square.
-- **A 3 by 2 matrix can't fill 3D.** Every output is built from just two columns, so all of them lie on one flat sheet through the origin. That sheet is the *column space*: the span of the columns, like in lesson 1.3.3.
-- **A 1 by 2 matrix is the dot product in disguise.** <Formula tex="\begin{bmatrix} 1 & -2 \end{bmatrix} \vec{v}" /> is the same sum as <Formula tex="(1, -2) \cdot \vec{v}" /> from lesson 6.1.1. Every point on a line at right angles to <Formula tex="(1, -2)" /> lands on the same number.
+- **Columns = how many numbers go in.** <Formula tex="A\mathbf{x}" /> needs one number of <Formula tex="\mathbf{x}" /> per column (Lesson 1.4.1). 2 columns means the input is 2D.
+- **Rows = how many numbers come out.** Each column has as many numbers as <Formula tex="A" /> has rows, and so does every mix of them. 3 rows means the output is 3D.
+- **Same rule as always.** Take <Formula tex="x" /> copies of column 1 plus <Formula tex="y" /> copies of column 2. Nothing about "mix the columns" needs the matrix to be square.
+
+**The words for it.** The rule <Formula tex="T(\mathbf{x}) = A\mathbf{x}" /> for an <Formula tex="m \times n" /> matrix is a *matrix transformation* <Formula tex="T : \mathbb{R}^n \to \mathbb{R}^m" />. <Formula tex="\mathbb{R}^n" /> (where the inputs live) is its *domain*, and <Formula tex="\mathbb{R}^m" /> (where the outputs live) is its *codomain*. <Formula tex="T(\mathbf{x})" /> is the *image* of <Formula tex="\mathbf{x}" />, and the set of all images is the *range* of <Formula tex="T" />.
+
+- **The range of a 3 by 2 matrix is only a plane.** Every output is a mix of the two columns, so the range is their span (Lesson 1.3.3): a flat sheet through the origin, not all of the codomain <Formula tex="\mathbb{R}^3" />. "Is <Formula tex="\mathbf{b}" /> in the range?" is the same question as "does <Formula tex="A\mathbf{x} = \mathbf{b}" /> have a solution?"
+- **A 1 by 2 matrix squashes the plane onto a line.** Its range is a number line, and a whole line of inputs lands on each number.
 
 ## Predict
 
@@ -50,7 +54,7 @@ Which points of the plane land on **0** on the number line under <Formula tex="\
 
 <details>
   <summary>Reveal</summary>
-  All points with <Formula tex="x - 2y = 0" />, which is the line <Formula tex="y = x / 2" /> through <Formula tex="(0, 0)" />, <Formula tex="(2, 1)" /> and <Formula tex="(4, 2)" />. A whole line of points gets squashed onto one number, so (as with **Project** in lesson 1.9.2) this can't be undone. Try dragging <span class="vec">**v**</span> to <Formula tex="(2, 1)" /> and pressing Play.
+  All points with <Formula tex="x - 2y = 0" />, which is the line <Formula tex="y = x / 2" /> through <Formula tex="(0, 0)" />, <Formula tex="(2, 1)" /> and <Formula tex="(4, 2)" />. A whole line of points gets squashed onto one number, so this can't be undone: from the number 0 alone you can't tell which point it came from. §1.9 gives this a name (not *one-to-one*). Try dragging <span class="vec">**v**</span> to <Formula tex="(2, 1)" /> and pressing Play.
 </details>
 
 ## Practice
@@ -60,6 +64,12 @@ Which points of the plane land on **0** on the number line under <Formula tex="\
 <Exercise id="2.6-to-3d" client:visible />
 
 <Exercise id="2.6-shape" client:visible />
+
+<Exercise id="1.8-find-x" client:visible />
+
+<Exercise id="1.8-in-range" client:visible />
+
+<DoInYourBook section="1.8" />
 
 ## Go deeper
 

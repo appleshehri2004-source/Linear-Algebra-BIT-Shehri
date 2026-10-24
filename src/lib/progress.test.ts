@@ -63,7 +63,12 @@ describe('oldLessonIds', () => {
   it('points every old id at a lesson file that exists', () => {
     const files = new Set(readdirSync(new URL('../content/lessons', import.meta.url)).map((f) => f.replace(/\.mdx?$/, '')));
     for (const newId of Object.values(oldLessonIds)) expect(files.has(newId), newId).toBe(true);
-    expect(Object.keys(oldLessonIds)).toHaveLength(40);
+    // The list only ever grows: the 40 lessons from before the book order, plus later renames.
+    expect(Object.keys(oldLessonIds).length).toBeGreaterThanOrEqual(40);
+  });
+
+  it('points straight at the newest id, never at another old id', () => {
+    for (const newId of Object.values(oldLessonIds)) expect(oldLessonIds[newId], newId).toBeUndefined();
   });
 });
 
