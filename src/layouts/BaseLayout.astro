@@ -7,15 +7,19 @@ interface Props {
   title: string;
   /** One sentence for search results and link previews. Every page needs one. */
   description: string;
+  /** true on the homepage only: its own colours and fonts, always light (the `html.home` block in global.css). */
+  home?: boolean;
+  /** true for a full-width page: no narrow text column, each section sets its own width. */
+  wide?: boolean;
 }
 
-const { title, description } = Astro.props;
+const { title, description, home = false, wide = false } = Astro.props;
 
 // BASE_URL comes from `base` in astro.config.mjs, e.g. "/Linear-Algebra-BIT-Shehri/" or "/".
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 ---
 
-<html lang="en">
+<html lang="en" class:list={{ home }}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -27,7 +31,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
     <title>{title}</title>
   </head>
   <body>
-    <div class="page">
+    <div class:list={['page', { wide }]}>
       <slot />
     </div>
   </body>

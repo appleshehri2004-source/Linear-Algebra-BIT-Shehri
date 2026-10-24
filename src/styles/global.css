@@ -181,3 +181,53 @@ nav.top a,
   align-items: center;
   min-height: 2.75rem;
 }
+
+/* ---------- Homepage look ---------- */
+/* Only the homepage uses these: BaseLayout puts class="home" on <html> when a page asks for it (see docs/homepage-plan.md, D1–D3).
+   Lesson pages never get the class, so they keep the colours above and their dark theme.
+   "html.home" is stronger than ":root", so these win even when the phone is in dark mode: the homepage is always light. */
+html.home {
+  /* Paper and ink */
+  --paper: #faf8f4; /* page background */
+  --sunken: #f2eee6; /* section bands, card backgrounds */
+  --border: #e3ddd2; /* hairlines, grid lines */
+  --ink: #15241d; /* main text */
+  --ink-2: #4b5850; /* secondary text */
+  --muted: #646d65; /* captions, hints */
+
+  /* Brand */
+  --brand: #0e5c3f; /* heading accents, primary button */
+  --brand-hover: #0a4a32;
+  --copper: #a44a24; /* links, secondary accents */
+  --gold: #b98a4e; /* decoration only, never text (too pale to read) */
+  --gold-tint: #e9d6b4; /* the determinant's area fill, at about 60% opacity */
+
+  /* Maths: each colour means one thing */
+  --i-hat: #c4502a; /* î and anything tied to the first column. Arrows only: too pale for text (4.4 : 1) */
+  --j-hat: #2b5fb3; /* ĵ and anything tied to the second column */
+  --output: #0e5c3f; /* output vectors (Av) */
+  --eigen: #a3366f; /* eigenvector lines, always dashed */
+
+  /* The old names the rest of the stylesheet uses, pointed at the homepage colours. */
+  --bg: var(--paper);
+  --text: var(--ink);
+  --link: var(--copper);
+
+  /* Fonts: serif headings, Inter for everything else. KaTeX keeps its own fonts. */
+  --font-heading: 'Source Serif 4 Variable', Georgia, 'Times New Roman', serif;
+  --font-body: 'Inter Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  color-scheme: light;
+  font-family: var(--font-body);
+}
+
+html.home :is(h1, h2, h3) {
+  font-family: var(--font-heading);
+  color: var(--ink);
+}
+
+/* A full-width page: BaseLayout's wide option drops the narrow 42rem column. Each homepage band sets its own width. */
+.page.wide {
+  max-width: none;
+  padding: 0;
+}

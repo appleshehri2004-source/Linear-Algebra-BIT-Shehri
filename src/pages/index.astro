@@ -1,4 +1,6 @@
 ---
+// The serif heading font, installed from npm and bundled with the site (no Google Fonts). Only the homepage loads it.
+import '@fontsource-variable/source-serif-4';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import LessonList, { type ChapterLinks } from '../components/LessonList.tsx';
 import { book, lessonNumber } from '../content/book';
@@ -37,6 +39,7 @@ const chapters: ChapterLinks[] = book
 ---
 
 <BaseLayout
+  home
   title="Visual Linear Algebra"
   description={`Learn linear algebra by moving things: drag vectors, stretch grids and watch matrices act, in ${lessons.length} interactive lessons that follow Lay's textbook.`}
 >

@@ -23,6 +23,12 @@ export default defineConfig({
   base,
   // sitemap() writes sitemap-index.xml listing every page, so search engines can find them.
   integrations: [react(), mdx(), sitemap()],
+  // The 3D library (three.js) is one big file, about 942 kB, and Vite warns about any file over 500 kB.
+  // It only downloads on pages with a 3D picture, once that picture is on screen, so the warning is expected.
+  // 1000 kB is just above it: a file much bigger than three.js would still warn. (docs/homepage-plan.md, D6)
+  vite: {
+    build: { chunkSizeWarningLimit: 1000 },
+  },
   // Old lesson links (from before the lessons followed Lay's book) forward to the lesson's new page,
   // e.g. /lessons/1-1-vectors/ -> /lessons/1-3-1-vectors/. Astro adds the base path to the old link
   // but not to the target, so we add it. Lessons in archived sections have no page, so no redirect:
