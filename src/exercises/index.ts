@@ -10,6 +10,7 @@ import { module7 } from './module7';
 import { module8 } from './module8';
 import { module9 } from './module9';
 import { chapter1 } from './chapter1';
+import { chapter2 } from './chapter2';
 
 export const exercises: Record<string, Generator> = {
   ...module1,
@@ -22,4 +23,5 @@ export const exercises: Record<string, Generator> = {
   ...module8,
   ...module9,
   ...chapter1,
+  ...chapter2,
 };

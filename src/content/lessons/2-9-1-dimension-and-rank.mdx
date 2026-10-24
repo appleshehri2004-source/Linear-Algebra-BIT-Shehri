@@ -1,0 +1,108 @@
+---
+title: Dimension and rank
+description: "A basis gives every vector in a subspace its own coordinates. Count the basis vectors to get the dimension, and the rank of a matrix."
+section: '2.9'
+part: 1
+threeBlueOneBrown: https://www.3blue1brown.com/lessons/inverse-matrices
+mit: https://ocw.mit.edu/courses/18-06-linear-algebra-spring-2010/resources/lecture-9-independence-basis-and-dimension/
+tongji: 第三章 §2 矩阵的秩；第四章 §3 向量组的秩
+---
+
+import Formula from '../../components/Formula.astro';
+import BasisGridView from '../../components/BasisGridView.tsx';
+import SubspaceView from '../../components/SubspaceView.tsx';
+import Exercise from '../../components/Exercise.tsx';
+import DoInYourBook from '../../components/DoInYourBook.astro';
+
+## Question
+
+A plane through the origin in <Formula tex="\mathbb{R}^3" /> is a flat, two-dimensional thing living in three dimensions. **Can you describe each of its points with just two numbers?** And how do you measure how big <Formula tex="\operatorname{Col} A" /> and <Formula tex="\operatorname{Nul} A" /> are?
+
+## Play
+
+A basis <Formula tex="\mathcal{B} = \{\mathbf{b}_1, \mathbf{b}_2\}" /> draws its own grid. Drag the yellow arrow <Formula tex="\mathbf{x}" /> and read its two labels: its usual numbers, and how many <Formula tex="\mathbf{b}_1" />s and <Formula tex="\mathbf{b}_2" />s it takes, <Formula tex="[\mathbf{x}]_{\mathcal{B}}" />. Then drag <Formula tex="\mathbf{b}_1" /> or <Formula tex="\mathbf{b}_2" />.
+
+<BasisGridView client:visible plain basis={[[2, 1], [-1, 1]]} start={[3, 3]} />
+
+Now count dimensions. Each matrix below squashes the plane by a different amount (Lesson 2.8.1). The **rank** is how many dimensions survive.
+
+<SubspaceView
+  client:visible
+  presets={[
+    { name: 'Rank 2', matrix: [[2, 1], [-1, 1]] },
+    { name: 'Rank 1', matrix: [[1, 2], [2, 4]] },
+    { name: 'Rank 0', matrix: [[0, 0], [0, 0]] },
+  ]}
+/>
+
+## Numbers
+
+**Coordinates in a plane.** <Formula tex="\mathbf{b}_1 = (1, 2, 0)" /> and <Formula tex="\mathbf{b}_2 = (0, 1, 1)" /> are independent, so they are a basis <Formula tex="\mathcal{B}" /> for the plane <Formula tex="H" /> they span. Is <Formula tex="\mathbf{x} = (2, 7, 3)" /> in <Formula tex="H" />, and what are its coordinates? Row reduce <Formula tex="[\,\mathbf{b}_1 \;\; \mathbf{b}_2 \;\; \mathbf{x}\,]" />:
+
+<Formula display tex="\left[\begin{array}{cc|c} 1 & 0 & 2 \\ 2 & 1 & 7 \\ 0 & 1 & 3 \end{array}\right] \sim \left[\begin{array}{cc|c} 1 & 0 & 2 \\ 0 & 1 & 3 \\ 0 & 0 & 0 \end{array}\right]" />
+
+It is consistent, so <Formula tex="\mathbf{x}" /> is in <Formula tex="H" />, and <Formula tex="\mathbf{x} = 2\mathbf{b}_1 + 3\mathbf{b}_2" />. So <Formula tex="[\mathbf{x}]_{\mathcal{B}} = (2, 3)" />: two numbers for a point of a plane, even though the plane sits in <Formula tex="\mathbb{R}^3" />.
+
+**Rank.** The <Formula tex="3 \times 4" /> matrix <Formula tex="B" /> from Lesson 2.8.1 had pivots in columns 1 and 3, and two free unknowns:
+
+<Formula display tex="\operatorname{rank} B = \dim \operatorname{Col} B = 2, \qquad \dim \operatorname{Nul} B = 2, \qquad 2 + 2 = 4 \text{ columns}" />
+
+## Explain
+
+**Coordinates.** Let <Formula tex="\mathcal{B} = \{\mathbf{b}_1, \dots, \mathbf{b}_p\}" /> be a basis for a subspace <Formula tex="H" />. Every <Formula tex="\mathbf{x}" /> in <Formula tex="H" /> is a mix <Formula tex="c_1\mathbf{b}_1 + \cdots + c_p\mathbf{b}_p" /> (the basis spans <Formula tex="H" />), and in **only one way**: if there were two mixes, subtracting them would give a nontrivial mix that equals <Formula tex="\mathbf{0}" />, but the basis is independent. The weights are the **coordinates of x relative to B**:
+
+<Formula display tex="[\mathbf{x}]_{\mathcal{B}} = \begin{bmatrix} c_1 \\ \vdots \\ c_p \end{bmatrix}" />
+
+So a basis lets you treat <Formula tex="H" /> as if it were <Formula tex="\mathbb{R}^p" />.
+
+**Dimension.** Every basis of <Formula tex="H" /> has the same number of vectors (§4.5 proves it). That number is the **dimension** of <Formula tex="H" />, <Formula tex="\dim H" />. A line through the origin has dimension 1, a plane through the origin 2, and <Formula tex="\mathbb{R}^n" /> has dimension <Formula tex="n" /> (think of the standard basis). The subspace <Formula tex="\{\mathbf{0}\}" /> has no basis at all, and its dimension is defined to be 0.
+
+**Rank.** The **rank** of a matrix is the dimension of its column space. The pivot columns are a basis for <Formula tex="\operatorname{Col} A" /> (Lesson 2.8.1), so **the rank is the number of pivot columns**. Each non-pivot column gives a free unknown, and each free unknown gives one basis vector of <Formula tex="\operatorname{Nul} A" />.
+
+**The Rank Theorem.** Every column is either a pivot column or not, so for a matrix with <Formula tex="n" /> columns:
+
+<Formula display tex="\operatorname{rank} A + \dim \operatorname{Nul} A = n" />
+
+In pictures: every dimension the output loses becomes a dimension of the null space. In the demo, rank 2 is <Formula tex="2 + 0" />, rank 1 is <Formula tex="1 + 1" />, and rank 0 is <Formula tex="0 + 2" />.
+
+**The Basis Theorem.** If you already know <Formula tex="\dim H = p" />, you only need to check half the definition. Any <Formula tex="p" /> **independent** vectors in <Formula tex="H" /> are a basis, and so are any <Formula tex="p" /> vectors that **span** <Formula tex="H" />.
+
+**The Invertible Matrix Theorem, continued.** For an <Formula tex="n \times n" /> matrix <Formula tex="A" />, each of these is one more way of saying "<Formula tex="A" /> is invertible" (Lesson 2.3.1):
+
+| | Statement |
+|---|---|
+| m | The columns of <Formula tex="A" /> are a basis of <Formula tex="\mathbb{R}^n" />. |
+| n | <Formula tex="\operatorname{Col} A = \mathbb{R}^n" /> |
+| o | <Formula tex="\dim \operatorname{Col} A = n" /> |
+| p | <Formula tex="\operatorname{rank} A = n" /> |
+| q | <Formula tex="\operatorname{Nul} A = \{\mathbf{0}\}" /> |
+| r | <Formula tex="\dim \operatorname{Nul} A = 0" /> |
+
+## Predict
+
+<Formula tex="A" /> is a <Formula tex="5 \times 5" /> matrix whose null space is a plane. Do the columns of <Formula tex="A" /> span <Formula tex="\mathbb{R}^5" />?
+
+<details>
+  <summary>Reveal</summary>
+  No. <Formula tex="\dim \operatorname{Nul} A = 2" />, so by the Rank Theorem <Formula tex="\operatorname{rank} A = 5 - 2 = 3" />. The columns span only a 3-dimensional subspace of <Formula tex="\mathbb{R}^5" />, and <Formula tex="A" /> is not invertible.
+</details>
+
+## Practice
+
+<Exercise id="2.9-from-coords" client:visible />
+
+<Exercise id="2.9-coords" client:visible />
+
+<Exercise id="2.9-dims" client:visible />
+
+<Exercise id="2.9-rank-theorem" client:visible />
+
+<Exercise id="4.5-rank3" client:visible />
+
+<DoInYourBook section="2.9" />
+
+## Go deeper
+
+**Rank on a computer.** Counting pivots is easy with exact numbers. With rounded ones, a number that should be 0 might come out as 0.0000001 and look like a pivot. Real software finds the rank another way, with the singular value decomposition (§7.4).
+
+**Coming back.** Chapter 4 does all of this again for any vector space (polynomials, functions, matrices). Coordinates return in §4.4, where a grid like the one above is somebody else's way of describing the plane, and the matrix <Formula tex="P_{\mathcal{B}}" /> turns her numbers into ours.

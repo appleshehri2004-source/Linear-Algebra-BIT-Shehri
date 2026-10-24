@@ -49,9 +49,21 @@ The two answers are different matrices. In the demo, <Formula tex="\vec{v} = (2,
 
 **Read right to left.** In <Formula tex="SR\vec{v}" />, the matrix next to <Formula tex="\vec{v}" /> acts first, just like <Formula tex="f(g(x))" /> does <Formula tex="g" /> first. So <Formula tex="SR" /> means "rotate, then shear".
 
-**Order matters.** Rotate then shear: the shear comes last, so the finished picture is slanted along the x-axis. Shear then rotate: the rotation comes last and turns the slanted picture a quarter turn, so the slant ends up along the y-axis. Different moves, different matrices: in general <Formula tex="AB \ne BA" />.
+**Order matters.** Rotate then shear: the shear comes last, so the finished picture is slanted along the x-axis. Shear then rotate: the rotation comes last and turns the slanted picture a quarter turn, so the slant ends up along the y-axis. Different moves, different matrices: in general <Formula tex="AB \ne BA" />. The next lesson collects the other rules matrices do and don't share with numbers.
 
 **Why brackets don't matter.** <Formula tex="(AB)C" /> and <Formula tex="A(BC)" /> both mean "do <Formula tex="C" />, then <Formula tex="B" />, then <Formula tex="A" />". The brackets only change which two moves you *name* as one move first; the plane still goes through the same three moves in the same order. That's why <Formula tex="(AB)C = A(BC)" /> (associativity). With rows-times-columns sums, proving it takes a page of algebra. Thinking in transformations, there is nothing to prove.
+
+**The definition, for any size.** If <Formula tex="B" /> has columns <Formula tex="\mathbf{b}_1, \dots, \mathbf{b}_p" />, then
+
+<Formula display tex="AB = A\begin{bmatrix} \mathbf{b}_1 & \mathbf{b}_2 & \cdots & \mathbf{b}_p \end{bmatrix} = \begin{bmatrix} A\mathbf{b}_1 & A\mathbf{b}_2 & \cdots & A\mathbf{b}_p \end{bmatrix}" />
+
+Each <Formula tex="A\mathbf{b}_j" /> is a mix of the columns of <Formula tex="A" /> (Lesson 1.4.1), so **every column of AB is a mix of the columns of A**.
+
+**When is AB defined?** <Formula tex="A\mathbf{b}_j" /> needs one number in <Formula tex="\mathbf{b}_j" /> for each column of <Formula tex="A" />. So <Formula tex="A" /> must have as many columns as <Formula tex="B" /> has rows. Write the sizes next to each other: the inside numbers must match, and the outside numbers give the size of <Formula tex="AB" />.
+
+<Formula display tex="\underset{m \times n}{A}\;\underset{n \times p}{B} = \underset{m \times p}{AB}" />
+
+**The quick way by hand: the row–column rule.** The number in row <Formula tex="i" />, column <Formula tex="j" /> of <Formula tex="AB" /> is row <Formula tex="i" /> of <Formula tex="A" /> times column <Formula tex="j" /> of <Formula tex="B" />, number by number, added up. That is the row way of working out <Formula tex="A\mathbf{b}_j" /> from Lesson 1.4.1. For example, row 1 of <Formula tex="S" /> times column 1 of <Formula tex="R" /> is <Formula tex="1 \cdot 0 + 1 \cdot 1 = 1" />, the top-left number of <Formula tex="SR" />.
 
 ## Predict
 
@@ -66,14 +78,18 @@ Rotate 90°, then shear. Where does <Formula tex="\vec{v} = (1, 2)" /> land? Tap
 
 ## Practice
 
-<Exercise id="2.4-two-steps" client:visible />
-
 <Exercise id="2.4-product-column" client:visible />
 
 <Exercise id="2.4-order" client:visible />
 
+<Exercise id="2.1-size" client:visible />
+
+<Exercise id="2.1-entry" client:visible />
+
+<Exercise id="2.1-product" client:visible />
+
 ## Go deeper
 
-The usual "row times column" rule gives the same numbers. The top-left number of <Formula tex="AB" /> is row 1 of <Formula tex="A" /> dotted with column 1 of <Formula tex="B" />, because that's the x-part of where <Formula tex="A" /> sends column 1 of <Formula tex="B" />.
+**Why the row–column rule works.** The top-left number of <Formula tex="AB" /> is the first number of <Formula tex="A\mathbf{b}_1" />: the x-part of where <Formula tex="A" /> sends column 1 of <Formula tex="B" />. Mixing the columns of <Formula tex="A" /> and keeping only their first numbers is exactly "row 1 of A times column 1 of B".
 
 Some pairs *do* commute: two rotations (turning by 30° then 50° is the same as 50° then 30°), or two scalings along the axes. Try to explain why with pictures. A rotation and a scaling by the same amount in every direction also commute. A rotation and a stretch along one axis don't.

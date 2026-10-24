@@ -1,6 +1,6 @@
 // A 3D version of MatrixPlayground: a 3x3 matrix moves space, with the same Play / Rewind / slider
 // as TransformPlayer, a 3x3 MatrixEditor, and buttons for ready-made matrices.
-// With showSubspaces (Lesson 4.5) it also draws the column space in violet and the null space in pink:
+// With showSubspaces (Lessons 2.8.1 and 2.9.1) it also draws the column space in violet and the null space in pink:
 // pink arrows on the null space all land on the origin as the matrix plays.
 // Use it in a lesson with client:visible, so the 3D code only downloads once it's on screen.
 import { useState } from 'react';
@@ -36,6 +36,10 @@ interface Props {
   presets?: Preset3[];
   /** Draw the column space (violet) and the null space (pink), and say what the rank is. */
   showSubspaces?: boolean;
+  /** false: don't use the word "rank" (for lessons before §2.9, where it is defined). */
+  showRank?: boolean;
+  /** false: don't show the determinant line (for lessons before Chapter 3). */
+  showDet?: boolean;
   /** How far away the camera starts: 1 is normal, 2 is twice as far (for long arrows). */
   zoomOut?: number;
 }
@@ -62,7 +66,7 @@ function same(a: Mat3, b: Mat3): boolean {
   return a.flat().every((n, i) => n === b.flat()[i]);
 }
 
-export default function Stage3D({ matrix: start, presets, showSubspaces = false, zoomOut }: Props) {
+export default function Stage3D({ matrix: start, presets, showSubspaces = false, showRank = true, showDet = true, zoomOut }: Props) {
   const [matrix, setMatrix] = useState<Mat3>(start);
   const [playKey, setPlayKey] = useState(0);
   const playback = usePlayback({ playKey });
@@ -105,15 +109,17 @@ export default function Stage3D({ matrix: start, presets, showSubspaces = false,
       )}
 
       <MatrixEditor value={matrix} onChange={load} />
-      <p className="demo-status">
-        det = {roundTo(volume, 2)}: the cube's volume is now {roundTo(Math.abs(volume), 2)}
-        {volume < 0 ? ', and space is flipped over' : ''}.
-      </p>
+      {showDet && (
+        <p className="demo-status">
+          det = {roundTo(volume, 2)}: the cube's volume is now {roundTo(Math.abs(volume), 2)}
+          {volume < 0 ? ', and space is flipped over' : ''}.
+        </p>
+      )}
       {showSubspaces && (
         <p className="demo-status" aria-live="polite">
           {r === 3
-            ? 'Rank 3: nothing is squished. The column space is all of space, and only the origin lands on 0.'
-            : `Rank ${r}: space is squished onto ${SPACE_WORDS[r]} (the column space, violet). ` +
+            ? `${showRank ? 'Rank 3: n' : 'N'}othing is squished. The column space is all of space, and only the origin lands on 0.`
+            : `${showRank ? `Rank ${r}: s` : 'S'}pace is squished onto ${SPACE_WORDS[r]} (the column space, violet). ` +
               `The null space is ${SPACE_WORDS[3 - r]} (pink).`}
           {r < 3 && playback.t > 0.999 && ' Every pink arrow has landed on the origin.'}
         </p>

@@ -1,6 +1,19 @@
 import { describe, expect, it } from 'vitest';
 import {
   add,
+  addRows,
+  blockMatrixTex,
+  blockProduct,
+  coordinatesIn,
+  elementaryRows,
+  identityRows,
+  inverseRows,
+  inverseSteps,
+  joinBlocks,
+  mulRows,
+  powRows,
+  scaleRows,
+  splitBlocks,
   charPoly2,
   charPolyAt,
   diagonalize,
@@ -75,6 +88,7 @@ import {
   lerpVec,
   mapAt,
   matMul,
+  matrixOperation,
   matrixAt,
   matVec,
   projectOnto,
@@ -2091,5 +2105,106 @@ describe('echelonKind', () => {
     // The second leading entry is not to the right of the first.
     expect(echelonKind([[0, 1, 2], [1, 0, 3]])).toBe('neither');
     expect(echelonKind([[1, 2], [3, 4]])).toBe('neither');
+  });
+});
+
+describe('matrix algebra on rows (Chapter 2)', () => {
+  const A = [
+    [1, 2],
+    [3, 4],
+  ];
+  const B = [
+    [0, 1, -1],
+    [2, 0, 1],
+  ];
+
+  it('multiplies by the row–column rule, and refuses sizes that do not fit', () => {
+    expect(mulRows(A, B)).toEqual([
+      [4, 1, 1],
+      [8, 3, 1],
+    ]);
+    expect(mulRows(B, A)).toBeNull(); // 2×3 times 2×2: 3 ≠ 2
+  });
+
+  it('adds, scales and takes powers', () => {
+    expect(addRows(A, A)).toEqual(scaleRows(2, A));
+    expect(addRows(A, B)).toBeNull();
+    expect(powRows(A, 0)).toEqual(identityRows(2));
+    expect(powRows(A, 3)).toEqual(mulRows(A, mulRows(A, A)!));
+  });
+
+  it('finds A⁻¹ by row reducing [A | I]', () => {
+    const M = [
+      [1, 0, 2],
+      [2, 1, 3],
+      [0, 1, 1],
+    ];
+    const inv = inverseRows(M)!;
+    mulRows(M, inv)!.forEach((row, r) => row.forEach((x, c) => expect(x).toBeCloseTo(r === c ? 1 : 0)));
+    const { steps } = inverseSteps(M);
+    expect(steps[0].matrix[0]).toEqual([1, 0, 2, 1, 0, 0]);
+    expect(steps.every((s) => s.matrix[0].length === 6)).toBe(true);
+  });
+
+  it('says when there is no inverse', () => {
+    expect(inverseRows([[1, 2], [2, 4]])).toBeNull();
+    expect(inverseRows([[1, 2, 3], [0, 1, 1], [1, 3, 4]])).toBeNull();
+    expect(inverseSteps([[1, 2], [2, 4]]).steps.at(-1)!.description).toMatch(/no inverse/);
+  });
+
+  it('makes elementary matrices: EA does the row operation to A', () => {
+    const op = { kind: 'add', i: 1, j: 0, k: -3 } as const;
+    const E = elementaryRows(2, op);
+    expect(E).toEqual([[1, 0], [-3, 1]]);
+    expect(mulRows(E, A)).toEqual(applyRowOp(A, op));
+  });
+
+  it('cuts a matrix into blocks and puts it back together', () => {
+    const M = [
+      [1, 2, 3],
+      [4, 5, 6],
+      [7, 8, 9],
+    ];
+    const blocks = splitBlocks(M, 1, 2);
+    expect(blocks[0][0]).toEqual([[1, 2]]);
+    expect(blocks[0][1]).toEqual([[3]]);
+    expect(blocks[1][0]).toEqual([[4, 5], [7, 8]]);
+    expect(joinBlocks(blocks)).toEqual(M);
+  });
+
+  it('finds coordinates relative to a basis, and null off the span', () => {
+    const basis = [[1, 0, 1], [0, 1, 1]];
+    expect(coordinatesIn(basis, [2, 3, 5])).toEqual([2, 3]);
+    expect(coordinatesIn(basis, [2, 3, 0])).toBeNull();
+  });
+});
+
+describe('matrixOperation', () => {
+  const a: Mat2 = [[1, 3], [2, 4]]; // rows (1, 2) and (3, 4)
+  const b: Mat2 = [[0, 1], [1, 0]];
+  it('adds, scales, multiplies and transposes 2×2 matrices stored as columns', () => {
+    expect(matrixOperation('A + B', a, b)).toEqual([[1, 4], [3, 4]]);
+    expect(matrixOperation('A − B', a, b)).toEqual([[1, 2], [1, 4]]);
+    expect(matrixOperation('2A', a, b)).toEqual([[2, 6], [4, 8]]);
+    expect(matrixOperation('AB', a, b)).toEqual(matMul(a, b));
+    expect(matrixOperation('BA', a, b)).toEqual(matMul(b, a));
+    expect(matrixOperation('A²', a, b)).toEqual(matMul(a, a));
+    expect(matrixOperation('Aᵀ', a, b)).toEqual([[1, 2], [3, 4]]);
+  });
+});
+
+describe('blockProduct', () => {
+  it('gives AB, wherever the cuts are', () => {
+    const a = [[1, 2, 0], [-1, 3, 4], [2, 0, 1]];
+    const b = [[0, 1, 2], [3, -1, 0], [1, 1, 1]];
+    for (const [r, k, c] of [[1, 1, 1], [1, 2, 2], [2, 1, 2], [2, 2, 1]]) {
+      expect(joinBlocks(blockProduct(a, b, r, k, c).product)).toEqual(mulRows(a, b));
+    }
+  });
+
+  it('draws blocks with lines between them', () => {
+    expect(blockMatrixTex(splitBlocks([[1, 2], [3, 4]], 1, 1))).toBe(
+      '\\left[\\begin{array}{c|c} 1 & 2 \\\\ \\hline 3 & 4 \\end{array}\\right]',
+    );
   });
 });

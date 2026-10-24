@@ -1,4 +1,4 @@
-// Lesson 4.5: rank, column space and null space, with the input plane and the output plane side by side.
+// Lessons 2.8.1 and 2.9.1: column space, null space and rank, with the input plane and the output plane side by side.
 // Input (left): the null space in pink, with a few pink vectors on it.
 // Output (right): the grid moves like in TransformPlayer, and the column space is violet.
 // On Play the pink vectors ride along and all land on the origin: that is what "A squashes them to 0" means.
@@ -23,6 +23,8 @@ interface Props {
   presets: Preset[];
   /** The planes show -range to range on both axes. */
   range?: number;
+  /** false: don't use the word "rank" (for lessons before §2.9, where it is defined). */
+  showRank?: boolean;
 }
 
 /** "the whole plane", "a line" or "just the origin", for a space with this many dimensions inside the plane. */
@@ -71,7 +73,7 @@ function NullVectors({ tips }: { tips: Vec2[] }) {
   );
 }
 
-export default function SubspaceView({ presets, range = 4 }: Props) {
+export default function SubspaceView({ presets, range = 4, showRank = true }: Props) {
   const [index, setIndex] = useState(0);
   const a = presets[index].matrix;
   const playback = usePlayback();
@@ -141,7 +143,7 @@ export default function SubspaceView({ presets, range = 4 }: Props) {
       <PlayControls playback={playback} />
 
       <p className="demo-status" aria-live="polite">
-        Rank {r}: the column space is {spaceWords(r)}, and the null space is {spaceWords(2 - r)}.
+        {showRank ? `Rank ${r}: the` : 'The'} column space is {spaceWords(r)}, and the null space is {spaceWords(2 - r)}.
       </p>
       <p className="demo-message">
         {r === 2 && 'Nothing is squashed: only the origin itself lands on the origin.'}

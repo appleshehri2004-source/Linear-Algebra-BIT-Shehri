@@ -22,12 +22,7 @@ import {
   type RowOp,
   type Vec3,
 } from '../lib/linalg';
-import { augmentedTex, matTex, pick, randInt, systemTex, type Generator, type Rand } from './exercise';
-
-/** TeX for a matrix given as ROWS (the way row operations see it), not as columns like matTex. */
-function rowsTex(rows: number[][]): string {
-  return `\\begin{bmatrix} ${rows.map((row) => row.join(' & ')).join(' \\\\ ')} \\end{bmatrix}`;
-}
+import { augmentedTex, matTex, pick, randInt, rowsTex, shuffle, systemTex, type Generator, type Rand } from './exercise';
 
 /** TeX for a number used as a multiplier: "3", "\tfrac{1}{3}", "-\tfrac{1}{2}". */
 function numberTex(k: number): string {
@@ -59,16 +54,6 @@ function randomRows(rand: Rand, rowCount: number, columns: number): number[][] {
   const rows = Array.from({ length: rowCount }, () => Array.from({ length: columns }, () => randInt(rand, -4, 4)));
   const texts = rows.map((r) => r.join(','));
   return new Set(texts).size === rowCount ? rows : randomRows(rand, rowCount, columns);
-}
-
-/** Put a list in a random order (Fisher–Yates). */
-function shuffle<T>(rand: Rand, items: T[]): T[] {
-  const out = [...items];
-  for (let i = out.length - 1; i > 0; i--) {
-    const j = Math.floor(rand() * (i + 1));
-    [out[i], out[j]] = [out[j], out[i]];
-  }
-  return out;
 }
 
 const same = (a: number[][], b: number[][]) => a.every((row, r) => row.every((x, c) => x === b[r][c]));

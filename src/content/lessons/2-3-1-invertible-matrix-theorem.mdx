@@ -1,0 +1,108 @@
+---
+title: The Invertible Matrix Theorem
+description: "For a square matrix, a dozen questions from Chapter 1 all have the same answer. See why: either nothing is squashed, or something is."
+section: '2.3'
+part: 1
+threeBlueOneBrown: https://www.3blue1brown.com/lessons/inverse-matrices
+mit: https://ocw.mit.edu/courses/18-06-linear-algebra-spring-2010/resources/lecture-3-multiplication-and-inverse-matrices/
+tongji: 第二章 §3 逆矩阵
+---
+
+import Formula from '../../components/Formula.astro';
+import InverseDemo from '../../components/InverseDemo.tsx';
+import Exercise from '../../components/Exercise.tsx';
+import DoInYourBook from '../../components/DoInYourBook.astro';
+
+## Question
+
+Chapter 1 asked many separate questions about a matrix. Do its columns span? Are they independent? Does <Formula tex="A\mathbf{x} = \mathbf{b}" /> always have a solution? Is <Formula tex="\mathbf{x} \mapsto A\mathbf{x}" /> one-to-one? **For a square matrix, all of these questions have the same answer.** Why?
+
+## Play
+
+Pick a matrix, press **Play A**, then try to rewind. Watch the two orange dots, and ask two questions each time: *did two different points land on the same spot?* and *is there anywhere in the plane that nothing lands on?*
+
+<InverseDemo
+  client:visible
+  tracked={[1, 2]}
+  points={[[2, 0], [0, 2]]}
+  presets={[
+    { name: 'Shear', matrix: [[1, 0], [1, 1]] },
+    { name: 'Stretch', matrix: [[2, 0], [0, 0.5]] },
+    { name: 'Squash onto a line', matrix: [[1, 1], [1, 1]] },
+    { name: 'Another squash', matrix: [[1, 2], [1, 2]] },
+  ]}
+/>
+
+For the first two, the answers are *no* and *no*, and **Rewind** works. For the squashes, the answers are *yes* and *yes*, and nothing can rewind them. You never get one *yes* and one *no*.
+
+## Numbers
+
+Take the squash onto a line,
+
+<Formula display tex="A = \begin{bmatrix} 1 & 1 \\ 1 & 1 \end{bmatrix}" />
+
+and ask the Chapter 1 questions:
+
+- **Pivots:** <Formula tex="R_2 \to R_2 - R_1" /> leaves one pivot, not two.
+- **Independent columns?** No: the two columns are equal.
+- **Only the trivial solution of** <Formula tex="A\mathbf{x} = \mathbf{0}" />**?** No: <Formula tex="\mathbf{x} = (1, -1)" /> works. (In the demo, <Formula tex="(2, 0)" /> and <Formula tex="(0, 2)" /> land on the same spot, because their difference is a multiple of <Formula tex="(1, -1)" />.)
+- **Do the columns span** <Formula tex="\mathbb{R}^2" />**?** No: every <Formula tex="A\mathbf{x}" /> is on the line <Formula tex="y = x" />, so <Formula tex="A\mathbf{x} = (1, 0)" /> has no solution.
+- **Invertible?** No.
+
+Every answer is *no*. For the shear <Formula tex="\begin{bmatrix} 1 & 1 \\ 0 & 1 \end{bmatrix}" />, every answer is *yes*.
+
+## Explain
+
+**The Invertible Matrix Theorem.** Let <Formula tex="A" /> be a **square** <Formula tex="n \times n" /> matrix. Then these statements are either all true or all false:
+
+| | Statement | From |
+|---|---|---|
+| a | <Formula tex="A" /> is invertible. | §2.2 |
+| b | <Formula tex="A" /> is row equivalent to <Formula tex="I_n" />. | §2.2 |
+| c | <Formula tex="A" /> has <Formula tex="n" /> pivot positions. | §1.2 |
+| d | <Formula tex="A\mathbf{x} = \mathbf{0}" /> has only the trivial solution. | §1.5 |
+| e | The columns of <Formula tex="A" /> are linearly independent. | §1.7 |
+| f | <Formula tex="\mathbf{x} \mapsto A\mathbf{x}" /> is one-to-one. | §1.9 |
+| g | <Formula tex="A\mathbf{x} = \mathbf{b}" /> has at least one solution for every <Formula tex="\mathbf{b}" /> in <Formula tex="\mathbb{R}^n" />. | §1.4 |
+| h | The columns of <Formula tex="A" /> span <Formula tex="\mathbb{R}^n" />. | §1.4 |
+| i | <Formula tex="\mathbf{x} \mapsto A\mathbf{x}" /> maps <Formula tex="\mathbb{R}^n" /> onto <Formula tex="\mathbb{R}^n" />. | §1.9 |
+| j | There is an <Formula tex="n \times n" /> matrix <Formula tex="C" /> with <Formula tex="CA = I" />. | §2.1 |
+| k | There is an <Formula tex="n \times n" /> matrix <Formula tex="D" /> with <Formula tex="AD = I" />. | §2.1 |
+| l | <Formula tex="A^T" /> is invertible. | §2.2 |
+
+**Why they hang together.** Statements d, e and f all say *nothing gets squashed*: no two points land on the same spot. In row reduction terms, there is a pivot in **every column**. Statements g, h and i all say *every point gets reached*: there is a pivot in **every row** (Lesson 1.4.1). For a general matrix, those are different questions. But a square matrix has as many rows as columns, so <Formula tex="n" /> pivots fill every row **and** every column at once (statement c). Then the reduced echelon form is <Formula tex="I_n" /> (statement b), which is exactly when <Formula tex="A" /> has an inverse (statement a, Lesson 2.2.2).
+
+**What it gives you.** Prove one statement and you get all twelve. And the opposites go together too: a **singular** square matrix has dependent columns, a nontrivial solution of <Formula tex="A\mathbf{x} = \mathbf{0}" />, a <Formula tex="\mathbf{b}" /> that can't be reached, and so on. One useful case: if <Formula tex="A" /> and <Formula tex="B" /> are square and <Formula tex="AB = I" />, then both are invertible, <Formula tex="B = A^{-1}" /> and <Formula tex="A = B^{-1}" />. One side is enough.
+
+**Only for square matrices.** A <Formula tex="3 \times 2" /> matrix can have independent columns and still miss most of <Formula tex="\mathbb{R}^3" />: two arrows span only a plane. The theorem says nothing there.
+
+**Invertible transformations.** A linear transformation <Formula tex="T: \mathbb{R}^n \to \mathbb{R}^n" /> is **invertible** if some <Formula tex="S: \mathbb{R}^n \to \mathbb{R}^n" /> undoes it from both sides:
+
+<Formula display tex="S(T(\mathbf{x})) = \mathbf{x} \quad\text{and}\quad T(S(\mathbf{x})) = \mathbf{x} \quad\text{for every } \mathbf{x}" />
+
+That happens exactly when its standard matrix <Formula tex="A" /> is invertible, and then <Formula tex="S" /> is the transformation <Formula tex="T^{-1}(\mathbf{x}) = A^{-1}\mathbf{x}" />. That's the **Rewind** button.
+
+## Predict
+
+<Formula tex="A" /> is a <Formula tex="3 \times 3" /> matrix, and for some <Formula tex="\mathbf{b}" />, the equation <Formula tex="A\mathbf{x} = \mathbf{b}" /> has **two different** solutions. Must there be a <Formula tex="\mathbf{c}" /> for which <Formula tex="A\mathbf{x} = \mathbf{c}" /> has **no** solution?
+
+<details>
+  <summary>Reveal</summary>
+  Yes. Two points land on the same <Formula tex="\mathbf{b}" />, so <Formula tex="\mathbf{x} \mapsto A\mathbf{x}" /> is not one-to-one (f is false). By the theorem, g is false too: some <Formula tex="\mathbf{c}" /> is never reached. The squash showed both at once.
+</details>
+
+## Practice
+
+<Exercise id="2.3-invertible" client:visible />
+
+<Exercise id="2.3-which-true" client:visible />
+
+<Exercise id="2.3-inverse-map" client:visible />
+
+<DoInYourBook section="2.3" />
+
+## Go deeper
+
+**Nearly singular.** A matrix can be invertible but very close to a singular one: change one number slightly and it squashes space flat. Computers working with rounded numbers can then give badly wrong answers. Programs measure this with the **condition number**: 1 for the identity, larger the closer the matrix is to singular.
+
+**The list keeps growing.** §2.9 adds six more statements about rank and subspaces. Chapter 3 adds "<Formula tex="\det A \neq 0" />", and Chapter 5 adds one about eigenvalues. They all describe the same picture: <Formula tex="A" /> doesn't squash space.

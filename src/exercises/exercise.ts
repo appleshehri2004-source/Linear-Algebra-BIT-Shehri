@@ -40,6 +40,16 @@ export function pick<T>(rand: Rand, items: T[]): T {
   return items[Math.floor(rand() * items.length)];
 }
 
+/** Put a list in a random order (Fisher–Yates). */
+export function shuffle<T>(rand: Rand, items: T[]): T[] {
+  const out = [...items];
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1));
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  return out;
+}
+
 /** A random vector with whole-number parts from -limit to limit, never the zero vector. */
 export function randVec(rand: Rand, limit = 4): Vec2 {
   const v: Vec2 = [randInt(rand, -limit, limit), randInt(rand, -limit, limit)];
@@ -58,6 +68,11 @@ export function vecTex(v: number[]): string {
 export function matTex(columns: number[][]): string {
   const rows = columns[0].map((_, r) => columns.map((col) => roundTo(col[r], 2)).join(' & '));
   return `\\begin{bmatrix} ${rows.join(' \\\\ ')} \\end{bmatrix}`;
+}
+
+/** TeX for a matrix given as ROWS (the way row operations and the row–column rule see it), not as columns like matTex. */
+export function rowsTex(rows: number[][]): string {
+  return `\\begin{bmatrix} ${rows.map((row) => row.map((x) => roundTo(x, 2)).join(' & ')).join(' \\\\ ')} \\end{bmatrix}`;
 }
 
 /** TeX for a system of equations (an augmented matrix stored as rows), one equation per line, e.g. "2x - y = 1" over "x + y = 5". */

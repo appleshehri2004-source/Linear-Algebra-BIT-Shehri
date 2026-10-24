@@ -2,6 +2,8 @@
 // basis vectors b₁ (green) and b₂ (red), which you can drag. The yellow arrow carries two labels at once:
 // its numbers in our language and in hers. Under the plane, P turns her numbers into ours and P⁻¹ turns ours
 // into hers. If b₁ and b₂ line up there is no grid for her to use, and the page says "not a basis".
+// With `plain` (Lesson 2.9.1, before the Jennifer story) it uses the book's words instead: the standard grid,
+// the B-grid, x and [x]_B, and it leaves out the matrices P and P⁻¹ (they come in §4.4).
 // All the maths comes from linalg.ts (toOurCoords, toHerCoords, basisGridLines, snapToBasis).
 import { useState } from 'react';
 import { Text, Vector } from 'mafs';
@@ -29,6 +31,8 @@ interface Props {
   basis?: Mat2;
   /** Where the yellow arrow starts, in our numbers. */
   start?: Vec2;
+  /** Use the words "standard" and "B" instead of "ours" and "hers", and leave out P and P⁻¹. */
+  plain?: boolean;
 }
 
 type View = 'ours' | 'hers' | 'both';
@@ -40,7 +44,7 @@ const OUR_GRID = toPath(gridLines(RANGE));
 const show = (n: number) => formatNumber(n).replace('-', '−');
 const pair = ([x, y]: Vec2) => `(${show(x)}, ${show(y)})`;
 
-export default function BasisGridView({ basis = [[2, 1], [-1, 1]], start = [3, 2] }: Props) {
+export default function BasisGridView({ basis = [[2, 1], [-1, 1]], start = [3, 2], plain = false }: Props) {
   const [b1, setB1] = useState<Vec2>(basis[0]);
   const [b2, setB2] = useState<Vec2>(basis[1]);
   const [v, setV] = useState<Vec2>(start);
@@ -73,7 +77,7 @@ export default function BasisGridView({ basis = [[2, 1], [-1, 1]], start = [3, 2
               aria-pressed={name === view}
               onClick={() => setView(name)}
             >
-              {name === 'ours' ? 'Ours' : name === 'hers' ? 'Hers' : 'Both'}
+              {name === 'ours' ? (plain ? 'Standard' : 'Ours') : name === 'hers' ? (plain ? 'B-grid' : 'Hers') : 'Both'}
             </button>
           ))}
         </span>
@@ -93,21 +97,31 @@ export default function BasisGridView({ basis = [[2, 1], [-1, 1]], start = [3, 2
         <DragVector value={v} onChange={moveV} limit={RANGE} />
         {/* The labels go on the side away from the nearer edge, so they aren't cut off on a phone. */}
         <Text x={v[0]} y={v[1]} attach={side === 'w' ? 'nw' : 'ne'} attachDistance={20} color="var(--vec)" size={15}>
-          {`ours ${pair(v)}`}
+          {plain ? `x = ${pair(v)}` : `ours ${pair(v)}`}
         </Text>
         {/* Both labels show in every view: the arrow is the same, only the language changes. */}
         {her && (
           <Text x={v[0]} y={v[1]} attach={side === 'w' ? 'sw' : 'se'} attachDistance={20} color="var(--grid-moving)" size={15}>
-            {`hers ${pair(her)}`}
+            {plain ? `[x]_B = ${pair(her)}` : `hers ${pair(her)}`}
           </Text>
         )}
 
         <DragVector value={b1} onChange={setB1} snap={snap} label="b₁" color="var(--ihat)" limit={3} />
         <DragVector value={b2} onChange={setB2} snap={snap} label="b₂" color="var(--jhat)" limit={3} />
       </Plane>
-      <p className="demo-message">Drag the yellow arrow. Drag b₁ and b₂ to give Jennifer a different grid.</p>
+      <p className="demo-message">
+        {plain
+          ? 'Drag the yellow arrow x. Drag b₁ and b₂ to change the basis B.'
+          : 'Drag the yellow arrow. Drag b₁ and b₂ to give Jennifer a different grid.'}
+      </p>
 
-      {isBasis && her && inv ? (
+      {plain ? (
+        !isBasis && (
+          <p className="demo-status" aria-live="polite" style={{ color: 'var(--negative)' }}>
+            Not a basis: b₁ and b₂ are on one line, so they don't span the plane.
+          </p>
+        )
+      ) : isBasis && her && inv ? (
         <>
           <p className="demo-message">Her numbers → ours:</p>
           <div className="demo-row" aria-live="polite">

@@ -1,0 +1,130 @@
+---
+title: Subspaces, column space and null space
+description: "Lines and planes through the origin are subspaces. Every matrix has two: where it can land, and what it squashes to 0. Find a basis for each."
+section: '2.8'
+part: 1
+threeBlueOneBrown: https://www.3blue1brown.com/lessons/inverse-matrices
+mit: https://ocw.mit.edu/courses/18-06-linear-algebra-spring-2010/resources/lecture-6-column-space-and-nullspace/
+tongji: 第四章 §1 向量组及其线性组合；第四章 §4 线性方程组的解的结构
+---
+
+import Formula from '../../components/Formula.astro';
+import SubspaceView from '../../components/SubspaceView.tsx';
+import Stage3D from '../../components/Stage3D.tsx';
+import PredictReveal from '../../components/PredictReveal.tsx';
+import Exercise from '../../components/Exercise.tsx';
+import DoInYourBook from '../../components/DoInYourBook.astro';
+
+## Question
+
+When a matrix is not invertible, it squashes space (Lesson 2.3.1). **Where can things still land, and what gets lost?** Both answers turn out to be flat pieces of space through the origin, and that kind of set has a name.
+
+## Play
+
+Pick a matrix and press **Play**. The left plane is the input, before <Formula tex="A" />. The right plane is the output, after. Watch the <span class="null">**pink**</span> arrows.
+
+<SubspaceView
+  client:visible
+  showRank={false}
+  presets={[
+    { name: 'Nothing squashed', matrix: [[2, 1], [-1, 1]] },
+    { name: 'Squash onto a line', matrix: [[1, 2], [2, 4]] },
+    { name: 'Everything to 0', matrix: [[0, 0], [0, 0]] },
+  ]}
+/>
+
+The same in 3D. Drag to turn the view, and press **Play**.
+
+<Stage3D
+  client:visible
+  showSubspaces
+  showRank={false}
+  showDet={false}
+  zoomOut={1.8}
+  matrix={[[1, 2, 3], [2, 4, 6], [0, 1, 1]]}
+  presets={[
+    { name: 'Onto a plane', matrix: [[1, 2, 3], [2, 4, 6], [0, 1, 1]] },
+    { name: 'Onto a line', matrix: [[1, 1, 1], [2, 2, 2], [-1, -1, -1]] },
+  ]}
+/>
+
+## Numbers
+
+Take the **Squash onto a line** matrix. Its second column is 2 copies of the first:
+
+<Formula display tex="A = \begin{bmatrix} 1 & 2 \\ 2 & 4 \end{bmatrix}, \qquad A\begin{bmatrix} x \\ y \end{bmatrix} = x\begin{bmatrix} 1 \\ 2 \end{bmatrix} + y\begin{bmatrix} 2 \\ 4 \end{bmatrix} = (x + 2y)\begin{bmatrix} 1 \\ 2 \end{bmatrix}" />
+
+Every output is some number of copies of <Formula tex="(1, 2)" />, so every output is on the line through <Formula tex="(1, 2)" />. That line is the <span class="space">**column space**</span>.
+
+The output is <Formula tex="\mathbf{0}" /> exactly when <Formula tex="x + 2y = 0" />. Take <Formula tex="y = 1" />, so <Formula tex="x = -2" />:
+
+<Formula display tex="A\begin{bmatrix} -2 \\ 1 \end{bmatrix} = -2\begin{bmatrix} 1 \\ 2 \end{bmatrix} + 1\begin{bmatrix} 2 \\ 4 \end{bmatrix} = \begin{bmatrix} 0 \\ 0 \end{bmatrix}" />
+
+So the whole line through <Formula tex="(-2, 1)" /> lands on <Formula tex="\mathbf{0}" />. That line is the <span class="null">**null space**</span>.
+
+**A bigger one, with bases.** Here is a <Formula tex="3 \times 4" /> matrix and its reduced echelon form:
+
+<Formula display tex="B = \begin{bmatrix} 1 & 2 & 0 & 3 \\ 2 & 4 & 1 & 4 \\ -1 & -2 & 1 & -5 \end{bmatrix} \sim \begin{bmatrix} 1 & 2 & 0 & 3 \\ 0 & 0 & 1 & -2 \\ 0 & 0 & 0 & 0 \end{bmatrix}" />
+
+The pivots are in columns 1 and 3. The free unknowns are <Formula tex="x_2" /> and <Formula tex="x_4" />, so the solutions of <Formula tex="B\mathbf{x} = \mathbf{0}" /> in parametric vector form (Lesson 1.5.1) are
+
+<Formula display tex="\mathbf{x} = x_2\begin{bmatrix} -2 \\ 1 \\ 0 \\ 0 \end{bmatrix} + x_4\begin{bmatrix} -3 \\ 0 \\ 2 \\ 1 \end{bmatrix}" />
+
+Those two vectors are a basis for <Formula tex="\operatorname{Nul} B" />. Columns 1 and 3 of <Formula tex="B" /> itself, <Formula tex="(1, 2, -1)" /> and <Formula tex="(0, 1, 1)" />, are a basis for <Formula tex="\operatorname{Col} B" />.
+
+## Explain
+
+**Subspaces.** A **subspace** of <Formula tex="\mathbb{R}^n" /> is a set <Formula tex="H" /> of vectors with three properties:
+
+1. The zero vector is in <Formula tex="H" />.
+2. If <Formula tex="\mathbf{u}" /> and <Formula tex="\mathbf{v}" /> are in <Formula tex="H" />, so is <Formula tex="\mathbf{u} + \mathbf{v}" />.
+3. If <Formula tex="\mathbf{u}" /> is in <Formula tex="H" />, so is every multiple <Formula tex="c\mathbf{u}" />.
+
+In pictures: a point (the origin alone), a line or plane **through the origin**, or all of <Formula tex="\mathbb{R}^n" />. A line that misses the origin fails rule 1. A curve, or two crossing lines, fails rule 2. Any span <Formula tex="\operatorname{Span}\{\mathbf{v}_1, \dots, \mathbf{v}_p\}" /> is a subspace: mixes of mixes are still mixes.
+
+**Two subspaces of every matrix.** For an <Formula tex="m \times n" /> matrix <Formula tex="A" />:
+
+- the <span class="space">**column space**</span> <Formula tex="\operatorname{Col} A" /> is the span of the columns: everywhere <Formula tex="A\mathbf{x}" /> can land. It is a subspace of <Formula tex="\mathbb{R}^m" />. A vector <Formula tex="\mathbf{b}" /> is in it exactly when <Formula tex="A\mathbf{x} = \mathbf{b}" /> is consistent.
+- the <span class="null">**null space**</span> <Formula tex="\operatorname{Nul} A" /> is every solution of <Formula tex="A\mathbf{x} = \mathbf{0}" />: everything <Formula tex="A" /> squashes to <Formula tex="\mathbf{0}" />. It is a subspace of <Formula tex="\mathbb{R}^n" />. To test a vector <Formula tex="\mathbf{u}" />, just multiply: is <Formula tex="A\mathbf{u} = \mathbf{0}" />?
+
+Why the null space is a subspace: <Formula tex="A\mathbf{0} = \mathbf{0}" />, and if <Formula tex="A\mathbf{u} = \mathbf{0}" /> and <Formula tex="A\mathbf{v} = \mathbf{0}" />, then <Formula tex="A(\mathbf{u} + \mathbf{v}) = \mathbf{0} + \mathbf{0}" /> and <Formula tex="A(c\mathbf{u}) = c\mathbf{0}" />. That's why it is a line or a plane, never a curve.
+
+**Bases.** A **basis** of a subspace <Formula tex="H" /> is a linearly independent set that spans <Formula tex="H" />: enough vectors to reach all of <Formula tex="H" />, with none wasted. The columns of <Formula tex="I_n" />, <Formula tex="\mathbf{e}_1, \dots, \mathbf{e}_n" />, are the **standard basis** of <Formula tex="\mathbb{R}^n" />. By the Invertible Matrix Theorem, the columns of any invertible <Formula tex="n \times n" /> matrix are a basis of <Formula tex="\mathbb{R}^n" /> too.
+
+- **A basis for Nul A:** solve <Formula tex="A\mathbf{x} = \mathbf{0}" /> and write the solution in parametric vector form. The vectors that multiply the free unknowns are a basis. (They are independent, because each one has a 1 where the others have a 0.)
+- **A basis for Col A:** the **pivot columns of A**. Find the pivots from an echelon form, but take the columns from <Formula tex="A" /> itself: row operations change the column space, but not which columns are mixes of the others.
+
+## Predict
+
+<Formula tex="A" /> is the **Squash onto a line** matrix. Tap where you think the yellow vector <Formula tex="(-2, 1)" /> will land.
+
+<PredictReveal client:visible matrix={[[1, 2], [2, 4]]} vector={[-2, 1]} />
+
+<details>
+  <summary>Why</summary>
+  On the origin. <Formula tex="(-2, 1)" /> is in the null space: <Formula tex="-2" /> copies of column 1 cancel 1 copy of column 2.
+</details>
+
+## Practice
+
+<Exercise id="2.8-in-nul" client:visible />
+
+<Exercise id="2.8-in-col" client:visible />
+
+<Exercise id="2.8-sizes" client:visible />
+
+<Exercise id="2.8-nul-basis" client:visible />
+
+<Exercise id="2.8-col-basis" client:visible />
+
+<Exercise id="2.8-basis-r3" client:visible />
+
+<DoInYourBook section="2.8" />
+
+## Go deeper
+
+**Why the null space matters for solving.** If <Formula tex="A\mathbf{n} = \mathbf{0}" /> and <Formula tex="A\mathbf{x} = \mathbf{b}" />, then <Formula tex="A(\mathbf{x} + \mathbf{n}) = \mathbf{b}" /> too. That's Lesson 1.5.1 again: the solutions of <Formula tex="A\mathbf{x} = \mathbf{b}" /> are one solution plus all of <Formula tex="\operatorname{Nul} A" />.
+
+**Other names.** The null space is also called the **kernel**, and the column space the **image** or **range** of <Formula tex="\mathbf{x} \mapsto A\mathbf{x}" /> (Lesson 1.8.1).
+
+**Coming up.** How many vectors does a basis of a subspace need? Always the same number, whichever basis you pick. That number is the next lesson.

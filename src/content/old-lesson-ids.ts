@@ -17,7 +17,7 @@ export const oldLessonIds: Record<string, string> = {
   '2-5-3d': '1-9-4-3d',
   '2-4-composition': '2-1-1-composition',
   '4-3-inverse': '2-2-1-inverse',
-  '4-5-rank-subspaces': '2-8-1-rank-subspaces',
+  '4-5-rank-subspaces': '2-8-1-subspaces',
   '3-3-computing': '3-1-1-computing',
   '3-4-det-product': '3-2-1-det-product',
   '3-1-area-scaling': '3-3-1-area-scaling',
@@ -47,4 +47,5 @@ export const oldLessonIds: Record<string, string> = {
   '1-1-1-system-transformation': '1-1-1-systems-of-equations',
   '1-7-1-independence-basis': '1-7-1-linear-independence',
   '1-9-3-3d': '1-9-4-3d',
+  '2-8-1-rank-subspaces': '2-8-1-subspaces',
 };

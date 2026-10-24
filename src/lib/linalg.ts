@@ -1881,3 +1881,146 @@ export function polyTex(p: Poly, variable = 'x'): string {
   }
   return terms.length ? terms.join(' ') : '0';
 }
+
+// ---------- Matrix algebra (Chapter 2) ----------
+// NOTE: like rrefSteps, these take matrices stored as ROWS, because sizes, entries (i, j), row operations
+// and blocks are all talked about row by row. [[1, 2], [3, 4]] has top row 1, 2. transpose() turns
+// rows into columns (and back) when a function above wants columns.
+
+/** The n×n identity as rows: 1s down the diagonal, 0s everywhere else. */
+export function identityRows(n: number): number[][] {
+  return Array.from({ length: n }, (_, r) => Array.from({ length: n }, (_, c) => (r === c ? 1 : 0)));
+}
+
+/**
+ * The product AB, or null when it is not defined (A needs as many columns as B has rows).
+ * Entry (i, j) is row i of A times column j of B, number by number, added up: the row–column rule.
+ */
+export function mulRows(a: number[][], b: number[][]): number[][] | null {
+  if (a[0].length !== b.length) return null;
+  return a.map((row) => b[0].map((_, j) => row.reduce((sum, x, k) => sum + x * b[k][j], 0) + 0));
+}
+
+/** A + B, number by number, or null when the sizes differ. */
+export function addRows(a: number[][], b: number[][]): number[][] | null {
+  if (a.length !== b.length || a[0].length !== b[0].length) return null;
+  return a.map((row, r) => row.map((x, c) => x + b[r][c] + 0));
+}
+
+/** kA: every number times k. */
+export function scaleRows(k: number, a: number[][]): number[][] {
+  return a.map((row) => row.map((x) => k * x + 0));
+}
+
+/** Aᵏ = A times itself k times (k ≥ 0; A⁰ = I). A must be square. */
+export function powRows(a: number[][], k: number): number[][] {
+  let out = identityRows(a.length);
+  for (let i = 0; i < k; i++) out = mulRows(out, a)!;
+  return out;
+}
+
+/**
+ * Row reducing [A | I], step by step, for finding A⁻¹ (A square). When A is row equivalent to I, the left half
+ * ends as I and the right half is A⁻¹. When it isn't, a row of 0s appears on the left and A has no inverse.
+ * Each step's matrix is n rows of 2n numbers: A's part, then I's part.
+ */
+export function inverseSteps(a: number[][]): { steps: EliminationStep[]; inverse: number[][] | null } {
+  const n = a.length;
+  const start = a.map((row, r) => [...row, ...identityRows(n)[r]]);
+  // rrefSteps reads its last column as b; give it a column of 0s to carry along, then drop it again.
+  const { steps, pivotColumns } = rrefSteps(start.map((row) => [...row, 0]));
+  const kept = steps
+    .filter((s, i) => i === 0 || s.changedRow !== null) // its "no solution / free unknown" notes are about systems
+    .map((s) => ({ ...s, matrix: s.matrix.map((row) => row.slice(0, 2 * n)) }));
+  const invertible = pivotColumns.filter((c) => c < n).length === n;
+  const end = kept[kept.length - 1].matrix;
+  kept.push({
+    description: invertible ? 'The left half is I, so the right half is A⁻¹' : 'A row of A’s half is all 0s: A has no inverse',
+    matrix: end,
+    changedRow: null,
+  });
+  return { steps: kept, inverse: invertible ? end.map((row) => row.slice(n)) : null };
+}
+
+/** A⁻¹ found by row reducing [A | I], or null when A is not invertible. Works for any square size. */
+export function inverseRows(a: number[][]): number[][] | null {
+  return inverseSteps(a).inverse;
+}
+
+/** The elementary matrix for a row operation: do that operation to the n×n identity. Then EA does it to A. */
+export function elementaryRows(n: number, op: RowOp): number[][] {
+  return applyRowOp(identityRows(n), op);
+}
+
+/**
+ * Cut a matrix into 4 blocks: above / below row cut r, left / right of column cut c.
+ * splitBlocks(m, 1, 2) puts row 1 in the top blocks and columns 1–2 in the left blocks.
+ * Returns [[top-left, top-right], [bottom-left, bottom-right]]. A cut at 0 or at the end leaves empty blocks ([]).
+ */
+export function splitBlocks(m: number[][], r: number, c: number): number[][][][] {
+  const part = (rows: number[][], from: number, to: number) => {
+    const out = rows.map((row) => row.slice(from, to));
+    return out.length && out[0].length ? out : [];
+  };
+  const top = m.slice(0, r);
+  const bottom = m.slice(r);
+  return [
+    [part(top, 0, c), part(top, c, m[0].length)],
+    [part(bottom, 0, c), part(bottom, c, m[0].length)],
+  ];
+}
+
+/** Put 4 blocks back together into one matrix (the opposite of splitBlocks; no empty blocks). */
+export function joinBlocks([[a, b], [c, d]]: number[][][][]): number[][] {
+  return [...a.map((row, r) => [...row, ...b[r]]), ...c.map((row, r) => [...row, ...d[r]])];
+}
+
+/**
+ * The coordinates of x relative to a basis b₁, …, bₚ (given as a list of vectors): the weights c with
+ * c₁b₁ + … + cₚbₚ = x. They are unique because a basis is independent. null when x is not in the span.
+ */
+export function coordinatesIn(basis: number[][], x: number[]): number[] | null {
+  const solution = completeSolution(basis, x);
+  return solution && solution.directions.length === 0 ? solution.particular : null;
+}
+
+/** The matrix operations in the Lesson 2.1.2 demo, on 2×2 matrices stored as columns. */
+export type MatrixOperation = 'A + B' | 'A − B' | '2A' | 'AB' | 'BA' | 'A²' | 'Aᵀ';
+
+/** One of the operations above. Sums and multiples go column by column; products are "B first, then A" for AB. */
+export function matrixOperation(op: MatrixOperation, a: Mat2, b: Mat2): Mat2 {
+  const asMat2 = (m: number[][]) => m.map((col) => col.map((x) => x + 0)) as Mat2;
+  if (op === 'A + B') return asMat2(a.map((col, c) => add(col, b[c])));
+  if (op === 'A − B') return asMat2(a.map((col, c) => sub(col, b[c])));
+  if (op === '2A') return asMat2(a.map((col) => scale(2, col)));
+  if (op === 'AB') return matMul(a, b);
+  if (op === 'BA') return matMul(b, a);
+  if (op === 'A²') return matMul(a, a);
+  return asMat2(transpose(a));
+}
+
+/**
+ * TeX for a partitioned matrix: a grid of blocks (each a matrix as rows), with lines between the blocks.
+ * blockMatrixTex([[A, B], [C, D]]) draws the four blocks with a | down the middle and a line across.
+ * Empty blocks ([]) are left out, so a cut at the edge just draws fewer lines.
+ */
+export function blockMatrixTex(blocks: number[][][][]): string {
+  const kept = blocks.map((row) => row.filter((block) => block.length > 0)).filter((row) => row.length > 0);
+  const format = kept[0].map((block) => 'c'.repeat(block[0].length)).join('|');
+  const rows = kept.map((blockRow) =>
+    blockRow[0].map((_, r) => blockRow.map((block) => block[r].map((x) => roundTo(x, 2)).join(' & ')).join(' & ')).join(' \\\\ '),
+  );
+  return `\\left[\\begin{array}{${format}} ${rows.join(' \\\\ \\hline ')} \\end{array}\\right]`;
+}
+
+/**
+ * AB worked out block by block. A is cut after row rowCut and after column innerCut; B is cut after row innerCut
+ * (the same cut, so the blocks fit) and after column colCut. Then block (i, j) of AB is Aᵢ₁B₁ⱼ + Aᵢ₂B₂ⱼ, the
+ * row–column rule with blocks instead of numbers. `product` is the four blocks; joining them gives AB.
+ */
+export function blockProduct(a: number[][], b: number[][], rowCut: number, innerCut: number, colCut: number) {
+  const aBlocks = splitBlocks(a, rowCut, innerCut);
+  const bBlocks = splitBlocks(b, innerCut, colCut);
+  const product = [0, 1].map((i) => [0, 1].map((j) => addRows(mulRows(aBlocks[i][0], bBlocks[0][j])!, mulRows(aBlocks[i][1], bBlocks[1][j])!)!));
+  return { aBlocks, bBlocks, product };
+}

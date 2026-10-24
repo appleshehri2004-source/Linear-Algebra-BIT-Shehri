@@ -1,0 +1,88 @@
+---
+title: Partitioned matrices
+description: "Cut a matrix into blocks and multiply the blocks as if they were numbers. Plus the column–row expansion and block inverses."
+section: '2.4'
+part: 1
+mit: https://ocw.mit.edu/courses/18-06-linear-algebra-spring-2010/resources/lecture-3-multiplication-and-inverse-matrices/
+tongji: 第二章 §4 矩阵分块法
+---
+
+import Formula from '../../components/Formula.astro';
+import BlockProductDemo from '../../components/BlockProductDemo.tsx';
+import Exercise from '../../components/Exercise.tsx';
+import DoInYourBook from '../../components/DoInYourBook.astro';
+
+## Question
+
+Big matrices in real problems are often built from pieces: a corner that is the identity, a strip of 0s, a few smaller matrices. **Can you cut a matrix into blocks and multiply the blocks as if each one were a single number?**
+
+## Play
+
+Choose where to cut <Formula tex="A" /> and <Formula tex="B" />. The cut down <Formula tex="A" /> and the cut across <Formula tex="B" /> are always the same one, so the blocks fit together. Each block of <Formula tex="AB" /> is worked out from blocks only. Check that the finished <Formula tex="AB" /> never changes, wherever you cut.
+
+<BlockProductDemo client:visible a={[[1, 2, 0], [-1, 3, 4], [2, 0, 1]]} b={[[0, 1, 2], [3, -1, 0], [1, 1, 1]]} />
+
+## Numbers
+
+These two matrices have 0s off the diagonal blocks:
+
+<Formula display tex="A = \left[\begin{array}{cc|c} 1 & 2 & 0 \\ 3 & 4 & 0 \\ \hline 0 & 0 & 5 \end{array}\right] = \begin{bmatrix} A_{11} & 0 \\ 0 & A_{22} \end{bmatrix}, \qquad B = \left[\begin{array}{cc|c} 2 & 1 & 0 \\ 0 & 1 & 0 \\ \hline 0 & 0 & 3 \end{array}\right] = \begin{bmatrix} B_{11} & 0 \\ 0 & B_{22} \end{bmatrix}" />
+
+Multiply the blocks like numbers. The 0 blocks drop out:
+
+<Formula display tex="AB = \begin{bmatrix} A_{11}B_{11} & 0 \\ 0 & A_{22}B_{22} \end{bmatrix}, \qquad A_{11}B_{11} = \begin{bmatrix} 1 & 2 \\ 3 & 4 \end{bmatrix}\begin{bmatrix} 2 & 1 \\ 0 & 1 \end{bmatrix} = \begin{bmatrix} 2 & 3 \\ 6 & 7 \end{bmatrix}, \qquad A_{22}B_{22} = 15" />
+
+So <Formula tex="AB = \left[\begin{array}{cc|c} 2 & 3 & 0 \\ 6 & 7 & 0 \\ \hline 0 & 0 & 15 \end{array}\right]" />: one 2×2 product and one ordinary multiplication instead of a full 3×3 product.
+
+## Explain
+
+**Partitioning.** Lines between rows and between columns cut a matrix into **blocks** (smaller matrices). The matrix is then **partitioned**, or a **block matrix**. Writing a matrix as its columns <Formula tex="[\,\mathbf{a}_1 \;\cdots\; \mathbf{a}_n\,]" /> is one partition you already know.
+
+**Sums and multiples** go block by block, when both matrices are cut the same way.
+
+**Products: the row–column rule with blocks.** If <Formula tex="A" />'s column cuts match <Formula tex="B" />'s row cuts, then
+
+<Formula display tex="\begin{bmatrix} A_{11} & A_{12} \\ A_{21} & A_{22} \end{bmatrix}\begin{bmatrix} B_{11} & B_{12} \\ B_{21} & B_{22} \end{bmatrix} = \begin{bmatrix} A_{11}B_{11} + A_{12}B_{21} & A_{11}B_{12} + A_{12}B_{22} \\ A_{21}B_{11} + A_{22}B_{21} & A_{21}B_{12} + A_{22}B_{22} \end{bmatrix}" />
+
+Keep the order inside each product: <Formula tex="A_{11}B_{11}" />, never <Formula tex="B_{11}A_{11}" />, because blocks are matrices and don't commute.
+
+**The column–row expansion.** Cut <Formula tex="A" /> into its columns and <Formula tex="B" /> into its rows. The block rule then says <Formula tex="AB" /> is a sum of "column times row" pieces:
+
+<Formula display tex="AB = \operatorname{col}_1(A)\operatorname{row}_1(B) + \cdots + \operatorname{col}_n(A)\operatorname{row}_n(B)" />
+
+For example,
+
+<Formula display tex="\begin{bmatrix} 1 & 2 \\ 3 & 4 \end{bmatrix}\begin{bmatrix} 5 & 6 \\ 7 & 8 \end{bmatrix} = \begin{bmatrix} 1 \\ 3 \end{bmatrix}\begin{bmatrix} 5 & 6 \end{bmatrix} + \begin{bmatrix} 2 \\ 4 \end{bmatrix}\begin{bmatrix} 7 & 8 \end{bmatrix} = \begin{bmatrix} 5 & 6 \\ 15 & 18 \end{bmatrix} + \begin{bmatrix} 14 & 16 \\ 28 & 32 \end{bmatrix} = \begin{bmatrix} 19 & 22 \\ 43 & 50 \end{bmatrix}" />
+
+Each piece is a matrix whose columns are all multiples of one column of <Formula tex="A" />.
+
+**Inverses of block matrices.** Take a **block upper triangular** matrix, with square blocks <Formula tex="A_{11}" /> and <Formula tex="A_{22}" /> on the diagonal. To find its inverse, call the unknown blocks <Formula tex="B_{ij}" />, multiply, and match each block with the identity:
+
+<Formula display tex="\begin{bmatrix} A_{11} & A_{12} \\ 0 & A_{22} \end{bmatrix}^{-1} = \begin{bmatrix} A_{11}^{-1} & -A_{11}^{-1}A_{12}A_{22}^{-1} \\ 0 & A_{22}^{-1} \end{bmatrix}" />
+
+when <Formula tex="A_{11}" /> and <Formula tex="A_{22}" /> are invertible. Matching the bottom-right block gives <Formula tex="A_{22}B_{22} = I" />, and the Invertible Matrix Theorem (Lesson 2.3.1) says that alone makes <Formula tex="A_{22}" /> invertible. A **block diagonal** matrix (0s off the diagonal blocks, like <Formula tex="A" /> above) is invertible exactly when every diagonal block is, and its inverse inverts each block.
+
+## Predict
+
+<Formula tex="I" /> and <Formula tex="0" /> are 2×2 blocks, and <Formula tex="E" /> is any 2×2 matrix. What is the inverse of <Formula tex="\begin{bmatrix} I & 0 \\ E & I \end{bmatrix}" />?
+
+<details>
+  <summary>Reveal</summary>
+  <Formula tex="\begin{bmatrix} I & 0 \\ -E & I \end{bmatrix}" />. Multiply them: the bottom-left block is <Formula tex="E \cdot I + I \cdot (-E) = 0" />, and the other blocks give <Formula tex="I" />, <Formula tex="0" />, <Formula tex="I" />. Like an elementary matrix (Lesson 2.2.2): adding <Formula tex="E" /> times the top half to the bottom half is undone by subtracting it again.
+</details>
+
+## Practice
+
+<Exercise id="2.4-block-product" client:visible />
+
+<Exercise id="2.4-unknown-block" client:visible />
+
+<Exercise id="2.4-block-inverse" client:visible />
+
+<DoInYourBook section="2.4" />
+
+## Go deeper
+
+**Why computers like blocks.** A matrix too big for fast memory can be multiplied a few blocks at a time. Libraries for large-scale linear algebra use block algorithms for exactly this reason.
+
+**The Schur complement.** For <Formula tex="\begin{bmatrix} A & B \\ C & D \end{bmatrix}" /> with <Formula tex="A" /> invertible, one block step of elimination (subtract <Formula tex="CA^{-1}" /> times the top block row from the bottom one) leaves <Formula tex="D - CA^{-1}B" /> in the corner. This matrix is called the **Schur complement**, and it decides whether the whole matrix is invertible. Some of the exercises at the end of §2.4 build on it.
