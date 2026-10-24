@@ -3,22 +3,25 @@
 // index.astro loads it with client:only="react", on top of a still poster of station 1: this canvas starts
 // see-through and fades in once its first frame is drawn. Without WebGL it draws nothing and the poster stays.
 //
-// It also holds the stations' state (station 1: the arrows v and w; station 2: the matrix A). The 3D parts draw
+// It also holds the stations' state (station 1: the arrows v and w; stations 2 and 3: the matrix A). The 3D parts draw
 // it inside the canvas; the handles and the readouts are ordinary HTML, put into their places on the page with
 // React portals.
 //
-// The lattice sits in a "moved" group with station 2's moving grid and logo: the group's transform is the
-// matrix, so all three bend together. Away from station 2 the matrix slides back to the identity (flat).
+// The lattice sits in a "moved" group with station 2's moving grid and logo (and station 3's area patch): the
+// group's transform is the matrix, so all of them bend together. Stations 2 and 3 share the matrix, so the world
+// stays bent from one to the other; away from them it slides back to the identity (flat).
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Canvas, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { MATRIX_START, MATRIX_X, VECTORS_START } from '../../content/home';
-import { add, identity, lerpMatrix, roundTo, sub, type Mat2, type Vec2 } from '../../lib/linalg';
+import { add, detState, identity, lerpMatrix, roundTo, sub, type Mat2, type Vec2 } from '../../lib/linalg';
 import { useThemeColors, useThemeGlow } from '../../lib/useThemeColors';
-import { snapTip, stationPresence, worldMatrix4 } from '../../lib/world';
+import { presenceAcross, snapTip, stationPresence, worldMatrix4 } from '../../lib/world';
 import { onWorldChange, world } from '../../lib/worldScroll';
+import AreaPatch3D, { UnitSquareOutline } from './AreaPatch3D';
 import CameraRig from './CameraRig';
+import DeterminantReadout from './DeterminantReadout';
 import FrameRateWatch from './FrameRateWatch';
 import Lattice from './Lattice';
 import LogoPlane from './LogoPlane';
@@ -69,13 +72,16 @@ export default function World() {
   const [w, setW] = useState<Vec2>(VECTORS_START.w);
   const handleButtons = useRef<(HTMLElement | null)[]>([]);
   const camera = useRef<THREE.Camera | null>(null);
-  // Station 2: the matrix, changed by dragging î's and ĵ's tips (its columns).
+  // Stations 2 and 3: the matrix, changed by dragging î's and ĵ's tips (its columns).
   const [matrix, setMatrix] = useState<Mat2>(MATRIX_START);
   const setColumn = (k: 0 | 1) => (p: Vec2) => setMatrix((m) => (k === 0 ? [p, m[1]] : [m[0], p]));
   const matrixButtons = useRef<(HTMLElement | null)[]>([]);
-  // How much station 2 is there (0 to 1). It slides the matrix in from the identity as you arrive.
-  // Rounded, so React only re-draws when it really changes.
+  // How much stations 2–3 are there (0 to 1): it slides the matrix in from the identity as you arrive at station 2,
+  // and back out after station 3. Then each station's own things: station 2's b arrow, station 3's area patch.
+  // Rounded, so React only re-draws when they really change.
   const [matrixShown, setMatrixShown] = useState(0);
+  const [matrixOnly, setMatrixOnly] = useState(0);
+  const [detShown, setDetShown] = useState(0);
   const drawnMatrix = lerpMatrix(IDENTITY, matrix, matrixShown);
   const moved = useMemo(
     () => new THREE.Matrix4().set(...(worldMatrix4(drawnMatrix) as Parameters<THREE.Matrix4['set']>)),
@@ -86,6 +92,7 @@ export default function World() {
   const handleLayer = document.getElementById('world-handles');
   const vectorsReadout = document.getElementById('readout-vectors');
   const matrixReadout = document.getElementById('readout-matrix');
+  const determinantReadout = document.getElementById('readout-determinant');
 
   // Fade the whole world (canvas and poster) out after station 5, straight on the page: no React re-draw per scroll.
   useEffect(() => {
@@ -93,7 +100,9 @@ export default function World() {
     const update = () => {
       if (layer) layer.style.opacity = String(1 - world.out);
       setRunning(world.out < 1);
-      setMatrixShown(roundTo(stationPresence(world.s, 1), 3));
+      setMatrixShown(roundTo(presenceAcross(world.s, 1, 2), 3));
+      setMatrixOnly(roundTo(stationPresence(world.s, 1), 3));
+      setDetShown(roundTo(stationPresence(world.s, 2), 3));
     };
     update();
     return onWorldChange(update);
@@ -108,7 +117,7 @@ export default function World() {
       {handleLayer &&
         createPortal(
           <TipHandles
-            station={0}
+            stations={[0]}
             buttons={handleButtons}
             camera={camera}
             tips={[
@@ -128,7 +137,7 @@ export default function World() {
       {handleLayer &&
         createPortal(
           <TipHandles
-            station={1}
+            stations={[1, 2]}
             buttons={matrixButtons}
             camera={camera}
             tips={[
@@ -143,6 +152,11 @@ export default function World() {
         createPortal(
           <MatrixReadout matrix={matrix} x={MATRIX_X} colours={colours} onReset={() => setMatrix(MATRIX_START)} />,
           matrixReadout,
+        )}
+      {determinantReadout &&
+        createPortal(
+          <DeterminantReadout matrix={matrix} colours={colours} onReset={() => setMatrix(MATRIX_START)} />,
+          determinantReadout,
         )}
       <div ref={box} className={ready ? 'world-canvas ready' : 'world-canvas'}>
         <Canvas
@@ -169,12 +183,16 @@ export default function World() {
           <group matrixAutoUpdate={false} matrix={moved}>
             <Lattice colour={themeGlow > 0 ? colours.text : colours.muted} glow={glow} />
             <MovingGrid colour={colours.moving} opacity={matrixShown} />
-            <LogoPlane opacity={matrixShown} />
+            <AreaPatch3D kind={detState(drawnMatrix).kind} colours={colours} opacity={detShown} />
+            {/* At station 3 the logo turns partly see-through, so the area shading shows through it. */}
+            <LogoPlane opacity={matrixShown * (1 - 0.55 * detShown)} />
           </group>
+          <UnitSquareOutline colour={colours.muted} opacity={detShown} />
           <MatrixStation
             matrix={drawnMatrix}
             x={MATRIX_X}
             shown={matrixShown}
+            bShown={matrixOnly}
             colours={colours}
             glow={glow}
             handles={matrixButtons}

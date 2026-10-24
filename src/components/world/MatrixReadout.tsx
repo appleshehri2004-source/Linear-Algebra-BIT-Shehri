@@ -11,8 +11,17 @@ const n = (x: number) => String(roundTo(x, 2) + 0);
  * TeX that paints `tex` in a theme colour. KaTeX needs a real colour value, so the theme's colour (read at runtime
  * in World.tsx) is used only if it is a plain hex colour; anything else just inherits the readout's colour.
  */
-const paint = (colour: string, tex: string) =>
+export const paint = (colour: string, tex: string) =>
   /^#[0-9a-f]{3,8}$/i.test(colour) ? `\\textcolor{${colour}}{${tex}}` : tex;
+
+/** The ↺ button that puts the matrix back to its start (stations 2 and 3 both have one). */
+export function ResetButton({ onReset }: { onReset: () => void }) {
+  return (
+    <button type="button" className="readout-reset" aria-label="Put the matrix back to its start" onClick={onReset}>
+      ↺
+    </button>
+  );
+}
 
 interface Props {
   matrix: Mat2;
@@ -31,9 +40,7 @@ export default function MatrixReadout({ matrix, x, colours, onReset }: Props) {
   return (
     <span className="readout-parts">
       <Tex tex={tex} />
-      <button type="button" className="readout-reset" aria-label="Put the matrix back to its start" onClick={onReset}>
-        ↺
-      </button>
+      <ResetButton onReset={onReset} />
     </span>
   );
 }

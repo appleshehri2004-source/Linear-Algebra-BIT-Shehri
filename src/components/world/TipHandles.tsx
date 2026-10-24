@@ -24,8 +24,8 @@ interface Tip {
 }
 
 interface Props {
-  /** The station these handles belong to (0 = station 1): they're only awake there. */
-  station: number;
+  /** The stations these handles belong to (0 = station 1): they're only awake there. */
+  stations: number[];
   tips: Tip[];
   /** Filled in here with the buttons, so HandleAnchors can move them over the tips. */
   buttons: MutableRefObject<(HTMLElement | null)[]>;
@@ -53,7 +53,7 @@ function planePointAt(x: number, y: number, camera: THREE.Camera): Vec2 | null {
   return hit && fromWorld(hit);
 }
 
-export default function TipHandles({ station, tips, buttons, camera }: Props) {
+export default function TipHandles({ stations, tips, buttons, camera }: Props) {
   // Only usable while you're at this station (its arrows are packed away elsewhere).
   const [active, setActive] = useState(true);
   // The soft pulsing ring invites a first drag; it stops once you've moved a tip.
@@ -61,10 +61,10 @@ export default function TipHandles({ station, tips, buttons, camera }: Props) {
   const dragging = useRef<number | null>(null);
 
   useEffect(() => {
-    const update = () => setActive(stationPresence(world.s, station) > 0.6);
+    const update = () => setActive(Math.max(...stations.map((k) => stationPresence(world.s, k))) > 0.6);
     update();
     return onWorldChange(update);
-  }, [station]);
+  }, [stations.join()]);
 
   /** Move tip k to the plane point under the finger or mouse. */
   function aim(k: number, e: PointerEvent<HTMLButtonElement>) {

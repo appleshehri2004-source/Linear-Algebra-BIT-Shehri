@@ -43,20 +43,24 @@ interface Props {
   matrix: Mat2;
   /** The vector x in A·x = b. */
   x: Vec2;
-  /** 0 to 1: how much the station is there (it fades in and out with the scroll). */
+  /** 0 to 1: how much stations 2–3 are there (î and ĵ fade in and out with the scroll). */
   shown: number;
+  /** 0 to 1: how much station 2 itself is there (the b arrow belongs to station 2 only). */
+  bShown: number;
   colours: ThemeColors;
   glow: number;
   handles: MutableRefObject<(HTMLElement | null)[]>;
   cameraOut: MutableRefObject<THREE.Camera | null>;
 }
 
-export default function MatrixStation({ matrix, x, shown, colours, glow, handles, cameraOut }: Props) {
+export default function MatrixStation({ matrix, x, shown, bShown, colours, glow, handles, cameraOut }: Props) {
   return (
     <>
       {shown > 0.01 && (
         <>
-          <Arrow3D tip={matVec(matrix, x)} colour={colours.vec} thickness={0.045} glow={glow} opacity={shown} />
+          {bShown > 0.01 && (
+            <Arrow3D tip={matVec(matrix, x)} colour={colours.vec} thickness={0.045} glow={glow} opacity={bShown} />
+          )}
           <Arrow3D tip={matrix[0]} colour={colours.ihat} glow={glow} opacity={shown} />
           <Arrow3D tip={matrix[1]} colour={colours.jhat} glow={glow} opacity={shown} />
         </>

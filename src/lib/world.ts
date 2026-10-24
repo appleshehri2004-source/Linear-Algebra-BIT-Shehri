@@ -150,6 +150,15 @@ export function stationPresence(s: number, k: number): number {
 }
 
 /**
+ * Like stationPresence, but for a run of stations: 1 at every station from `first` to `last` and all the way in
+ * between, easing out beyond them. Stations 2 and 3 share one matrix, so the world stays bent from one to the other.
+ */
+export function presenceAcross(s: number, first: number, last: number): number {
+  if (s >= first && s <= last) return 1;
+  return stationPresence(s, s < first ? first : last);
+}
+
+/**
  * The 2×2 matrix A as a three.js transform of the floor, as 16 numbers row by row (for Matrix4.set).
  * The maths point (x, y) is drawn at (x, 0, −y), so A's entries move into the x and z places, with signs flipped
  * where y turns into −z. Heights (three.js y) are left alone.

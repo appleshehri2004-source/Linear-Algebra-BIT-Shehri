@@ -10,6 +10,7 @@ import {
   matMul,
   matrixAt,
   projectionMatrix,
+  detState,
   roundTo,
   rotation,
   samplePath,
@@ -361,8 +362,13 @@ export const STATIONS: Station[] = [
     name: 'Matrices',
     pose: { azimuth: 0, elevation: 76, distance: 8, lookHeight: 0, look: [1.5, 0.8], sweep: 0 },
   },
-  // Straight down and closer, turned a little: the area fills the screen.
-  { id: 'station-determinant', name: 'Determinant', pose: { azimuth: 14, elevation: 84, distance: 8, lookHeight: 0, sweep: 0 } },
+  // Straight down and closer, turned a little: the area fills the screen. It looks at the middle of the
+  // starting parallelogram (î + ĵ)/2, so a phone held upright fits it.
+  {
+    id: 'station-determinant',
+    name: 'Determinant',
+    pose: { azimuth: 14, elevation: 84, distance: 7, lookHeight: 0, look: [1, 0.75], sweep: 0 },
+  },
   // Far back and low: the eigen-lines run off to the horizon.
   { id: 'station-eigen', name: 'Eigenvectors', pose: { azimuth: -40, elevation: 24, distance: 15, lookHeight: 0, sweep: 0 } },
   // Very low, lifted, and circling as you scroll: the logo rises off the plane.
@@ -412,4 +418,34 @@ export function chapterProgress(chapters: ChapterLinks[], progress: Progress): C
     const lessons = chapter.sections.flatMap((s) => s.lessons);
     return { number: chapter.number, done: lessons.filter((l) => progress.lessons[l.id]).length, total: lessons.length };
   });
+}
+
+// ---------- Station 3's readout ----------
+
+/** A number inside TeX: at most 2 decimal places, negative ones in brackets so "0.5 · (−1)" reads right. */
+const texNumber = (n: number) => {
+  const r = roundTo(n, 2) + 0;
+  return r < 0 ? `(${r})` : String(r);
+};
+
+/**
+ * Station 3's readout as TeX: "\det A = ad − bc = 1.5 · 1 − 0.5 · 0.5 = 1.25". The answer is detState's number
+ * from linalg.ts, so it always matches what the rest of the site would say. `paint` colours a number by the
+ * column it came from (î's or ĵ's), and is given by the readout, which knows the theme's colours.
+ */
+export function determinantTex(m: Mat2, paint: (column: 0 | 1, tex: string) => string = (_, t) => t): string {
+  const [[a, c], [b, d]] = m; // stored as columns: î = (a, c), ĵ = (b, d)
+  const i = (n: number) => paint(0, texNumber(n));
+  const j = (n: number) => paint(1, texNumber(n));
+  return `\\det A = ad - bc = ${i(a)} \\cdot ${j(d)} - ${j(b)} \\cdot ${i(c)} = ${detState(m).det}`; // the answer stands alone: no brackets
+}
+
+/** The words under station 3's formula: what the matrix does to area. Built from detState, like the number. */
+export function determinantMeaning(m: Mat2): string {
+  const { kind, det } = detState(m);
+  const size = (n: number) => String(roundTo(n, 2) + 0);
+  if (kind === 'point') return 'Squashed onto a single point: area 0';
+  if (kind === 'line') return 'Squashed onto a line: area 0';
+  if (kind === 'flipped') return `Flipped over, area ×${size(-det)}`;
+  return `Area ×${size(det)}`;
 }

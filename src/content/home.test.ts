@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { book } from './book';
-import { det2, det3, eig2, obliqueProject, isClose, matMul, matVec, rotationAngle, svdSteps, transformShape, UNIT_SQUARE, type Mat2, type Vec2 } from '../lib/linalg';
+import { det2, det3, eig2, roundTo, obliqueProject, isClose, matMul, matVec, rotationAngle, svdSteps, transformShape, UNIT_SQUARE, type Mat2, type Vec2 } from '../lib/linalg';
 import {
   bigIdeas,
   CARD_3D_MATRIX,
@@ -9,6 +9,8 @@ import {
   cardStories,
   chapterIdeas,
   chapterProgress,
+  determinantMeaning,
+  determinantTex,
   chapterSummaries,
   cssMatrix,
   eigenScene,
@@ -278,5 +280,34 @@ describe('chapterProgress', () => {
 
   it('is all zeros with nothing saved', () => {
     expect(chapterProgress(chapters, { lessons: {}, exercises: {} }).map((c) => c.done)).toEqual([0, 0]);
+  });
+});
+
+describe("station 3's determinant readout", () => {
+  const last = (tex: string) => tex.split('=').pop()!.trim();
+
+  it('ends with the same number as detState in linalg.ts', () => {
+    const matrices: Mat2[] = [
+      [[1.5, 0.5], [0.5, 1]],
+      [[1.5, 0.5], [1.6, -0.6]], // flipped
+      [[1, 2], [0.5, 1]], // squashed onto a line
+      [[0.3, 0.7], [1.1, 0.2]],
+    ];
+    for (const m of matrices) {
+      const det = roundTo(det2(m), 2) + 0;
+      expect(last(determinantTex(m))).toBe(String(det));
+    }
+  });
+
+  it('writes ad − bc with the numbers in the right places', () => {
+    // î = (a, c) = (1.5, 0.5), ĵ = (b, d) = (0.5, 1): ad − bc = 1.5·1 − 0.5·0.5.
+    expect(determinantTex([[1.5, 0.5], [0.5, 1]])).toBe('\\det A = ad - bc = 1.5 \\cdot 1 - 0.5 \\cdot 0.5 = 1.25');
+  });
+
+  it('says what happens to area', () => {
+    expect(determinantMeaning([[1.5, 0.5], [0.5, 1]])).toBe('Area ×1.25');
+    expect(determinantMeaning([[1.5, 0.5], [1.6, -0.6]])).toBe('Flipped over, area ×1.7');
+    expect(determinantMeaning([[1, 2], [0.5, 1]])).toBe('Squashed onto a line: area 0');
+    expect(determinantMeaning([[0, 0], [0, 0]])).toBe('Squashed onto a single point: area 0');
   });
 });

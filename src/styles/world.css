@@ -152,7 +152,21 @@
   }
 }
 
-/* Station 2's ↺ button: puts the matrix back to its start. 44px tall for a thumb, quiet until hovered. */
+/* Station 3's readout: the formula with a short line under it saying what happens to area. */
+.home .readout-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+}
+
+.home .readout-meaning {
+  color: var(--text);
+  font-size: 0.8rem;
+  letter-spacing: 0.02em;
+}
+
+/* Stations 2 and 3's ↺ button: puts the matrix back to its start. 44px tall for a thumb, quiet until hovered. */
 .home .readout-reset {
   display: grid;
   place-items: center;

@@ -6,6 +6,7 @@ import {
   latticePoints,
   movingFrameRate,
   portraitStepBack,
+  presenceAcross,
   rayToFloor,
   snapTip,
   stationPresence,
@@ -186,5 +187,17 @@ describe('worldMatrix4', () => {
     const moved = [0, 1, 2].map((row) => m[4 * row] * X + m[4 * row + 1] * Y + m[4 * row + 2] * Z);
     // A·(2, 1) = 2·(1.5, 0.5) + 1·(0.5, 1) = (3.5, 2).
     expect(moved).toEqual(toWorld([3.5, 2]));
+  });
+});
+
+describe('presenceAcross', () => {
+  it('is 1 at both stations and everywhere between them', () => {
+    for (const s of [1, 1.3, 1.5, 1.8, 2]) expect(presenceAcross(s, 1, 2)).toBe(1);
+  });
+
+  it('eases out beyond them, like one station would', () => {
+    expect(presenceAcross(0.4, 1, 2)).toBe(0);
+    expect(presenceAcross(2.6, 1, 2)).toBe(0);
+    expect(presenceAcross(2.35, 1, 2)).toBeCloseTo(stationPresence(2.35, 2));
   });
 });

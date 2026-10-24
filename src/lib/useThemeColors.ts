@@ -15,6 +15,8 @@ export function readThemeColors() {
     sum: get('--sum'),
     cross: get('--cross'),
     areaKept: get('--area-kept'),
+    areaFlipped: get('--area-flipped'),
+    zero: get('--zero'),
     faint: get('--grid'),
     moving: get('--grid-moving'),
     muted: get('--text-muted'),
